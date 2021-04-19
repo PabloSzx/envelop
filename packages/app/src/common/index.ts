@@ -49,7 +49,7 @@ export interface BaseEnvelopAppOptions extends Partial<EnvelopOptions>, Partial<
   scalars?: '*' | { [k in keyof typeof scalarResolvers]?: boolean };
 }
 
-export function CreateEnvelopAppFactory(
+export function createEnvelopAppFactory(
   config: BaseEnvelopAppOptions,
   internalConfig: InternalEnvelopConfig
 ): EnvelopAppFactoryType {
@@ -157,12 +157,12 @@ export function CreateEnvelopAppFactory(
 
       if (enableCodegen) {
         if (outputSchema) {
-          import('./outputSchema').then(({ writeOutputSchema }) => {
+          import('./outputSchema.js').then(({ writeOutputSchema }) => {
             writeOutputSchema(schema, config.outputSchema!).catch(onCodegenError);
           });
         }
 
-        import('./codegen').then(({ EnvelopCodegen }) => {
+        import('./codegen.js').then(({ EnvelopCodegen }) => {
           EnvelopCodegen(schema, config, internalConfig).catch(onCodegenError);
         });
       }

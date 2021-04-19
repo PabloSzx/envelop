@@ -7,14 +7,13 @@ import * as typescriptOperationsPlugin from '@graphql-codegen/typescript-operati
 import * as typescriptResolversPlugin from '@graphql-codegen/typescript-resolvers';
 import { printSchemaWithDirectives } from '@graphql-tools/utils';
 
-import { formatPrettier } from './prettier';
-import { writeFileIfChanged } from './write';
+import { formatPrettier } from './prettier.js';
+import { writeFileIfChanged } from './write.js';
 
 import type { TypeScriptPluginConfig } from '@graphql-codegen/typescript';
 import type { TypeScriptResolversPluginConfig } from '@graphql-codegen/typescript-resolvers/config';
 
-import type { FastifyEnvelopAppOptions } from './index';
-import type { InternalEnvelopConfig } from './common';
+import type { BaseEnvelopAppOptions, InternalEnvelopConfig } from '.';
 
 export interface CodegenConfig extends TypeScriptPluginConfig, TypeScriptResolversPluginConfig {
   /**
@@ -50,7 +49,7 @@ export interface CodegenConfig extends TypeScriptPluginConfig, TypeScriptResolve
 
 export async function EnvelopCodegen(
   executableSchema: GraphQLSchema,
-  options: FastifyEnvelopAppOptions,
+  options: BaseEnvelopAppOptions,
   internalConfig: InternalEnvelopConfig
 ): Promise<void> {
   const schema = parse(printSchemaWithDirectives(executableSchema));

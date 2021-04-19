@@ -3,12 +3,16 @@
   "version": "0.1.0",
   "private": false,
   "license": "MIT",
-  "main": "dist/index.js",
-  "module": "dist/index.mjs",
-  "types": "dist/index.d.ts",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/esm/index.d.ts",
+  "exports": {
+    "import": "./dist/esm/index.js",
+    "require": "./dist/cjs/index.js"
+  },
   "scripts": {
-    "build": "tsup src/index.ts --dts --format esm,cjs --target es2020",
-    "dev": "tsup src/index.ts --dts --format esm,cjs --target es2020 --watch src"
+    "build": "tsc-node-build",
+    "dev": "tsc-node-watch"
   },
   "dependencies": {
     "@envelop/core": "^0.1.2",
@@ -26,12 +30,17 @@
     "graphql": "^15.5.0",
     "graphql-helix": "1.2.3",
     "graphql-modules": "^1.4.2",
+    "graphql-scalars": "^1.9.0",
     "mkdirp": "^1.0.4",
     "prettier": "^2.2.1"
   },
   "devDependencies": {
-    "@pablosz/tsup": "^0.0.7",
+    "@pablosz/tsup": "^0.0.11",
+    "@types/mkdirp": "^1.0.1",
     "esbuild": "^0.11.11",
-    "typescript": "^4.2.4"
+    "typescript": "^4.2.4",
+    "psz-builder": "^0.1.2",
+    "concurrently": "^6.0.2",
+    "tsc-node-build": "^1.0.0"
   }
 }

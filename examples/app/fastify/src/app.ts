@@ -1,4 +1,4 @@
-import { CreateEnvelopApp, FastifyContextArgs, InferFunctionReturn } from '@envelop/app';
+import { CreateFastifyApp, FastifyContextArgs, InferFunctionReturn } from '@envelop/app';
 
 function buildContext({ reply, request }: FastifyContextArgs) {
   return {
@@ -12,7 +12,7 @@ declare module '@envelop/app' {
   interface FastifyEnvelopContext extends InferFunctionReturn<typeof buildContext> {}
 }
 
-export const { registerModule, buildApp, gql } = CreateEnvelopApp({
+export const { registerModule, buildApp, gql } = CreateFastifyApp({
   codegen: {
     federation: true,
     deepPartialResolvers: true,
