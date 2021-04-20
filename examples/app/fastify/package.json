@@ -4,8 +4,9 @@
   "license": "MIT",
   "main": "index.js",
   "scripts": {
-    "dev:cjs": "tsup src/index.ts --target es2020 --sourcemap --no-splitting --ignore-watch \"**/*.generated.ts\" --format esm,cjs --clean --watch src --onSuccess \"node dist/index.js\"",
-    "dev:mjs": "tsup src/index.ts --target es2020 --sourcemap --no-splitting --ignore-watch \"**/*.generated.ts\" --format esm,cjs --clean --watch src --onSuccess \"node dist/index.mjs\"",
+    "dev": "npm run dev:mjs",
+    "dev:cjs": "tsup src/index.ts --target node12 --format cjs --sourcemap --no-splitting --ignore-watch \"**/*.generated.ts\" --clean --watch src --onSuccess \"node dist/index.js\"",
+    "dev:mjs": "tsup src/index.ts --target es2020 --format esm --sourcemap --no-splitting --ignore-watch \"**/*.generated.ts\" --clean --watch src --onSuccess \"node dist/index.mjs\"",
     "start": "node dist/index.js"
   },
   "dependencies": {
@@ -14,8 +15,8 @@
     "graphql": "^15.5.0"
   },
   "devDependencies": {
-    "@pablosz/tsup": "^0.0.11",
     "esbuild": "^0.11.11",
+    "tsup": "^4.9.1",
     "typescript": "^4.2.4"
   }
 }

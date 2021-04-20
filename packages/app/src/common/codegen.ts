@@ -41,6 +41,11 @@ export interface CodegenConfig extends TypeScriptPluginConfig, TypeScriptResolve
   targetPath?: string;
 
   /**
+   * Add arbitrary code at the beggining of the generated code
+   */
+  preImportCode?: string;
+
+  /**
    * Handle Code Generation errors
    * @default console.error
    */
@@ -54,11 +59,13 @@ export async function EnvelopCodegen(
 ): Promise<void> {
   const schema = parse(printSchemaWithDirectives(executableSchema));
 
-  const { codegen: { targetPath, deepPartialResolvers, ...codegenOptions } = {} } = options;
+  const { codegen: { targetPath, deepPartialResolvers, preImportCode = '', onError, scalars, ...codegenOptions } = {} } = options;
 
-  const config: CodegenConfig = {
+  const config: TypeScriptPluginConfig & TypeScriptResolversPluginConfig = {
     useTypeImports: true,
     defaultMapper: deepPartialResolvers ? 'import("@envelop/app").DeepPartial<{T}>' : undefined,
+    // TODO: Add default recommended types
+    scalars,
     ...codegenOptions,
   };
 
@@ -87,6 +94,7 @@ export async function EnvelopCodegen(
 
   const code = await formatPrettier(
     `
+    ${preImportCode}
     ${codegenCode}
 
     declare module "@envelop/app" {

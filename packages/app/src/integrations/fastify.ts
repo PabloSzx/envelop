@@ -22,6 +22,12 @@ export interface FastifyEnvelopAppOptions extends BaseEnvelopAppOptions {
    * Build Context
    */
   buildContext?: (args: FastifyContextArgs) => Record<string, unknown> | Promise<Record<string, unknown>>;
+
+  /**
+   * Enable Subscriptions
+   * TODO: Detect if schema has subscriptions and autoenable by default
+   */
+  subscriptions?: boolean | 'legacy';
 }
 
 export interface FastifyEnvelopContext {
@@ -98,9 +104,7 @@ export function CreateFastifyApp(config: FastifyEnvelopAppOptions = {}): Fastify
                 reply.status(result.status);
                 reply.send(result.payload);
               } else {
-                // You can find a complete example with GraphQL Subscriptions and stream/defer here:
-                // https://github.com/contrawork/graphql-helix/blob/master/examples/fastify/server.ts
-                reply.send({ errors: [{ message: 'Not Supported in this demo' }] });
+                throw Error('WIP');
               }
             },
           });
@@ -120,3 +124,5 @@ export function CreateFastifyApp(config: FastifyEnvelopAppOptions = {}): Fastify
     buildApp,
   };
 }
+
+export { gql };

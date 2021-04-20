@@ -17,6 +17,12 @@ export const { registerModule, buildApp, gql } = CreateFastifyApp({
     federation: true,
     deepPartialResolvers: true,
     targetPath: './src/envelop.generated.ts',
+    preImportCode: `
+    /* eslint-disable no-use-before-define */
+    `,
+    scalars: {
+      DateTime: 'string',
+    },
   },
   outputSchema: './schema.gql',
   scalars: {
