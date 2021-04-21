@@ -8457,10 +8457,10 @@ ts-node@9.1.1:
     source-map-support "^0.5.17"
     yn "3.1.1"
 
-tsc-node-build@^1.0.2:
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/tsc-node-build/-/tsc-node-build-1.0.2.tgz#d1817108de52456c0aaa141f0d91fb263ffbbb07"
-  integrity sha512-QGfC4nYOlc9+8ZhJNHRfZfWl50U53StDHp8UGu8+Vb3gZIwLhVLp1sDU1w1AytY7ocbZTx98iIKyZcXx+jZ3tg==
+tsc-node-build@^1.0.4:
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/tsc-node-build/-/tsc-node-build-1.0.4.tgz#1bed52986fb466302803ff4ac292301f581bd692"
+  integrity sha512-YgOq8xAnW23EkTCSxwvZggwY6HbOR8eAnwvdfE7Wr77cHcU54QbGzESAp9WWCSpeER9VtnjVU5RRy6vHmwZQsA==
   dependencies:
     commander "^7.2.0"
     concurrently "^6.0.2"

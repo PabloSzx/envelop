@@ -59,7 +59,7 @@ export async function EnvelopCodegen(
 ): Promise<void> {
   const schema = parse(printSchemaWithDirectives(executableSchema));
 
-  const { codegen: { targetPath, deepPartialResolvers, preImportCode = '', onError, scalars, ...codegenOptions } = {} } = options;
+  const { codegen: { targetPath, deepPartialResolvers, preImportCode = '', scalars, onError, ...codegenOptions } = {} } = options;
 
   const config: TypeScriptPluginConfig & TypeScriptResolversPluginConfig = {
     useTypeImports: true,
@@ -104,5 +104,5 @@ export async function EnvelopCodegen(
     'typescript'
   );
 
-  await writeFileIfChanged(resolve(targetPath ?? './src/envelop.generated.ts'), code);
+  await writeFileIfChanged(resolve(targetPath ?? './src/envelop.generated.ts'), code).catch(onError);
 }

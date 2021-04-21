@@ -1,9 +1,23 @@
 import assert from 'assert';
+
 import { Envelop } from '@envelop/types';
+
 import type { Server as SocketServer } from 'ws';
+import type { Disposable } from 'graphql-ws/lib/types';
+import type { SubscriptionServer } from 'subscriptions-transport-ws/dist/server';
 export type SubscriptionsFlag = boolean | 'legacy' | 'all';
 
-export async function CreateSubscriptionsServer(flag: SubscriptionsFlag | undefined) {
+export type CommonSubscriptionsServer = Promise<
+  | ((
+      getEnveloped: Envelop<unknown>
+    ) =>
+      | readonly ['new', SocketServer, Disposable]
+      | readonly ['both', (protocol: string | string[] | undefined) => SocketServer]
+      | readonly ['legacy', SocketServer, SubscriptionServer])
+  | null
+>;
+
+export const CreateSubscriptionsServer = async (flag: SubscriptionsFlag | undefined): CommonSubscriptionsServer => {
   if (!flag) return null;
 
   const GRAPHQL_TRANSPORT_WS_PROTOCOL = 'graphql-transport-ws';
@@ -117,4 +131,4 @@ export async function CreateSubscriptionsServer(flag: SubscriptionsFlag | undefi
       ),
     ] as const;
   };
-}
+};
