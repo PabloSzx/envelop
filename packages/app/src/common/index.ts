@@ -25,6 +25,11 @@ export interface EnvelopAppFactoryType {
 
 export interface BaseEnvelopAppOptions extends Partial<EnvelopOptions>, Partial<Omit<ApplicationConfig, 'modules'>> {
   /**
+   * @default "/graphql"
+   */
+  path?: string;
+
+  /**
    * Enable code generation, by default it's enabled if `NODE_ENV` is not `production` nor `test`
    *
    * @default process.env.NODE_ENV !== "production" && process.env.NODE_ENV !== "test"

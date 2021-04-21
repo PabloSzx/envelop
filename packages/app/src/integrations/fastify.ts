@@ -8,8 +8,10 @@ import { CreateSubscriptionsServer, SubscriptionsFlag } from '../common/subscrip
 
 import type { ExecutionContext } from 'graphql-helix/dist/types';
 import type { FastifyPluginCallback, FastifyReply, FastifyRequest } from 'fastify';
-import type { Server } from 'http';
+import type { Server, IncomingMessage } from 'http';
 import type { EnvelopModuleConfig } from '../common/types';
+import type { Socket } from 'net';
+
 export interface FastifyEnvelopApp {
   EnvelopAppPlugin: FastifyPluginCallback<Record<never, never>, Server>;
 }
@@ -51,7 +53,9 @@ export function CreateFastifyApp(config: FastifyEnvelopAppOptions = {}): Fastify
   const { appBuilder, gql, modules, registerModule } = createEnvelopAppFactory(config, {
     contextTypeName: 'FastifyEnvelopContext',
   });
-  const { buildContext, subscriptions } = config;
+  const { buildContext, subscriptions, path = '/graphql' } = config;
+
+  const wsPromise = subscriptions ? import('ws').then(v => v.default) : null;
 
   const subscriptionsClientFactoryPromise = CreateSubscriptionsServer(subscriptions);
 
@@ -65,43 +69,54 @@ export function CreateFastifyApp(config: FastifyEnvelopAppOptions = {}): Fastify
         const EnvelopAppPlugin: FastifyPluginCallback = async function FastifyPlugin(instance, _opts) {
           const { default: AltairFastify } = await import('altair-fastify-plugin');
 
-          const subscriptionsClientFactory = await subscriptionsClientFactoryPromise;
-
-          instance.register(AltairFastify, {});
-
-          const subscriptionsServer = subscriptionsClientFactory?.(getEnveloped);
-
-          instance.server.on('upgrade', async (rawRequest, socket, head) => {
-            assert(subscriptionsServer, 'Subscriptions client not existant');
-
-            const protocol = rawRequest.headers['sec-websocket-protocol'] || socket.protocol;
-
-            switch (subscriptionsServer[0]) {
-              case 'both': {
-                const server = subscriptionsServer[1](protocol);
-
-                server.handleUpgrade(rawRequest, socket, head, ws => {
-                  server.emit('connection', ws, rawRequest);
-                });
-                break;
-              }
-              case 'legacy': {
-                const server = subscriptionsServer[1];
-
-                server.handleUpgrade(rawRequest, socket, head, ws => {
-                  server.emit('connection', ws, rawRequest);
-                });
-                break;
-              }
-              case 'new': {
-                const server = subscriptionsServer[1];
-                server.handleUpgrade(rawRequest, socket, head, ws => {
-                  server.emit('connection', ws, rawRequest);
-                });
-                break;
-              }
-            }
+          instance.register(AltairFastify, {
+            subscriptionsEndpoint: `ws://localhost:3000/${path}`,
           });
+
+          if (subscriptions) {
+            const subscriptionsClientFactory = await subscriptionsClientFactoryPromise;
+            assert(subscriptionsClientFactory);
+
+            const subscriptionsServer = subscriptionsClientFactory(getEnveloped);
+
+            assert(wsPromise);
+            const ws = await wsPromise;
+
+            const fallbackWebSocket = new ws.Server({
+              noServer: true,
+            });
+
+            // TODO: Improve implementation based in https://github.com/fastify/fastify-websocket/blob/master/index.js
+
+            instance.server.on('upgrade', async (rawRequest: IncomingMessage, socket: Socket, head: Buffer) => {
+              // TODO: Strip parameters from url OR re-route to fastify routing using "instance.routing" untyped bind
+              if (rawRequest.url !== path) {
+                return fallbackWebSocket.handleUpgrade(rawRequest, socket, head, (webSocket, _request) => {
+                  webSocket.close(1001);
+                });
+              }
+
+              const protocol = rawRequest.headers['sec-websocket-protocol'];
+
+              switch (subscriptionsServer[0]) {
+                case 'both': {
+                  const server = subscriptionsServer[1](protocol);
+
+                  return server.handleUpgrade(rawRequest, socket, head, ws => {
+                    server.emit('connection', ws, rawRequest);
+                  });
+                }
+                case 'new':
+                case 'legacy': {
+                  const server = subscriptionsServer[1];
+
+                  return server.handleUpgrade(rawRequest, socket, head, ws => {
+                    server.emit('connection', ws, rawRequest);
+                  });
+                }
+              }
+            });
+          }
 
           instance.route({
             method: ['GET', 'POST'],
