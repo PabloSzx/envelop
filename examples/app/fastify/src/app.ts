@@ -29,4 +29,5 @@ export const { registerModule, buildApp, gql } = CreateFastifyApp({
     DateTime: true,
   },
   buildContext,
+  subscriptions: true,
 });

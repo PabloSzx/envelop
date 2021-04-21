@@ -23,6 +23,11 @@ export type Query = {
   hello2: Scalars['String'];
 };
 
+export type Subscription = {
+  __typename?: 'Subscription';
+  hello: Scalars['String'];
+};
+
 export type ResolverTypeWrapper<T> = Promise<T> | T;
 
 export type LegacyStitchingResolver<TResult, TParent, TContext, TArgs> = {
@@ -107,6 +112,7 @@ export type ResolversTypes = {
   DateTime: ResolverTypeWrapper<import('@envelop/app').DeepPartial<Scalars['DateTime']>>;
   Query: ResolverTypeWrapper<{}>;
   String: ResolverTypeWrapper<import('@envelop/app').DeepPartial<Scalars['String']>>;
+  Subscription: ResolverTypeWrapper<{}>;
   Boolean: ResolverTypeWrapper<import('@envelop/app').DeepPartial<Scalars['Boolean']>>;
 };
 
@@ -115,6 +121,7 @@ export type ResolversParentTypes = {
   DateTime: import('@envelop/app').DeepPartial<Scalars['DateTime']>;
   Query: {};
   String: import('@envelop/app').DeepPartial<Scalars['String']>;
+  Subscription: {};
   Boolean: import('@envelop/app').DeepPartial<Scalars['Boolean']>;
 };
 
@@ -130,9 +137,17 @@ export type QueryResolvers<
   hello2?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
 };
 
+export type SubscriptionResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes['Subscription'] = ResolversParentTypes['Subscription']
+> = {
+  hello?: SubscriptionResolver<ResolversTypes['String'], 'hello', ParentType, ContextType>;
+};
+
 export type Resolvers<ContextType = any> = {
   DateTime?: GraphQLScalarType;
   Query?: QueryResolvers<ContextType>;
+  Subscription?: SubscriptionResolvers<ContextType>;
 };
 
 /**

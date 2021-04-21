@@ -1,8 +1,13 @@
 import { registerModule, gql } from '../app';
 
+const sleep = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
+
 registerModule(
   gql`
     type Query {
+      hello: String!
+    }
+    type Subscription {
       hello: String!
     }
   `,
@@ -11,6 +16,22 @@ registerModule(
       Query: {
         hello(_root, _args, _ctx) {
           return 'hello';
+        },
+      },
+      Subscription: {
+        hello: {
+          async *subscribe() {
+            for (let i = 1; i <= 5; ++i) {
+              await sleep(100);
+
+              yield {
+                hello: 'Hello World ' + i,
+              };
+            }
+            yield {
+              hello: 'Done!',
+            };
+          },
         },
       },
     },

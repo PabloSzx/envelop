@@ -1,5 +1,6 @@
 schema {
   query: Query
+  subscription: Subscription
 }
 
 """
@@ -10,4 +11,8 @@ scalar DateTime
 type Query {
   hello: String!
   hello2: String!
+}
+
+type Subscription {
+  hello: String!
 }
