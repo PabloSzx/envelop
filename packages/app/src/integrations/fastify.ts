@@ -4,14 +4,13 @@ import { getGraphQLParameters, processRequest } from 'graphql-helix';
 import { gql, Module, TypeDefs } from 'graphql-modules';
 
 import { BaseEnvelopAppOptions, createEnvelopAppFactory } from '../common/index.js';
-import { CreateSubscriptionsServer, SubscriptionsFlag } from '../common/subscriptions.js';
+import { BuildSubscriptionContext, CreateSubscriptionsServer, SubscriptionsFlag } from '../common/subscriptions.js';
 
 import type { ExecutionContext } from 'graphql-helix/dist/types';
 import type { FastifyPluginCallback, FastifyReply, FastifyRequest } from 'fastify';
 import type { Server, IncomingMessage } from 'http';
 import type { EnvelopModuleConfig } from '../common/types';
 import type { Socket } from 'net';
-
 export interface FastifyEnvelopApp {
   EnvelopAppPlugin: FastifyPluginCallback<Record<never, never>, Server>;
 }
@@ -28,8 +27,12 @@ export interface FastifyEnvelopAppOptions extends BaseEnvelopAppOptions {
   buildContext?: (args: FastifyContextArgs) => Record<string, unknown> | Promise<Record<string, unknown>>;
 
   /**
+   * Build Context for subscriptions
+   */
+  buildSubscriptionsContext?: BuildSubscriptionContext;
+
+  /**
    * Enable Subscriptions
-   * TODO: Detect if schema has subscriptions and autoenable by default
    */
   subscriptions?: SubscriptionsFlag;
 }
@@ -53,9 +56,7 @@ export function CreateFastifyApp(config: FastifyEnvelopAppOptions = {}): Fastify
   const { appBuilder, gql, modules, registerModule } = createEnvelopAppFactory(config, {
     contextTypeName: 'FastifyEnvelopContext',
   });
-  const { buildContext, subscriptions, path = '/graphql' } = config;
-
-  const wsPromise = subscriptions ? import('ws').then(v => v.default) : null;
+  const { buildContext, subscriptions, path = '/graphql', buildSubscriptionsContext } = config;
 
   const subscriptionsClientFactoryPromise = CreateSubscriptionsServer(subscriptions);
 
@@ -77,21 +78,21 @@ export function CreateFastifyApp(config: FastifyEnvelopAppOptions = {}): Fastify
             const subscriptionsClientFactory = await subscriptionsClientFactoryPromise;
             assert(subscriptionsClientFactory);
 
-            const subscriptionsServer = subscriptionsClientFactory(getEnveloped);
+            const subscriptionsServer = subscriptionsClientFactory(getEnveloped, buildSubscriptionsContext);
 
-            assert(wsPromise);
-            const ws = await wsPromise;
+            const wsServers = subscriptionsServer[0] === 'both' ? subscriptionsServer[2] : ([subscriptionsServer[1]] as const);
 
-            const fallbackWebSocket = new ws.Server({
-              noServer: true,
-            });
+            function getPathname(path?: string) {
+              return path && new URL('http://_' + path).pathname;
+            }
 
-            // TODO: Improve implementation based in https://github.com/fastify/fastify-websocket/blob/master/index.js
+            let closing = false;
 
             instance.server.on('upgrade', async (rawRequest: IncomingMessage, socket: Socket, head: Buffer) => {
-              // TODO: Strip parameters from url OR re-route to fastify routing using "instance.routing" untyped bind
-              if (rawRequest.url !== path) {
-                return fallbackWebSocket.handleUpgrade(rawRequest, socket, head, (webSocket, _request) => {
+              const requestUrl = getPathname(rawRequest.url);
+
+              if (closing || requestUrl !== path) {
+                return wsServers[0].handleUpgrade(rawRequest, socket, head, (webSocket, _request) => {
                   webSocket.close(1001);
                 });
               }
@@ -116,6 +117,31 @@ export function CreateFastifyApp(config: FastifyEnvelopAppOptions = {}): Fastify
                 }
               }
             });
+
+            instance.addHook('onClose', function (_fastify, done) {
+              Promise.all(
+                wsServers.map(
+                  server => new Promise<Error | undefined>(resolve => server.close(err => resolve(err)))
+                )
+              ).then(() => done(), done);
+            });
+
+            const oldClose = instance.server.close;
+
+            // Monkeypatching fastify.server.close as done already in https://github.com/fastify/fastify-websocket/blob/master/index.js#L134
+            instance.server.close = function (cb) {
+              closing = true;
+
+              oldClose.call(this, cb);
+
+              for (const server of wsServers) {
+                for (const client of server.clients) {
+                  client.close();
+                }
+              }
+
+              return instance.server;
+            };
           }
 
           instance.route({

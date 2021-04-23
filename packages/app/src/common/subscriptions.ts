@@ -2,20 +2,41 @@ import assert from 'assert';
 
 import { Envelop } from '@envelop/types';
 
-import type { Server as SocketServer } from 'ws';
-import type { Disposable } from 'graphql-ws/lib/types';
-import type { SubscriptionServer } from 'subscriptions-transport-ws/dist/server';
+import type WebSocket from 'ws';
+import type { IncomingMessage } from 'http';
 export type SubscriptionsFlag = boolean | 'legacy' | 'all';
+
+export interface SubscriptionContextArgs {
+  request: IncomingMessage;
+  connectionParams?: Readonly<Record<string, unknown>>;
+}
+
+export type BuildSubscriptionContext = (
+  args: SubscriptionContextArgs
+) => Record<string, unknown> | Promise<Record<string, unknown>>;
 
 export type CommonSubscriptionsServer = Promise<
   | ((
-      getEnveloped: Envelop<unknown>
+      getEnveloped: Envelop<unknown>,
+      customContext: BuildSubscriptionContext | undefined
     ) =>
-      | readonly ['new', SocketServer, Disposable]
-      | readonly ['both', (protocol: string | string[] | undefined) => SocketServer]
-      | readonly ['legacy', SocketServer, SubscriptionServer])
+      | readonly ['new', WebSocket.Server]
+      | readonly [
+          'both',
+          (protocol: string | string[] | undefined) => WebSocket.Server,
+          readonly [WebSocket.Server, WebSocket.Server]
+        ]
+      | readonly ['legacy', WebSocket.Server])
   | null
 >;
+
+type SubscriptionsTransportOnConnectArgs = [
+  connectionParams: Record<string, unknown> | undefined,
+  socket: WebSocket,
+  connectionContext: {
+    request: IncomingMessage;
+  }
+];
 
 export const CreateSubscriptionsServer = async (flag: SubscriptionsFlag | undefined): CommonSubscriptionsServer => {
   if (!flag) return null;
@@ -36,7 +57,7 @@ export const CreateSubscriptionsServer = async (flag: SubscriptionsFlag | undefi
     flag === 'all' || flag === true ? import('graphql-ws/lib/use/ws').then(v => v.useServer) : null,
   ]);
 
-  const wsServer: SocketServer | [graphqlWsServer: SocketServer, subWsServer: SocketServer] =
+  const wsServer: WebSocket.Server | [graphqlWsServer: WebSocket.Server, subWsServer: WebSocket.Server] =
     flag === 'all'
       ? [
           /**
@@ -56,23 +77,35 @@ export const CreateSubscriptionsServer = async (flag: SubscriptionsFlag | undefi
           noServer: true,
         });
 
-  return function (getEnveloped: Envelop<unknown>) {
+  return function (getEnveloped, customCtxFactory) {
     const { schema, execute, subscribe, contextFactory } = getEnveloped();
-    if (flag === true) {
-      assert(!Array.isArray(wsServer), 'Received more than 1 single server');
-      assert(useGraphQLWSServer, 'useGraphQLWSServer not found');
 
-      const graphqlWsServer = useGraphQLWSServer(
+    async function getContext(contextArgs: SubscriptionContextArgs) {
+      const ctx = {};
+
+      const [envelopCtx, customCtx] = await Promise.all([contextFactory(contextArgs), customCtxFactory?.(contextArgs)]);
+      Object.assign(ctx, envelopCtx, customCtx);
+
+      return ctx;
+    }
+
+    if (flag === true) {
+      assert(!Array.isArray(wsServer));
+      assert(useGraphQLWSServer);
+
+      useGraphQLWSServer(
         {
           schema,
           execute,
           subscribe,
-          context: ctx => contextFactory(ctx),
+          context: ({ connectionParams, extra: { request } }) => {
+            return getContext({ connectionParams, request });
+          },
         },
         wsServer
       );
 
-      return ['new', wsServer, graphqlWsServer] as const;
+      return ['new', wsServer] as const;
     } else if (flag === 'all') {
       assert(subscriptionsTransportWs);
       assert(useGraphQLWSServer);
@@ -81,7 +114,9 @@ export const CreateSubscriptionsServer = async (flag: SubscriptionsFlag | undefi
       useGraphQLWSServer(
         {
           schema,
-          context: ctx => contextFactory(ctx),
+          context: ({ connectionParams, extra: { request } }) => {
+            return getContext({ connectionParams, request });
+          },
           execute,
           subscribe,
         },
@@ -93,8 +128,8 @@ export const CreateSubscriptionsServer = async (flag: SubscriptionsFlag | undefi
           schema,
           execute,
           subscribe,
-          onConnect() {
-            return contextFactory({});
+          onConnect(...[connectionParams, , { request }]: SubscriptionsTransportOnConnectArgs) {
+            return getContext({ connectionParams, request });
           },
         },
         wsServer[1]
@@ -109,26 +144,25 @@ export const CreateSubscriptionsServer = async (flag: SubscriptionsFlag | undefi
             ? wsServer[1]
             : wsServer[0];
         },
+        wsServer,
       ] as const;
     }
 
     assert(subscriptionsTransportWs);
     assert(!Array.isArray(wsServer));
 
-    return [
-      'legacy',
-      wsServer,
-      subscriptionsTransportWs.create(
-        {
-          schema,
-          execute,
-          subscribe,
-          onConnect() {
-            return contextFactory({});
-          },
+    subscriptionsTransportWs.create(
+      {
+        schema,
+        execute,
+        subscribe,
+        onConnect(...[connectionParams, , { request }]: SubscriptionsTransportOnConnectArgs) {
+          return getContext({ connectionParams, request });
         },
-        wsServer
-      ),
-    ] as const;
+      },
+      wsServer
+    );
+
+    return ['legacy', wsServer] as const;
   };
 };

@@ -1,8 +1,7 @@
 import { CreateFastifyApp, FastifyContextArgs, InferFunctionReturn } from '@envelop/app';
 
-function buildContext({ reply, request }: FastifyContextArgs) {
+function buildContext({ request }: FastifyContextArgs) {
   return {
-    reply,
     request,
     foo: 'bar',
   };
@@ -29,5 +28,11 @@ export const { registerModule, buildApp, gql } = CreateFastifyApp({
     DateTime: true,
   },
   buildContext,
-  subscriptions: true,
+  buildSubscriptionsContext({ request }) {
+    return {
+      request,
+      foo: 'baz',
+    };
+  },
+  subscriptions: 'all',
 });

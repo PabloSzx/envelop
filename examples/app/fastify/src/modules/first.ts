@@ -20,7 +20,7 @@ registerModule(
       },
       Subscription: {
         hello: {
-          async *subscribe() {
+          async *subscribe(_root, _args, _ctx) {
             for (let i = 1; i <= 5; ++i) {
               await sleep(100);
 
