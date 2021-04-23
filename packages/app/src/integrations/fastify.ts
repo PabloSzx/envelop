@@ -146,7 +146,7 @@ export function CreateFastifyApp(config: FastifyEnvelopAppOptions = {}): Fastify
 
           instance.route({
             method: ['GET', 'POST'],
-            url: '/graphql',
+            url: path,
             async handler(req, reply) {
               const { parse, validate, contextFactory: contextFactoryEnvelop, execute, schema, subscribe } = getEnveloped();
 

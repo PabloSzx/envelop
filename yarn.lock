@@ -1558,7 +1558,7 @@
   dependencies:
     "@types/express" "*"
 
-"@types/express@*", "@types/express@4.17.11":
+"@types/express@*", "@types/express@4.17.11", "@types/express@^4.17.11":
   version "4.17.11"
   resolved "https://registry.yarnpkg.com/@types/express/-/express-4.17.11.tgz#debe3caa6f8e5fcda96b47bd54e2f40c4ee59545"
   integrity sha512-no+R6rW60JEc59977wIxreQVsIEOAYwgCqldrA/vkpCnbD7MqTefO97lmoBe4WE0F156bC4uLSP1XHDOySnChg==
@@ -1968,19 +1968,27 @@ ajv@^8.0.1:
     require-from-string "^2.0.2"
     uri-js "^4.2.2"
 
-altair-fastify-plugin@^4.0.1:
-  version "4.0.1"
-  resolved "https://registry.yarnpkg.com/altair-fastify-plugin/-/altair-fastify-plugin-4.0.1.tgz#a27d7f7003eff61062f1fbd1445081a9e560f4b1"
-  integrity sha512-Q+2Qr6z1+w38w28GTU/bqsYALkjQ3DIK0ORceB03lR1BP9J0u/r3v70ujA3YrzJQcd8iij2Vd40/R1pnApE+aA==
+altair-express-middleware@^4.0.2:
+  version "4.0.2"
+  resolved "https://registry.yarnpkg.com/altair-express-middleware/-/altair-express-middleware-4.0.2.tgz#f51302e1525af39db9eba3cbcaf823fd50a89b4f"
+  integrity sha512-WO3cJl9lV960XlABk+TVLs9X2pb2xGlJnhCagc+jm9X+o73zxJT2GclRmhnVeJkkFI39gOGU9n87xqpXByHLbQ==
   dependencies:
-    altair-static "^4.0.1"
+    altair-static "^4.0.2"
+    express "^4.16.2"
+
+altair-fastify-plugin@^4.0.2:
+  version "4.0.2"
+  resolved "https://registry.yarnpkg.com/altair-fastify-plugin/-/altair-fastify-plugin-4.0.2.tgz#be3d253456c0c9a072fe9c5e418a0f7a193102fa"
+  integrity sha512-rGMQAXyhuOpgW8Wvu+f8kSUPhOHFna4Gzpp7Z4gjJ70xgYu3244Sf8xqcH78ARlAnSYvxMcaqLtbE+35rTWv5Q==
+  dependencies:
+    altair-static "^4.0.2"
     fastify-plugin "^2.3.4"
     fastify-static "^3.2.1"
 
-altair-static@^4.0.1:
-  version "4.0.1"
-  resolved "https://registry.yarnpkg.com/altair-static/-/altair-static-4.0.1.tgz#b24fe997bc66fa15d8348f2c4d66738447f84959"
-  integrity sha512-6Z7q/pkZ958eWdaGlWNDVkmDxgGDDjuQs1Xn5fmLpXqV3ZDzSJj7YFmLQG9PpK8aeOu5ov9InIAgJDpwXr/dyQ==
+altair-static@^4.0.2:
+  version "4.0.2"
+  resolved "https://registry.yarnpkg.com/altair-static/-/altair-static-4.0.2.tgz#3a4145323dfdaf38adfeb90a68723f9494e3f2f2"
+  integrity sha512-FKArM7its4Z8N/zUBDzPCWVOSF2pKasb1CWQjT+DoIgLk6XKcNhmXJ+4lL77Xrjt1qOy4esCJfyV2U3AX0/CkA==
 
 ansi-align@^2.0.0:
   version "2.0.0"
@@ -3908,7 +3916,7 @@ expect@^26.6.2:
     jest-message-util "^26.6.2"
     jest-regex-util "^26.0.0"
 
-express@^4.0.0, express@^4.17.1:
+express@^4.0.0, express@^4.16.2, express@^4.17.1:
   version "4.17.1"
   resolved "https://registry.yarnpkg.com/express/-/express-4.17.1.tgz#4491fc38605cf51f8629d39c2b5d026f98a4c134"
   integrity sha512-mHJ9O79RqluphRrcw2X/GTh3k9tVv8YcoyY4Kkh4WDMUYKRZUq0h1o0w2rrrxBqM7VoeUVqgb27xlEMXTnYt4g==

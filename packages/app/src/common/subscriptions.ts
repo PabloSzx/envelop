@@ -81,12 +81,10 @@ export const CreateSubscriptionsServer = async (flag: SubscriptionsFlag | undefi
     const { schema, execute, subscribe, contextFactory } = getEnveloped();
 
     async function getContext(contextArgs: SubscriptionContextArgs) {
-      const ctx = {};
-
       const [envelopCtx, customCtx] = await Promise.all([contextFactory(contextArgs), customCtxFactory?.(contextArgs)]);
-      Object.assign(ctx, envelopCtx, customCtx);
+      Object.assign(envelopCtx, customCtx);
 
-      return ctx;
+      return envelopCtx;
     }
 
     if (flag === true) {

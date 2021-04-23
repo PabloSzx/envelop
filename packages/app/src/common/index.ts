@@ -1,10 +1,10 @@
 import { Application, ApplicationConfig, createApplication, createModule, gql, Module, TypeDefs } from 'graphql-modules';
 import { resolvers as scalarResolvers, typeDefs as scalarTypeDefs } from 'graphql-scalars';
 
-import { Envelop, envelop } from '@envelop/core';
+import { Envelop, envelop, useSchema } from '@envelop/core';
 import { useGraphQLModules } from '@envelop/graphql-modules';
 
-import type { GraphQLScalarType } from 'graphql';
+import type { GraphQLScalarType, GraphQLSchema } from 'graphql';
 import type { EnvelopOptions } from '@envelop/core';
 
 import type { EnvelopModuleConfig } from './types';
@@ -23,11 +23,18 @@ export interface EnvelopAppFactoryType {
   modules: Module[];
 }
 
-export interface BaseEnvelopAppOptions extends Partial<EnvelopOptions>, Partial<Omit<ApplicationConfig, 'modules'>> {
+export interface BaseEnvelopAppOptions
+  extends Partial<Omit<EnvelopOptions, 'initialSchema'>>,
+    Partial<Omit<ApplicationConfig, 'modules'>> {
   /**
    * @default "/graphql"
    */
   path?: string;
+
+  /**
+   * Pre-built schema
+   */
+  schema?: GraphQLSchema;
 
   /**
    * Enable code generation, by default it's enabled if `NODE_ENV` is not `production` nor `test`
@@ -138,7 +145,7 @@ export function createEnvelopAppFactory(
         outputSchema,
         enableCodegen = process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test',
         plugins = [],
-        initialSchema,
+        schema: initialSchema,
         extends: envelopExtends,
         middlewares,
         providers,
@@ -152,23 +159,26 @@ export function createEnvelopAppFactory(
         schemaBuilder,
       });
 
+      const envelopPlugins = modules.length ? [useGraphQLModules(modulesApplication), ...plugins] : [...plugins];
+
+      if (initialSchema) envelopPlugins.unshift(useSchema(initialSchema));
+
       const getEnveloped = envelop({
-        plugins: modules.length ? [useGraphQLModules(modulesApplication), ...plugins] : plugins,
-        initialSchema,
+        plugins: envelopPlugins,
         extends: envelopExtends,
       });
 
-      const { schema } = getEnveloped();
+      const { schema: envelopSchema } = getEnveloped();
 
       if (enableCodegen) {
         if (outputSchema) {
           import('./outputSchema.js').then(({ writeOutputSchema }) => {
-            writeOutputSchema(schema, config.outputSchema!).catch(onCodegenError);
+            writeOutputSchema(envelopSchema, config.outputSchema!).catch(onCodegenError);
           });
         }
 
         import('./codegen.js').then(({ EnvelopCodegen }) => {
-          EnvelopCodegen(schema, config, internalConfig).catch(onCodegenError);
+          EnvelopCodegen(envelopSchema, config, internalConfig).catch(onCodegenError);
         });
       }
 
