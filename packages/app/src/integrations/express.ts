@@ -1,13 +1,22 @@
+import assert from 'assert';
 import { getGraphQLParameters, processRequest } from 'graphql-helix';
-import { ExecutionContext } from 'graphql-helix/dist/types';
 import { gql, Module, TypeDefs } from 'graphql-modules';
+import { createServer, IncomingMessage, Server } from 'http';
 
+import { IDEOptions, handleIDE } from '../common/ide.js';
 import { BaseEnvelopAppOptions, createEnvelopAppFactory } from '../common/index.js';
+import { BuildSubscriptionsContext, CreateSubscriptionsServer, SubscriptionsFlag } from '../common/subscriptions.js';
+import { getPathname } from '../common/url.js';
 
-import type { Request, Response, Router } from 'express';
+import type { Socket } from 'net';
+import type { Envelop } from '@envelop/types';
+import type { ExecutionContext } from 'graphql-helix/dist/types';
+import type { Request, Response, Router, Express } from 'express';
 import type { EnvelopModuleConfig } from '../common/types';
+import type { OptionsJson as BodyParserOptions } from 'body-parser';
+
 export interface ExpressEnvelopApp {
-  EnvelopAppRouter: Router;
+  EnvelopApp: Router;
 }
 
 export interface ExpressContextArgs {
@@ -17,9 +26,31 @@ export interface ExpressContextArgs {
 
 export interface ExpressEnvelopAppOptions extends BaseEnvelopAppOptions {
   /**
+   * JSON body-parser options
+   */
+  bodyParserJSONOptions?: BodyParserOptions;
+
+  /**
    * Build Context
    */
   buildContext?: (args: ExpressContextArgs) => Record<string, unknown> | Promise<Record<string, unknown>>;
+
+  /**
+   * Build Context for subscriptions
+   */
+  buildSubscriptionsContext?: BuildSubscriptionsContext;
+
+  /**
+   * Enable Subscriptions
+   */
+  subscriptions?: SubscriptionsFlag;
+
+  /**
+   * IDE configuration
+   *
+   * @default { altair: true, graphiql: false }
+   */
+  ide?: IDEOptions;
 }
 
 export interface ExpressEnvelopContext {
@@ -27,11 +58,17 @@ export interface ExpressEnvelopContext {
   response: Response;
 }
 
+export interface BuildExpressAppOptions {
+  app: Express;
+  server?: Server;
+  prepare?: () => void | Promise<void>;
+}
+
 export interface ExpressEnvelopAppBuilder {
   gql: typeof gql;
   modules: Module[];
   registerModule: (typeDefs: TypeDefs, options?: EnvelopModuleConfig | undefined) => Module;
-  buildApp(prepare: () => void | Promise<void>): Promise<ExpressEnvelopApp>;
+  buildApp(options: BuildExpressAppOptions): Promise<ExpressEnvelopApp>;
 }
 
 export function CreateExpressApp(config: ExpressEnvelopAppOptions = {}): ExpressEnvelopAppBuilder {
@@ -39,29 +76,112 @@ export function CreateExpressApp(config: ExpressEnvelopAppOptions = {}): Express
     contextTypeName: 'ExpressEnvelopContext',
   });
 
-  const { buildContext, path = '/graphql' } = config;
+  const {
+    buildContext,
+    path = '/graphql',
+    subscriptions,
+    buildSubscriptionsContext,
+    bodyParserJSONOptions: jsonOptions,
+    ide,
+  } = config;
 
-  async function buildApp(prepare?: () => void | Promise<void>): Promise<ExpressEnvelopApp> {
+  const subscriptionsClientFactoryPromise = CreateSubscriptionsServer(subscriptions);
+
+  async function handleSubscriptions(getEnveloped: Envelop<unknown>, appInstance: Express, optionsServer: Server | undefined) {
+    if (!subscriptions) return;
+
+    const subscriptionsClientFactory = await subscriptionsClientFactoryPromise;
+    assert(subscriptionsClientFactory);
+
+    const subscriptionsServer = subscriptionsClientFactory(getEnveloped, buildSubscriptionsContext);
+
+    const wsServers = subscriptionsServer[0] === 'both' ? subscriptionsServer[2] : ([subscriptionsServer[1]] as const);
+
+    const server = optionsServer || createServer(appInstance);
+
+    appInstance.listen = (...args: any[]) => {
+      return server.listen(...args);
+    };
+
+    let closing = false;
+
+    server.on('upgrade', (rawRequest: IncomingMessage, socket: Socket, head: Buffer) => {
+      const requestUrl = getPathname(rawRequest.url);
+
+      if (closing || requestUrl !== path) {
+        return wsServers[0].handleUpgrade(rawRequest, socket, head, webSocket => {
+          webSocket.close(1001);
+        });
+      }
+
+      const protocol = rawRequest.headers['sec-websocket-protocol'];
+
+      switch (subscriptionsServer[0]) {
+        case 'both': {
+          const server = subscriptionsServer[1](protocol);
+
+          return server.handleUpgrade(rawRequest, socket, head, ws => {
+            server.emit('connection', ws, rawRequest);
+          });
+        }
+        case 'new':
+        case 'legacy': {
+          const server = subscriptionsServer[1];
+
+          return server.handleUpgrade(rawRequest, socket, head, ws => {
+            server.emit('connection', ws, rawRequest);
+          });
+        }
+      }
+    });
+
+    const oldClose = server.close;
+    server.close = function (cb) {
+      closing = true;
+
+      oldClose.call(this, cb);
+
+      for (const server of wsServers) {
+        for (const client of server.clients) {
+          client.close();
+        }
+      }
+
+      return server;
+    };
+  }
+
+  async function buildApp(buildOptions: BuildExpressAppOptions): Promise<ExpressEnvelopApp> {
     return appBuilder({
-      prepare,
+      prepare: buildOptions.prepare,
       async adapterFactory(getEnveloped) {
         const { Router, json } = await import('express');
 
-        const EnvelopAppRouter = Router();
+        const EnvelopApp = Router();
 
-        EnvelopAppRouter.use(json());
+        EnvelopApp.use(json(jsonOptions));
 
-        const { altairExpress } = await import('altair-express-middleware');
+        const IDEPromise = handleIDE(ide, {
+          async handleAltair(options) {
+            const { altairExpress } = await import('altair-express-middleware');
 
-        EnvelopAppRouter.use(
-          '/altair',
-          altairExpress({
-            endpointURL: path,
-            subscriptionsEndpoint: `ws://localhost:3000/${path}`,
-          })
-        );
+            EnvelopApp.use(
+              '/altair',
+              altairExpress({
+                ...options,
+              })
+            );
+          },
+          handleGraphiQL(options) {
+            EnvelopApp.use(options.path, (_req, res) => {
+              res.type('html').send(options.html);
+            });
+          },
+        });
 
-        EnvelopAppRouter.use(path, async (req, res) => {
+        const subscriptionsPromise = handleSubscriptions(getEnveloped, buildOptions.app, buildOptions.server);
+
+        EnvelopApp.use(path, async (req, res) => {
           const request = {
             body: req.body,
             headers: req.headers,
@@ -148,8 +268,10 @@ export function CreateExpressApp(config: ExpressEnvelopAppOptions = {}): Express
           }
         });
 
+        await Promise.all([IDEPromise, subscriptionsPromise]);
+
         return {
-          EnvelopAppRouter,
+          EnvelopApp,
         };
       },
     });

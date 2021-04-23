@@ -28,4 +28,9 @@ export const { registerModule, buildApp, gql } = CreateExpressApp({
     DateTime: true,
   },
   buildContext,
+  subscriptions: 'all',
+  ide: {
+    altair: true,
+    graphiql: true,
+  },
 });

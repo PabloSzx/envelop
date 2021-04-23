@@ -35,4 +35,8 @@ export const { registerModule, buildApp, gql } = CreateFastifyApp({
     };
   },
   subscriptions: 'all',
+  ide: {
+    altair: true,
+    graphiql: true,
+  },
 });

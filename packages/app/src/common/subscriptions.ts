@@ -1,6 +1,6 @@
 import assert from 'assert';
 
-import { Envelop } from '@envelop/types';
+import type { Envelop } from '@envelop/types';
 
 import type WebSocket from 'ws';
 import type { IncomingMessage } from 'http';
@@ -11,14 +11,14 @@ export interface SubscriptionContextArgs {
   connectionParams?: Readonly<Record<string, unknown>>;
 }
 
-export type BuildSubscriptionContext = (
+export type BuildSubscriptionsContext = (
   args: SubscriptionContextArgs
 ) => Record<string, unknown> | Promise<Record<string, unknown>>;
 
 export type CommonSubscriptionsServer = Promise<
   | ((
       getEnveloped: Envelop<unknown>,
-      customContext: BuildSubscriptionContext | undefined
+      customContext: BuildSubscriptionsContext | undefined
     ) =>
       | readonly ['new', WebSocket.Server]
       | readonly [

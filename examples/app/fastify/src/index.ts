@@ -8,8 +8,8 @@ const fastifyApp = Fastify({
 
 buildApp(async () => {
   await import('./modules');
-}).then(({ EnvelopAppPlugin }) => {
-  fastifyApp.register(EnvelopAppPlugin);
+}).then(({ EnvelopApp }) => {
+  fastifyApp.register(EnvelopApp);
 
   fastifyApp.listen(3000);
 });

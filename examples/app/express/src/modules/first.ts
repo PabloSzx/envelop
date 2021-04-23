@@ -15,7 +15,6 @@ registerModule(
     resolvers: {
       Query: {
         hello(_root, _args, _ctx) {
-          console.log(18, _ctx);
           return 'hello';
         },
       },
