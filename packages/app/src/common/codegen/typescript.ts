@@ -12,7 +12,7 @@ import { writeFileIfChanged } from './write.js';
 
 import type { TypeScriptPluginConfig } from '@graphql-codegen/typescript';
 import type { TypeScriptResolversPluginConfig } from '@graphql-codegen/typescript-resolvers/config';
-import type { BaseEnvelopAppOptions, InternalEnvelopConfig } from './app';
+import type { BaseEnvelopAppOptions, InternalEnvelopConfig } from '../app';
 
 export interface CodegenConfig extends TypeScriptPluginConfig, TypeScriptResolversPluginConfig {
   /**
@@ -53,7 +53,7 @@ export interface CodegenConfig extends TypeScriptPluginConfig, TypeScriptResolve
 
 export async function EnvelopCodegen(
   executableSchema: GraphQLSchema,
-  options: BaseEnvelopAppOptions,
+  options: BaseEnvelopAppOptions<never>,
   internalConfig: InternalEnvelopConfig
 ): Promise<void> {
   const moduleName = `@envelop/app/${internalConfig.moduleName}`;

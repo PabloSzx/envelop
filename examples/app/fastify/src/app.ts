@@ -1,4 +1,4 @@
-import { CreateApp, BuildContextArgs, InferFunctionReturn } from '@envelop/app/fastify';
+import { CreateApp, BuildContextArgs, InferFunctionReturn, gql } from '@envelop/app/fastify';
 
 function buildContext({ request }: BuildContextArgs) {
   return {
@@ -8,10 +8,10 @@ function buildContext({ request }: BuildContextArgs) {
 }
 
 declare module '@envelop/app/fastify' {
-  interface FastifyEnvelopContext extends InferFunctionReturn<typeof buildContext> {}
+  interface EnvelopContext extends InferFunctionReturn<typeof buildContext> {}
 }
 
-export const { registerModule, buildApp, gql } = CreateApp({
+export const { registerModule, buildApp } = CreateApp({
   codegen: {
     federation: true,
     deepPartialResolvers: true,
@@ -25,7 +25,7 @@ export const { registerModule, buildApp, gql } = CreateApp({
   },
   outputSchema: './schema.gql',
   scalars: {
-    DateTime: true,
+    DateTime: 1,
   },
   buildContext,
   buildWebsocketSubscriptionsContext({ request }) {
@@ -42,4 +42,20 @@ export const { registerModule, buildApp, gql } = CreateApp({
   routeOptions: {
     logLevel: 'info',
   },
+  schema: {
+    typeDefs: gql`
+      type Query {
+        hello3: String!
+      }
+    `,
+    resolvers: {
+      Query: {
+        hello3(_root, _args, _ctx) {
+          return 'zzz';
+        },
+      },
+    },
+  },
 });
+
+export { gql };

@@ -1,7 +1,9 @@
 import { renderGraphiQL } from 'graphql-helix';
+
+import { stripUndefineds } from './utils/object.js';
+
 import type { RenderOptions } from 'altair-static';
 import type { RenderGraphiQLOptions } from 'graphql-helix/dist/types';
-import { stripUndefineds } from './utils.js';
 
 export interface GraphiQLOptions extends RenderGraphiQLOptions {
   /**

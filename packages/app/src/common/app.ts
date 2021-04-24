@@ -1,14 +1,16 @@
+import { isSchema } from 'graphql';
 import { Application, ApplicationConfig, createApplication, createModule, gql, Module, TypeDefs } from 'graphql-modules';
-import { resolvers as scalarResolvers, typeDefs as scalarTypeDefs } from 'graphql-scalars';
 
 import { Envelop, envelop, useSchema } from '@envelop/core';
 import { useGraphQLModules } from '@envelop/graphql-modules';
+import { mergeSchemasAsync, MergeSchemasConfig } from '@graphql-tools/merge';
+import { IExecutableSchemaDefinition, makeExecutableSchema } from '@graphql-tools/schema';
 
-import type { GraphQLScalarType, GraphQLSchema } from 'graphql';
+import type { ScalarsConfig } from './scalars';
+import type { GraphQLSchema } from 'graphql';
 import type { EnvelopOptions } from '@envelop/core';
-
-import type { EnvelopModuleConfig } from './types';
-import type { CodegenConfig } from './codegen';
+import type { EnvelopContext, EnvelopModuleConfig, EnvelopResolvers } from './types';
+import type { CodegenConfig } from './codegen/typescript';
 
 export type AdapterFactory<T> = (envelop: Envelop<unknown>, modulesApplication: Application) => T;
 
@@ -28,13 +30,23 @@ export interface EnvelopAppFactoryType {
   modules: Module[];
 }
 
-export interface BaseEnvelopAppOptions
-  extends Partial<Omit<EnvelopOptions, 'initialSchema'>>,
-    Partial<Omit<ApplicationConfig, 'modules'>> {
+export interface ExecutableSchemaDefinition<TContext = EnvelopContext>
+  extends Omit<IExecutableSchemaDefinition<TContext>, 'resolvers'> {
+  resolvers?: EnvelopResolvers<TContext> | EnvelopResolvers<TContext>[];
+}
+
+export interface BaseEnvelopAppOptions<TContext>
+  extends Partial<Omit<EnvelopOptions, 'initialSchema' | 'extends'>>,
+    Partial<ApplicationConfig> {
   /**
    * Pre-built schema
    */
-  schema?: GraphQLSchema;
+  schema?: GraphQLSchema | ExecutableSchemaDefinition<TContext> | Array<GraphQLSchema | ExecutableSchemaDefinition<TContext>>;
+
+  /**
+   * Customize configuration of schema merging
+   */
+  mergeSchemasConfig?: Omit<MergeSchemasConfig, 'schemas'>;
 
   /**
    * Enable code generation, by default it's enabled if `NODE_ENV` is not `production` nor `test`
@@ -42,10 +54,12 @@ export interface BaseEnvelopAppOptions
    * @default process.env.NODE_ENV !== "production" && process.env.NODE_ENV !== "test"
    */
   enableCodegen?: boolean;
+
   /**
    * Add custom codegen config
    */
   codegen?: CodegenConfig;
+
   /**
    * Output schema target path or flag
    *
@@ -55,59 +69,20 @@ export interface BaseEnvelopAppOptions
    * @default false
    */
   outputSchema?: boolean | string;
+
   /**
    * Add scalars
    */
-  scalars?: '*' | { [k in keyof typeof scalarResolvers]?: boolean };
+  scalars?: ScalarsConfig;
 }
 
-export function createEnvelopAppFactory(
-  config: BaseEnvelopAppOptions,
+export function createEnvelopAppFactory<TContext>(
+  config: BaseEnvelopAppOptions<TContext>,
   internalConfig: InternalEnvelopConfig
 ): EnvelopAppFactoryType {
-  const modules: Module[] = [];
+  const factoryModules = config.modules ? [...config.modules] : [];
+
   let acumId = 0;
-
-  const {
-    scalars,
-    codegen: {
-      // eslint-disable-next-line no-console
-      onError: onCodegenError = console.error,
-    } = {},
-  } = config;
-
-  if (scalars) {
-    if (scalars === '*') {
-      const allScalarsNames = scalarTypeDefs.join('\n');
-      modules.push(
-        createModule({
-          id: 'scalars',
-          typeDefs: gql(allScalarsNames),
-          resolvers: scalarResolvers,
-        })
-      );
-    } else {
-      const scalarNames = Object.entries(scalars).reduce((acum, [name, value]) => {
-        if (value && name in scalarResolvers) acum.push(`scalar ${name}\n`);
-        return acum;
-      }, [] as string[]);
-      if (scalarNames.length) {
-        modules.push(
-          createModule({
-            id: 'scalars',
-            typeDefs: gql(scalarNames),
-            resolvers: Object.keys(scalars).reduce((acum, scalarName) => {
-              const resolver = (scalarResolvers as Record<string, GraphQLScalarType>)[scalarName];
-
-              if (resolver) acum[scalarName] = resolver;
-              return acum;
-            }, {} as Record<string, any>),
-          })
-        );
-      }
-    }
-  }
-
   function registerModule(typeDefs: TypeDefs, { id, ...options }: EnvelopModuleConfig = {}) {
     id ||= `module${++acumId}`;
     const module = createModule({
@@ -116,7 +91,7 @@ export function createEnvelopAppFactory(
       ...options,
     });
 
-    modules.push(module);
+    factoryModules.push(module);
 
     return module;
   }
@@ -128,21 +103,41 @@ export function createEnvelopAppFactory(
     prepare?: () => Promise<void> | void;
     adapterFactory: AdapterFactory<T>;
   }): Promise<T> {
-    if (prepare) await prepare();
+    try {
+      if (prepare) await prepare();
 
-    return getApp();
+      return getApp();
+    } finally {
+      factoryModules.length = 0;
+      if (config.modules) factoryModules.push(...config.modules);
+      acumId = 0;
+    }
 
-    function getApp() {
+    async function getApp() {
+      const modules = [...factoryModules];
+
       const {
-        outputSchema,
         enableCodegen = process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test',
-        plugins = [],
-        schema: initialSchema,
-        extends: envelopExtends,
+        plugins: manualPlugins = [],
+        schema: manualSchema,
         middlewares,
         providers,
         schemaBuilder,
+        scalars,
+        codegen: {
+          // eslint-disable-next-line no-console
+          onError: onCodegenError = console.error,
+        } = {},
+        mergeSchemasConfig,
       } = config;
+
+      if (scalars) {
+        await import('./scalars.js').then(({ createScalarsModule }) => {
+          const scalarsModule = createScalarsModule(scalars);
+
+          if (scalarsModule) modules.push(scalarsModule);
+        });
+      }
 
       const modulesApplication = createApplication({
         modules,
@@ -151,27 +146,46 @@ export function createEnvelopAppFactory(
         schemaBuilder,
       });
 
-      const envelopPlugins = modules.length ? [useGraphQLModules(modulesApplication), ...plugins] : [...plugins];
+      const plugins = modules.length ? [useGraphQLModules(modulesApplication), ...manualPlugins] : [...manualPlugins];
 
-      if (initialSchema) envelopPlugins.unshift(useSchema(initialSchema));
+      if (manualSchema) {
+        const schemas = (Array.isArray(manualSchema) ? manualSchema : [manualSchema]).map(schemaValue =>
+          isSchema(schemaValue) ? schemaValue : makeExecutableSchema(schemaValue as IExecutableSchemaDefinition)
+        );
+
+        if (schemas.length > 1) {
+          plugins.push(
+            useSchema(
+              await mergeSchemasAsync({
+                ...(mergeSchemasConfig || {}),
+                schemas: [...(modules.length ? [modulesApplication.schema] : []), ...schemas],
+              })
+            )
+          );
+        } else if (schemas[0]) {
+          plugins.push(
+            useSchema(
+              modules.length
+                ? await mergeSchemasAsync({
+                    ...(mergeSchemasConfig || {}),
+                    schemas: [modulesApplication.schema, schemas[0]],
+                  })
+                : schemas[0]
+            )
+          );
+        }
+      }
 
       const getEnveloped = envelop({
-        plugins: envelopPlugins,
-        extends: envelopExtends,
+        plugins,
       });
 
-      const { schema: envelopSchema } = getEnveloped();
-
       if (enableCodegen) {
-        if (outputSchema) {
-          import('./outputSchema.js').then(({ writeOutputSchema }) => {
-            writeOutputSchema(envelopSchema, config.outputSchema!).catch(onCodegenError);
-          });
-        }
-
-        import('./codegen.js').then(({ EnvelopCodegen }) => {
-          EnvelopCodegen(envelopSchema, config, internalConfig).catch(onCodegenError);
-        });
+        import('./codegen/handle.js')
+          .then(({ handleCodegen }) => {
+            handleCodegen(getEnveloped, config, internalConfig);
+          })
+          .catch(onCodegenError);
       }
 
       return adapterFactory(getEnveloped, modulesApplication);
@@ -182,6 +196,6 @@ export function createEnvelopAppFactory(
     registerModule,
     appBuilder,
     gql,
-    modules,
+    modules: factoryModules,
   };
 }

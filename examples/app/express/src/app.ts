@@ -8,7 +8,7 @@ function buildContext({ request }: BuildContextArgs) {
 }
 
 declare module '@envelop/app/express' {
-  interface ExpressEnvelopContext extends InferFunctionReturn<typeof buildContext> {}
+  interface EnvelopContext extends InferFunctionReturn<typeof buildContext> {}
 }
 
 export const { registerModule, buildApp, gql } = CreateApp({

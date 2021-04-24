@@ -1,5 +1,6 @@
 import type { ModuleConfig } from 'graphql-modules';
 import type { ExecutionContext } from 'graphql-helix/dist/types';
+import type { IResolvers } from '@graphql-tools/utils';
 
 type PossiblePromise<T> = T | Promise<T>;
 
@@ -18,19 +19,21 @@ type DeepPartialObject<T> = {
   [P in keyof T]?: PossiblePromise<DeepPartial<PossiblePromise<T[P]>>>;
 };
 
-export interface EnvelopResolvers {}
+export interface EnvelopContext extends GraphQLModules.ModuleContext, ExecutionContext {}
+
+export interface EnvelopResolvers<TContext = EnvelopContext> extends IResolvers<any, TContext> {}
 
 export type EnvelopModuleConfig = Omit<ModuleConfig, 'typeDefs' | 'id' | 'resolvers'> & {
   id?: string;
   resolvers?: EnvelopResolvers;
 };
 
-export interface EnvelopContext extends GraphQLModules.ModuleContext, ExecutionContext {}
-
 type PromiseType<T> = T extends PromiseLike<infer U> ? U : T;
 
 export type InferFunctionReturn<TFunction extends (...args: any) => any> = PromiseType<ReturnType<TFunction>>;
 
-export type { BaseEnvelopAppOptions } from './app';
+export type { BaseEnvelopAppOptions, ExecutableSchemaDefinition } from './app';
 
 export type { AltairOptions, GraphiQLOptions, IDEOptions } from '../common/ide';
+
+export type { ScalarsConfig } from './scalars';

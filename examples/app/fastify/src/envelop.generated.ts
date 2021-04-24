@@ -21,6 +21,7 @@ export type Query = {
   __typename?: 'Query';
   hello: Scalars['String'];
   hello2: Scalars['String'];
+  hello3: Scalars['String'];
 };
 
 export type Subscription = {
@@ -109,25 +110,21 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
-  DateTime: ResolverTypeWrapper<import('@envelop/app/fastify').DeepPartial<Scalars['DateTime']>>;
   Query: ResolverTypeWrapper<{}>;
   String: ResolverTypeWrapper<import('@envelop/app/fastify').DeepPartial<Scalars['String']>>;
   Subscription: ResolverTypeWrapper<{}>;
+  DateTime: ResolverTypeWrapper<import('@envelop/app/fastify').DeepPartial<Scalars['DateTime']>>;
   Boolean: ResolverTypeWrapper<import('@envelop/app/fastify').DeepPartial<Scalars['Boolean']>>;
 };
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
-  DateTime: import('@envelop/app/fastify').DeepPartial<Scalars['DateTime']>;
   Query: {};
   String: import('@envelop/app/fastify').DeepPartial<Scalars['String']>;
   Subscription: {};
+  DateTime: import('@envelop/app/fastify').DeepPartial<Scalars['DateTime']>;
   Boolean: import('@envelop/app/fastify').DeepPartial<Scalars['Boolean']>;
 };
-
-export interface DateTimeScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['DateTime'], any> {
-  name: 'DateTime';
-}
 
 export type QueryResolvers<
   ContextType = any,
@@ -135,6 +132,7 @@ export type QueryResolvers<
 > = {
   hello?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   hello2?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  hello3?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
 };
 
 export type SubscriptionResolvers<
@@ -144,10 +142,14 @@ export type SubscriptionResolvers<
   hello?: SubscriptionResolver<ResolversTypes['String'], 'hello', ParentType, ContextType>;
 };
 
+export interface DateTimeScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['DateTime'], any> {
+  name: 'DateTime';
+}
+
 export type Resolvers<ContextType = any> = {
-  DateTime?: GraphQLScalarType;
   Query?: QueryResolvers<ContextType>;
   Subscription?: SubscriptionResolvers<ContextType>;
+  DateTime?: GraphQLScalarType;
 };
 
 /**

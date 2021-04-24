@@ -2,11 +2,11 @@ import { getGraphQLParameters, processRequest, renderGraphiQL } from 'graphql-he
 import { gql, Module, TypeDefs } from 'graphql-modules';
 
 import { BaseEnvelopAppOptions, createEnvelopAppFactory } from './common/app.js';
-import { LazyPromise } from './common/lazyPromise.js';
+import { LazyPromise } from './common/LazyPromise/lazyPromise.js';
 
 import type { ExecutionContext, RenderGraphiQLOptions } from 'graphql-helix/dist/types';
 import type { NextApiHandler, NextApiRequest, NextApiResponse } from 'next';
-import type { EnvelopModuleConfig } from './common/types';
+import type { EnvelopModuleConfig, EnvelopContext } from './common/types';
 import type { RenderOptions } from 'altair-static';
 
 export interface BuildContextArgs {
@@ -14,14 +14,12 @@ export interface BuildContextArgs {
   response: NextApiResponse;
 }
 
-export interface EnvelopAppOptions extends BaseEnvelopAppOptions {
+export interface EnvelopAppOptions extends BaseEnvelopAppOptions<EnvelopContext> {
   /**
    * Build Context
    */
   buildContext?: (args: BuildContextArgs) => Record<string, unknown> | Promise<Record<string, unknown>>;
 }
-
-export interface EnvelopContext {}
 
 export interface BuildAppOptions {
   prepare?: () => void | Promise<void>;
@@ -39,12 +37,12 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
     moduleName: 'nextjs',
   });
 
-  const { buildContext } = config;
-
   function buildApp(buildOptions: BuildAppOptions = {}): NextApiHandler<unknown> {
     const app = appBuilder({
       prepare: buildOptions.prepare,
       async adapterFactory(getEnveloped): Promise<NextApiHandler<unknown>> {
+        const { buildContext } = config;
+
         return async function (req, res) {
           const request = {
             body: req.body,
@@ -230,4 +228,4 @@ export function AltairHandler(options: AltairHandlerOptions = {}): NextApiHandle
 export { gql };
 
 export * from './common/types.js';
-export * from './common/lazyPromise.js';
+export * from './common/LazyPromise/lazyPromise.js';

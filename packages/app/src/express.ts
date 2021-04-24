@@ -6,13 +6,13 @@ import { createServer, IncomingMessage, Server } from 'http';
 
 import { BaseEnvelopAppOptions, createEnvelopAppFactory } from './common/app.js';
 import { handleIDE, IDEOptions } from './common/ide.js';
-import { getPathname } from './common/url.js';
-import { BuildSubscriptionsContext, CreateSubscriptionsServer, SubscriptionsFlag } from './common/websocketSubscriptions.js';
+import { getPathname } from './common/utils/url.js';
+import { BuildSubscriptionsContext, CreateSubscriptionsServer, SubscriptionsFlag } from './common/subscriptions/websocket.js';
 
 import type { Socket } from 'net';
 import type { Envelop } from '@envelop/types';
 import type { ExecutionContext } from 'graphql-helix/dist/types';
-import type { EnvelopModuleConfig } from './common/types';
+import type { EnvelopModuleConfig, EnvelopContext } from './common/types';
 import type { OptionsJson as BodyParserOptions } from 'body-parser';
 
 export interface EnvelopApp {
@@ -24,7 +24,7 @@ export interface BuildContextArgs {
   response: Response;
 }
 
-export interface EnvelopAppOptions extends BaseEnvelopAppOptions {
+export interface EnvelopAppOptions extends BaseEnvelopAppOptions<EnvelopContext> {
   /**
    * @default "/graphql"
    */
@@ -58,11 +58,6 @@ export interface EnvelopAppOptions extends BaseEnvelopAppOptions {
   ide?: IDEOptions;
 }
 
-export interface EnvelopContext {
-  request: Request;
-  response: Response;
-}
-
 export interface BuildAppOptions {
   app: Express;
   server?: Server;
@@ -81,14 +76,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
     moduleName: 'express',
   });
 
-  const {
-    buildContext,
-    path = '/graphql',
-    websocketSubscriptions,
-    buildWebsocketSubscriptionsContext,
-    bodyParserJSONOptions: jsonOptions,
-    ide,
-  } = config;
+  const { path = '/graphql', websocketSubscriptions, buildWebsocketSubscriptionsContext } = config;
 
   const subscriptionsClientFactoryPromise = CreateSubscriptionsServer(websocketSubscriptions);
 
@@ -160,6 +148,13 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
     return appBuilder({
       prepare: buildOptions.prepare,
       async adapterFactory(getEnveloped) {
+        const {
+          buildContext,
+          path = '/graphql',
+
+          bodyParserJSONOptions: jsonOptions,
+          ide,
+        } = config;
         const EnvelopApp = Router();
 
         EnvelopApp.use(json(jsonOptions));
@@ -291,4 +286,4 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
 export { gql };
 
 export * from './common/types.js';
-export * from './common/lazyPromise.js';
+export * from './common/LazyPromise/lazyPromise.js';
