@@ -2,16 +2,16 @@ import assert from 'assert';
 import { getGraphQLParameters, processRequest } from 'graphql-helix';
 import { gql, Module, TypeDefs } from 'graphql-modules';
 
-import { handleIDE, IDEOptions } from '../common/ide.js';
-import { BaseEnvelopAppOptions, createEnvelopAppFactory } from '../common/index.js';
-import { BuildSubscriptionsContext, CreateSubscriptionsServer, SubscriptionsFlag } from '../common/websocketSubscriptions.js';
-import { getPathname } from '../common/url.js';
+import { handleIDE, IDEOptions } from './common/ide.js';
+import { BaseEnvelopAppOptions, createEnvelopAppFactory } from './common/index.js';
+import { BuildSubscriptionsContext, CreateSubscriptionsServer, SubscriptionsFlag } from './common/websocketSubscriptions.js';
+import { getPathname } from './common/url.js';
 
 import type { Envelop } from '@envelop/types';
 import type { ExecutionContext } from 'graphql-helix/dist/types';
 import type { FastifyInstance, FastifyPluginCallback, FastifyReply, FastifyRequest, RouteOptions } from 'fastify';
 import type { Server, IncomingMessage } from 'http';
-import type { EnvelopModuleConfig } from '../common/types';
+import type { EnvelopModuleConfig } from './common/types';
 import type { Socket } from 'net';
 import type { AltairFastifyPluginOptions } from 'altair-fastify-plugin';
 
@@ -292,4 +292,5 @@ export function CreateFastifyApp(config: FastifyEnvelopAppOptions = {}): Fastify
 
 export { gql };
 
-export * from '../common/types.js';
+export * from './common/types.js';
+export * from './common/lazyPromise.js';

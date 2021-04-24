@@ -1,4 +1,4 @@
-import { CreateExpressApp, ExpressContextArgs, InferFunctionReturn } from '@envelop/app';
+import { CreateExpressApp, ExpressContextArgs, InferFunctionReturn } from '@envelop/app/express';
 
 function buildContext({ request }: ExpressContextArgs) {
   return {
@@ -7,7 +7,7 @@ function buildContext({ request }: ExpressContextArgs) {
   };
 }
 
-declare module '@envelop/app' {
+declare module '@envelop/app/express' {
   interface ExpressEnvelopContext extends InferFunctionReturn<typeof buildContext> {}
 }
 

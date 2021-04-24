@@ -21,7 +21,9 @@ export interface AltairOptions extends RenderOptions {
   path?: string;
 }
 
-const defaultAltairOptions: AltairOptions = {};
+const defaultAltairOptions: AltairOptions & { path: string } = {
+  path: '/altair',
+};
 
 export type IDEOptions<
   TAltairOptions extends AltairOptions = AltairOptions,
@@ -34,7 +36,7 @@ export type IDEOptions<
     };
 
 export interface InternalIDEOptions<AltairOptions extends RenderOptions = RenderOptions> {
-  handleAltair: (options: AltairOptions) => Promise<void>;
+  handleAltair: (options: AltairOptions & { path: string }) => Promise<void>;
   handleGraphiQL: (graphiqlHTML: GraphiQLOptions & { html: string; path: string }) => void | Promise<void>;
 }
 

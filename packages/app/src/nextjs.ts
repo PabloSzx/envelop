@@ -1,12 +1,12 @@
 import { getGraphQLParameters, processRequest, renderGraphiQL } from 'graphql-helix';
 import { gql, Module, TypeDefs } from 'graphql-modules';
 
-import { BaseEnvelopAppOptions, createEnvelopAppFactory } from '../common/index.js';
-import { LazyPromise } from '../common/lazyPromise.js';
+import { BaseEnvelopAppOptions, createEnvelopAppFactory } from './common/index.js';
+import { LazyPromise } from './common/lazyPromise.js';
 
 import type { ExecutionContext, RenderGraphiQLOptions } from 'graphql-helix/dist/types';
 import type { NextApiHandler, NextApiRequest, NextApiResponse } from 'next';
-import type { EnvelopModuleConfig } from '../common/types';
+import type { EnvelopModuleConfig } from './common/types';
 import type { RenderOptions } from 'altair-static';
 
 export interface NextjsContextArgs {
@@ -229,4 +229,5 @@ export function NextjsAltairHandler(options: NextjsAltairOptions = {}): NextApiH
 
 export { gql };
 
-export * from '../common/types.js';
+export * from './common/types.js';
+export * from './common/lazyPromise.js';

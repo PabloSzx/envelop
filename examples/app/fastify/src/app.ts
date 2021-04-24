@@ -1,4 +1,4 @@
-import { CreateFastifyApp, FastifyContextArgs, InferFunctionReturn } from '@envelop/app';
+import { CreateFastifyApp, FastifyContextArgs, InferFunctionReturn } from '@envelop/app/fastify';
 
 function buildContext({ request }: FastifyContextArgs) {
   return {
@@ -7,7 +7,7 @@ function buildContext({ request }: FastifyContextArgs) {
   };
 }
 
-declare module '@envelop/app' {
+declare module '@envelop/app/fastify' {
   interface FastifyEnvelopContext extends InferFunctionReturn<typeof buildContext> {}
 }
 

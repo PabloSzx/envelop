@@ -3,16 +3,16 @@ import { getGraphQLParameters, processRequest } from 'graphql-helix';
 import { gql, Module, TypeDefs } from 'graphql-modules';
 import { createServer, IncomingMessage, Server } from 'http';
 
-import { IDEOptions, handleIDE } from '../common/ide.js';
-import { BaseEnvelopAppOptions, createEnvelopAppFactory } from '../common/index.js';
-import { BuildSubscriptionsContext, CreateSubscriptionsServer, SubscriptionsFlag } from '../common/websocketSubscriptions.js';
-import { getPathname } from '../common/url.js';
+import { IDEOptions, handleIDE } from './common/ide.js';
+import { BaseEnvelopAppOptions, createEnvelopAppFactory } from './common/index.js';
+import { BuildSubscriptionsContext, CreateSubscriptionsServer, SubscriptionsFlag } from './common/websocketSubscriptions.js';
+import { getPathname } from './common/url.js';
 
 import type { Socket } from 'net';
 import type { Envelop } from '@envelop/types';
 import type { ExecutionContext } from 'graphql-helix/dist/types';
 import type { Request, Response, Router, Express } from 'express';
-import type { EnvelopModuleConfig } from '../common/types';
+import type { EnvelopModuleConfig } from './common/types';
 import type { OptionsJson as BodyParserOptions } from 'body-parser';
 
 export interface ExpressEnvelopApp {
@@ -171,7 +171,7 @@ export function CreateExpressApp(config: ExpressEnvelopAppOptions = {}): Express
             const { altairExpress } = await import('altair-express-middleware');
 
             EnvelopApp.use(
-              '/altair',
+              options.path,
               altairExpress({
                 ...options,
               })
@@ -292,4 +292,5 @@ export function CreateExpressApp(config: ExpressEnvelopAppOptions = {}): Express
 
 export { gql };
 
-export * from '../common/types.js';
+export * from './common/types.js';
+export * from './common/lazyPromise.js';
