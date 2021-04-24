@@ -1,6 +1,6 @@
-import { CreateNextjsApp } from '@envelop/app/nextjs';
+import { CreateApp } from '@envelop/app/nextjs';
 
-export const { buildApp, registerModule, gql } = CreateNextjsApp({
+export const { buildApp, registerModule, gql } = CreateApp({
   buildContext() {
     return {
       foo: 'bar',

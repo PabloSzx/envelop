@@ -1,7 +1,7 @@
 import { getGraphQLParameters, processRequest, renderGraphiQL } from 'graphql-helix';
 import { gql, Module, TypeDefs } from 'graphql-modules';
 
-import { BaseEnvelopAppOptions, createEnvelopAppFactory } from './common/index.js';
+import { BaseEnvelopAppOptions, createEnvelopAppFactory } from './common/app.js';
 import { LazyPromise } from './common/lazyPromise.js';
 
 import type { ExecutionContext, RenderGraphiQLOptions } from 'graphql-helix/dist/types';
@@ -9,39 +9,39 @@ import type { NextApiHandler, NextApiRequest, NextApiResponse } from 'next';
 import type { EnvelopModuleConfig } from './common/types';
 import type { RenderOptions } from 'altair-static';
 
-export interface NextjsContextArgs {
+export interface BuildContextArgs {
   request: NextApiRequest;
   response: NextApiResponse;
 }
 
-export interface NextjsEnvelopAppOptions extends BaseEnvelopAppOptions {
+export interface EnvelopAppOptions extends BaseEnvelopAppOptions {
   /**
    * Build Context
    */
-  buildContext?: (args: NextjsContextArgs) => Record<string, unknown> | Promise<Record<string, unknown>>;
+  buildContext?: (args: BuildContextArgs) => Record<string, unknown> | Promise<Record<string, unknown>>;
 }
 
-export interface NextjsEnvelopContext {}
+export interface EnvelopContext {}
 
-export interface BuildNextjsAppOptions {
+export interface BuildAppOptions {
   prepare?: () => void | Promise<void>;
 }
 
-export interface NextjsEnvelopAppBuilder {
+export interface EnvelopAppBuilder {
   gql: typeof gql;
   modules: Module[];
   registerModule: (typeDefs: TypeDefs, options?: EnvelopModuleConfig | undefined) => Module;
-  buildApp(options?: BuildNextjsAppOptions): NextApiHandler<unknown>;
+  buildApp(options?: BuildAppOptions): NextApiHandler<unknown>;
 }
 
-export function CreateNextjsApp(config: NextjsEnvelopAppOptions = {}): NextjsEnvelopAppBuilder {
+export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
   const { appBuilder, gql, modules, registerModule } = createEnvelopAppFactory(config, {
-    contextTypeName: 'NextjsEnvelopContext',
+    moduleName: 'nextjs',
   });
 
   const { buildContext } = config;
 
-  function buildApp(buildOptions: BuildNextjsAppOptions = {}): NextApiHandler<unknown> {
+  function buildApp(buildOptions: BuildAppOptions = {}): NextApiHandler<unknown> {
     const app = appBuilder({
       prepare: buildOptions.prepare,
       async adapterFactory(getEnveloped): Promise<NextApiHandler<unknown>> {
@@ -148,9 +148,9 @@ export function CreateNextjsApp(config: NextjsEnvelopAppOptions = {}): NextjsEnv
   };
 }
 
-export interface NextjsGraphiQLOptions extends RenderGraphiQLOptions {}
+export interface GraphiQLHandlerOptions extends RenderGraphiQLOptions {}
 
-export function NextjsGraphiQLHandler(options: NextjsGraphiQLOptions = {}): NextApiHandler<unknown> {
+export function GraphiQLHandler(options: GraphiQLHandlerOptions = {}): NextApiHandler<unknown> {
   const { endpoint = '/api/graphql', ...renderOptions } = options;
   return function (req, res) {
     if (req.method !== 'GET') return res.status(404).end();
@@ -161,7 +161,7 @@ export function NextjsGraphiQLHandler(options: NextjsGraphiQLOptions = {}): Next
   };
 }
 
-export interface NextjsAltairOptions extends Omit<RenderOptions, 'baseURL'> {
+export interface AltairHandlerOptions extends Omit<RenderOptions, 'baseURL'> {
   /**
    *  Request Path
    *
@@ -170,7 +170,7 @@ export interface NextjsAltairOptions extends Omit<RenderOptions, 'baseURL'> {
   path?: string;
 }
 
-export function NextjsAltairHandler(options: NextjsAltairOptions = {}): NextApiHandler<unknown> {
+export function AltairHandler(options: AltairHandlerOptions = {}): NextApiHandler<unknown> {
   let { path = '/api/altair', endpointURL = '/api/graphql', ...renderOptions } = options;
 
   const baseURL = path.endsWith('/') ? (path = path.slice(0, path.length - 1)) + '/' : path + '/';

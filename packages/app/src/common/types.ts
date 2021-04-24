@@ -31,6 +31,6 @@ type PromiseType<T> = T extends PromiseLike<infer U> ? U : T;
 
 export type InferFunctionReturn<TFunction extends (...args: any) => any> = PromiseType<ReturnType<TFunction>>;
 
-export type { BaseEnvelopAppOptions } from '../common';
+export type { BaseEnvelopAppOptions } from './app';
 
 export type { AltairOptions, GraphiQLOptions, IDEOptions } from '../common/ide';

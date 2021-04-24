@@ -13,13 +13,18 @@ import type { CodegenConfig } from './codegen';
 export type AdapterFactory<T> = (envelop: Envelop<unknown>, modulesApplication: Application) => T;
 
 export interface InternalEnvelopConfig {
-  contextTypeName: string;
+  moduleName: 'express' | 'fastify' | 'nextjs';
+}
+
+export interface InternalAppBuildOptions<T> {
+  prepare?: () => void | Promise<void>;
+  adapterFactory: AdapterFactory<T>;
 }
 
 export interface EnvelopAppFactoryType {
   registerModule: (typeDefs: TypeDefs, options?: EnvelopModuleConfig) => Module;
   gql: typeof gql;
-  appBuilder<T>(opts: { prepare?: () => void | Promise<void>; adapterFactory: AdapterFactory<T> }): T;
+  appBuilder<T>(opts: InternalAppBuildOptions<T>): Promise<T>;
   modules: Module[];
 }
 
@@ -45,7 +50,7 @@ export interface BaseEnvelopAppOptions
    * Output schema target path or flag
    *
    * If `true`, defaults to `"./schema.gql"`
-   * You can specify a `.gql`, `.graphql` or `.json` extension
+   * You have to specify a `.gql`, `.graphql` or `.json` extension
    *
    * @default false
    */
@@ -116,22 +121,14 @@ export function createEnvelopAppFactory(
     return module;
   }
 
-  function appBuilder<T>(opts: { prepare?: undefined; adapterFactory: AdapterFactory<T> }): T;
-  function appBuilder<T>(opts: { prepare: () => Promise<void>; adapterFactory: AdapterFactory<T> }): Promise<T>;
-  function appBuilder<T>(opts: { prepare?: () => void; adapterFactory: AdapterFactory<T> }): T;
-  function appBuilder<T>({
+  async function appBuilder<T>({
     adapterFactory,
     prepare,
   }: {
     prepare?: () => Promise<void> | void;
     adapterFactory: AdapterFactory<T>;
-  }): T | Promise<T> {
-    if (prepare) {
-      const result = prepare();
-      if (result instanceof Promise) {
-        return result.then(getApp);
-      }
-    }
+  }): Promise<T> {
+    if (prepare) await prepare();
 
     return getApp();
 

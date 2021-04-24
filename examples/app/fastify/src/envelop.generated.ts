@@ -109,20 +109,20 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
-  DateTime: ResolverTypeWrapper<import('@envelop/app').DeepPartial<Scalars['DateTime']>>;
+  DateTime: ResolverTypeWrapper<import('@envelop/app/fastify').DeepPartial<Scalars['DateTime']>>;
   Query: ResolverTypeWrapper<{}>;
-  String: ResolverTypeWrapper<import('@envelop/app').DeepPartial<Scalars['String']>>;
+  String: ResolverTypeWrapper<import('@envelop/app/fastify').DeepPartial<Scalars['String']>>;
   Subscription: ResolverTypeWrapper<{}>;
-  Boolean: ResolverTypeWrapper<import('@envelop/app').DeepPartial<Scalars['Boolean']>>;
+  Boolean: ResolverTypeWrapper<import('@envelop/app/fastify').DeepPartial<Scalars['Boolean']>>;
 };
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
-  DateTime: import('@envelop/app').DeepPartial<Scalars['DateTime']>;
+  DateTime: import('@envelop/app/fastify').DeepPartial<Scalars['DateTime']>;
   Query: {};
-  String: import('@envelop/app').DeepPartial<Scalars['String']>;
+  String: import('@envelop/app/fastify').DeepPartial<Scalars['String']>;
   Subscription: {};
-  Boolean: import('@envelop/app').DeepPartial<Scalars['Boolean']>;
+  Boolean: import('@envelop/app/fastify').DeepPartial<Scalars['Boolean']>;
 };
 
 export interface DateTimeScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['DateTime'], any> {
@@ -156,6 +156,6 @@ export type Resolvers<ContextType = any> = {
  */
 export type IResolvers<ContextType = any> = Resolvers<ContextType>;
 
-declare module '@envelop/app' {
-  interface EnvelopResolvers extends Resolvers<import('@envelop/app').FastifyEnvelopContext> {}
+declare module '@envelop/app/fastify' {
+  interface EnvelopResolvers extends Resolvers<import('@envelop/app/fastify').EnvelopContext> {}
 }

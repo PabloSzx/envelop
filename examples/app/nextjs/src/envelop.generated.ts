@@ -146,6 +146,6 @@ export type Resolvers<ContextType = any> = {
  */
 export type IResolvers<ContextType = any> = Resolvers<ContextType>;
 
-declare module '@envelop/app' {
-  interface EnvelopResolvers extends Resolvers<import('@envelop/app').NextjsEnvelopContext> {}
+declare module '@envelop/app/nextjs' {
+  interface EnvelopResolvers extends Resolvers<import('@envelop/app/nextjs').EnvelopContext> {}
 }

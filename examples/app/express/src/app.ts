@@ -1,6 +1,6 @@
-import { CreateExpressApp, ExpressContextArgs, InferFunctionReturn } from '@envelop/app/express';
+import { CreateApp, BuildContextArgs, InferFunctionReturn } from '@envelop/app/express';
 
-function buildContext({ request }: ExpressContextArgs) {
+function buildContext({ request }: BuildContextArgs) {
   return {
     request,
     foo: 'bar',
@@ -11,7 +11,7 @@ declare module '@envelop/app/express' {
   interface ExpressEnvelopContext extends InferFunctionReturn<typeof buildContext> {}
 }
 
-export const { registerModule, buildApp, gql } = CreateExpressApp({
+export const { registerModule, buildApp, gql } = CreateApp({
   codegen: {
     federation: true,
     deepPartialResolvers: true,

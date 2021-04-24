@@ -1601,7 +1601,7 @@
   resolved "https://registry.yarnpkg.com/@types/benchmark/-/benchmark-2.1.0.tgz#157e2ef22311d3140fb33e82a938a1beb26e78e0"
   integrity sha512-wxT2/LZn4z0NvSfZirxmBx686CU7EXp299KHkIk79acXpQtgeYHrslFzDacPGXifC0Pe3CEaLup07bgY1PnuQw==
 
-"@types/body-parser@*", "@types/body-parser@1.19.0":
+"@types/body-parser@*", "@types/body-parser@1.19.0", "@types/body-parser@^1.19.0":
   version "1.19.0"
   resolved "https://registry.yarnpkg.com/@types/body-parser/-/body-parser-1.19.0.tgz#0685b3c47eb3006ffed117cdd55164b61f80538f"
   integrity sha512-W98JrE0j2K78swW4ukqMleo8R7h/pFETjM2DQ90MF6XK2i4LO4W3gQ71Lt4w3bfm2EvVSyWHplECvB5sK22yFQ==
@@ -9658,10 +9658,10 @@ ts-pnp@^1.1.6:
   resolved "https://registry.yarnpkg.com/ts-pnp/-/ts-pnp-1.2.0.tgz#a500ad084b0798f1c3071af391e65912c86bca92"
   integrity sha512-csd+vJOb/gkzvcCHgTGSChYpy5f1/XKNsmvBGO4JXS+z1v2HobugDz4s1IeFXM3wZB44uczs+eazB5Q/ccdhQw==
 
-tsc-node-build@^3.0.0:
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/tsc-node-build/-/tsc-node-build-3.0.0.tgz#2b1693b135819a4423cc4ca2b662b1498e07aedc"
-  integrity sha512-x5A7xMLkkVI81WXcwoPBq5ji0Cb3oTB+RWugmviKFywsEcw9+9Sl+4vk93ZJJ8kKyVALQgdZUIsx0w1p5NHWDA==
+tsc-node-build@^3.0.1:
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/tsc-node-build/-/tsc-node-build-3.0.1.tgz#21238ea320f1a31f186bf9f19f53ae98c7d98ccd"
+  integrity sha512-9qi5oLz2/fPugNcibEINdV8impnzkNayXApnHowST4KUh0rriMXPQS5aIsNYvzlot905I+cM/SpVRWRuoXQy4A==
   dependencies:
     commander "^7.2.0"
     concurrently "^6.0.2"

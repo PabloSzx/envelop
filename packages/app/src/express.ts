@@ -1,30 +1,30 @@
 import assert from 'assert';
+import { json, Router, Request, Response, Express } from 'express';
 import { getGraphQLParameters, processRequest } from 'graphql-helix';
 import { gql, Module, TypeDefs } from 'graphql-modules';
 import { createServer, IncomingMessage, Server } from 'http';
 
-import { IDEOptions, handleIDE } from './common/ide.js';
-import { BaseEnvelopAppOptions, createEnvelopAppFactory } from './common/index.js';
-import { BuildSubscriptionsContext, CreateSubscriptionsServer, SubscriptionsFlag } from './common/websocketSubscriptions.js';
+import { BaseEnvelopAppOptions, createEnvelopAppFactory } from './common/app.js';
+import { handleIDE, IDEOptions } from './common/ide.js';
 import { getPathname } from './common/url.js';
+import { BuildSubscriptionsContext, CreateSubscriptionsServer, SubscriptionsFlag } from './common/websocketSubscriptions.js';
 
 import type { Socket } from 'net';
 import type { Envelop } from '@envelop/types';
 import type { ExecutionContext } from 'graphql-helix/dist/types';
-import type { Request, Response, Router, Express } from 'express';
 import type { EnvelopModuleConfig } from './common/types';
 import type { OptionsJson as BodyParserOptions } from 'body-parser';
 
-export interface ExpressEnvelopApp {
+export interface EnvelopApp {
   EnvelopApp: Router;
 }
 
-export interface ExpressContextArgs {
+export interface BuildContextArgs {
   request: Request;
   response: Response;
 }
 
-export interface ExpressEnvelopAppOptions extends BaseEnvelopAppOptions {
+export interface EnvelopAppOptions extends BaseEnvelopAppOptions {
   /**
    * @default "/graphql"
    */
@@ -38,7 +38,7 @@ export interface ExpressEnvelopAppOptions extends BaseEnvelopAppOptions {
   /**
    * Build Context
    */
-  buildContext?: (args: ExpressContextArgs) => Record<string, unknown> | Promise<Record<string, unknown>>;
+  buildContext?: (args: BuildContextArgs) => Record<string, unknown> | Promise<Record<string, unknown>>;
 
   /**
    * Build Context for subscriptions
@@ -58,27 +58,27 @@ export interface ExpressEnvelopAppOptions extends BaseEnvelopAppOptions {
   ide?: IDEOptions;
 }
 
-export interface ExpressEnvelopContext {
+export interface EnvelopContext {
   request: Request;
   response: Response;
 }
 
-export interface BuildExpressAppOptions {
+export interface BuildAppOptions {
   app: Express;
   server?: Server;
   prepare?: () => void | Promise<void>;
 }
 
-export interface ExpressEnvelopAppBuilder {
+export interface EnvelopAppBuilder {
   gql: typeof gql;
   modules: Module[];
   registerModule: (typeDefs: TypeDefs, options?: EnvelopModuleConfig | undefined) => Module;
-  buildApp(options: BuildExpressAppOptions): Promise<ExpressEnvelopApp>;
+  buildApp(options: BuildAppOptions): Promise<EnvelopApp>;
 }
 
-export function CreateExpressApp(config: ExpressEnvelopAppOptions = {}): ExpressEnvelopAppBuilder {
+export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
   const { appBuilder, gql, modules, registerModule } = createEnvelopAppFactory(config, {
-    contextTypeName: 'ExpressEnvelopContext',
+    moduleName: 'express',
   });
 
   const {
@@ -156,12 +156,10 @@ export function CreateExpressApp(config: ExpressEnvelopAppOptions = {}): Express
     };
   }
 
-  async function buildApp(buildOptions: BuildExpressAppOptions): Promise<ExpressEnvelopApp> {
+  async function buildApp(buildOptions: BuildAppOptions): Promise<EnvelopApp> {
     return appBuilder({
       prepare: buildOptions.prepare,
       async adapterFactory(getEnveloped) {
-        const { Router, json } = await import('express');
-
         const EnvelopApp = Router();
 
         EnvelopApp.use(json(jsonOptions));

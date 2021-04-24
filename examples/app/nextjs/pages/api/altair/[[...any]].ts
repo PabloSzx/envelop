@@ -1,3 +1,3 @@
-import { NextjsAltairHandler } from '@envelop/app';
+import { AltairHandler } from '@envelop/app/nextjs';
 
-export default NextjsAltairHandler();
+export default AltairHandler();

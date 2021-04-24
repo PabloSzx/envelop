@@ -12,8 +12,7 @@ import { writeFileIfChanged } from './write.js';
 
 import type { TypeScriptPluginConfig } from '@graphql-codegen/typescript';
 import type { TypeScriptResolversPluginConfig } from '@graphql-codegen/typescript-resolvers/config';
-
-import type { BaseEnvelopAppOptions, InternalEnvelopConfig } from '.';
+import type { BaseEnvelopAppOptions, InternalEnvelopConfig } from './app';
 
 export interface CodegenConfig extends TypeScriptPluginConfig, TypeScriptResolversPluginConfig {
   /**
@@ -57,13 +56,14 @@ export async function EnvelopCodegen(
   options: BaseEnvelopAppOptions,
   internalConfig: InternalEnvelopConfig
 ): Promise<void> {
+  const moduleName = `@envelop/app/${internalConfig.moduleName}`;
   const schema = parse(printSchemaWithDirectives(executableSchema));
 
   const { codegen: { targetPath, deepPartialResolvers, preImportCode = '', scalars, onError, ...codegenOptions } = {} } = options;
 
   const config: TypeScriptPluginConfig & TypeScriptResolversPluginConfig = {
     useTypeImports: true,
-    defaultMapper: deepPartialResolvers ? 'import("@envelop/app").DeepPartial<{T}>' : undefined,
+    defaultMapper: deepPartialResolvers ? `import("${moduleName}").DeepPartial<{T}>` : undefined,
     // TODO: Add default recommended types
     scalars,
     ...codegenOptions,
@@ -97,8 +97,8 @@ export async function EnvelopCodegen(
     ${preImportCode}
     ${codegenCode}
 
-    declare module "@envelop/app" {
-        interface EnvelopResolvers extends Resolvers<import("@envelop/app").${internalConfig.contextTypeName}> { }
+    declare module "${moduleName}" {
+        interface EnvelopResolvers extends Resolvers<import("${moduleName}").EnvelopContext> { }
     }
   `,
     'typescript'

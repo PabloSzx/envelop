@@ -3,7 +3,7 @@ import { getGraphQLParameters, processRequest } from 'graphql-helix';
 import { gql, Module, TypeDefs } from 'graphql-modules';
 
 import { handleIDE, IDEOptions } from './common/ide.js';
-import { BaseEnvelopAppOptions, createEnvelopAppFactory } from './common/index.js';
+import { BaseEnvelopAppOptions, createEnvelopAppFactory } from './common/app.js';
 import { BuildSubscriptionsContext, CreateSubscriptionsServer, SubscriptionsFlag } from './common/websocketSubscriptions.js';
 import { getPathname } from './common/url.js';
 
@@ -15,16 +15,16 @@ import type { EnvelopModuleConfig } from './common/types';
 import type { Socket } from 'net';
 import type { AltairFastifyPluginOptions } from 'altair-fastify-plugin';
 
-export interface FastifyEnvelopApp {
+export interface EnvelopApp {
   EnvelopApp: FastifyPluginCallback<{}, Server>;
 }
 
-export interface FastifyContextArgs {
+export interface BuildContextArgs {
   request: FastifyRequest;
   reply: FastifyReply;
 }
 
-export interface FastifyEnvelopAppOptions extends BaseEnvelopAppOptions {
+export interface EnvelopAppOptions extends BaseEnvelopAppOptions {
   /**
    * @default "/graphql"
    */
@@ -33,7 +33,7 @@ export interface FastifyEnvelopAppOptions extends BaseEnvelopAppOptions {
   /**
    * Build Context
    */
-  buildContext?: (args: FastifyContextArgs) => Record<string, unknown> | Promise<Record<string, unknown>>;
+  buildContext?: (args: BuildContextArgs) => Record<string, unknown> | Promise<Record<string, unknown>>;
 
   /**
    * Build Context for subscriptions
@@ -56,24 +56,24 @@ export interface FastifyEnvelopAppOptions extends BaseEnvelopAppOptions {
   routeOptions?: Omit<RouteOptions, 'method' | 'url' | 'handler'>;
 }
 
-export interface FastifyEnvelopContext {
+export interface EnvelopContext {
   reply: FastifyReply;
 }
 
-export interface FastifyEnvelopAppBuilder {
+export interface BuildAppOptions {
+  prepare?: () => void | Promise<void>;
+}
+
+export interface EnvelopAppBuilder {
   gql: typeof gql;
   modules: Module[];
   registerModule: (typeDefs: TypeDefs, options?: EnvelopModuleConfig | undefined) => Module;
-  buildApp: {
-    (prepare?: undefined): FastifyEnvelopApp;
-    (prepare: () => Promise<void>): Promise<FastifyEnvelopApp>;
-    (prepare: () => void): FastifyEnvelopApp;
-  };
+  buildApp(options?: BuildAppOptions): Promise<EnvelopApp>;
 }
 
-export function CreateFastifyApp(config: FastifyEnvelopAppOptions = {}): FastifyEnvelopAppBuilder {
+export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
   const { appBuilder, gql, modules, registerModule } = createEnvelopAppFactory(config, {
-    contextTypeName: 'FastifyEnvelopContext',
+    moduleName: 'fastify',
   });
   const {
     buildContext,
@@ -154,10 +154,7 @@ export function CreateFastifyApp(config: FastifyEnvelopAppOptions = {}): Fastify
     };
   }
 
-  function buildApp(prepare?: undefined): FastifyEnvelopApp;
-  function buildApp(prepare: () => Promise<void>): Promise<FastifyEnvelopApp>;
-  function buildApp(prepare: () => void): FastifyEnvelopApp;
-  function buildApp(prepare?: () => Promise<void> | void): FastifyEnvelopApp | Promise<FastifyEnvelopApp> {
+  function buildApp({ prepare }: BuildAppOptions = {}): Promise<EnvelopApp> {
     return appBuilder({
       prepare,
       adapterFactory(getEnveloped) {
