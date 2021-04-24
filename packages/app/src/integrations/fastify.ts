@@ -291,3 +291,5 @@ export function CreateFastifyApp(config: FastifyEnvelopAppOptions = {}): Fastify
 }
 
 export { gql };
+
+export * from '../common/types.js';

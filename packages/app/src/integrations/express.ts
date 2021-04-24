@@ -291,3 +291,5 @@ export function CreateExpressApp(config: ExpressEnvelopAppOptions = {}): Express
 }
 
 export { gql };
+
+export * from '../common/types.js';
