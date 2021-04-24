@@ -28,15 +28,18 @@ export const { registerModule, buildApp, gql } = CreateFastifyApp({
     DateTime: true,
   },
   buildContext,
-  buildSubscriptionsContext({ request }) {
+  buildWebsocketSubscriptionsContext({ request }) {
     return {
       request,
       foo: 'baz',
     };
   },
-  subscriptions: 'all',
+  websocketSubscriptions: 'all',
   ide: {
     altair: true,
     graphiql: true,
+  },
+  routeOptions: {
+    logLevel: 'info',
   },
 });

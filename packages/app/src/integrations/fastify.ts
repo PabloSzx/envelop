@@ -2,21 +2,21 @@ import assert from 'assert';
 import { getGraphQLParameters, processRequest } from 'graphql-helix';
 import { gql, Module, TypeDefs } from 'graphql-modules';
 
-import { IDEOptions, handleIDE } from '../common/ide.js';
+import { handleIDE, IDEOptions } from '../common/ide.js';
 import { BaseEnvelopAppOptions, createEnvelopAppFactory } from '../common/index.js';
-import { BuildSubscriptionsContext, CreateSubscriptionsServer, SubscriptionsFlag } from '../common/subscriptions.js';
+import { BuildSubscriptionsContext, CreateSubscriptionsServer, SubscriptionsFlag } from '../common/websocketSubscriptions.js';
 import { getPathname } from '../common/url.js';
 
 import type { Envelop } from '@envelop/types';
 import type { ExecutionContext } from 'graphql-helix/dist/types';
-import type { FastifyInstance, FastifyPluginCallback, FastifyReply, FastifyRequest } from 'fastify';
+import type { FastifyInstance, FastifyPluginCallback, FastifyReply, FastifyRequest, RouteOptions } from 'fastify';
 import type { Server, IncomingMessage } from 'http';
 import type { EnvelopModuleConfig } from '../common/types';
 import type { Socket } from 'net';
 import type { AltairFastifyPluginOptions } from 'altair-fastify-plugin';
 
 export interface FastifyEnvelopApp {
-  EnvelopApp: FastifyPluginCallback<Record<never, never>, Server>;
+  EnvelopApp: FastifyPluginCallback<{}, Server>;
 }
 
 export interface FastifyContextArgs {
@@ -26,6 +26,11 @@ export interface FastifyContextArgs {
 
 export interface FastifyEnvelopAppOptions extends BaseEnvelopAppOptions {
   /**
+   * @default "/graphql"
+   */
+  path?: string;
+
+  /**
    * Build Context
    */
   buildContext?: (args: FastifyContextArgs) => Record<string, unknown> | Promise<Record<string, unknown>>;
@@ -33,17 +38,22 @@ export interface FastifyEnvelopAppOptions extends BaseEnvelopAppOptions {
   /**
    * Build Context for subscriptions
    */
-  buildSubscriptionsContext?: BuildSubscriptionsContext;
+  buildWebsocketSubscriptionsContext?: BuildSubscriptionsContext;
 
   /**
-   * Enable Subscriptions
+   * Enable Websocket Subscriptions
    */
-  subscriptions?: SubscriptionsFlag;
+  websocketSubscriptions?: SubscriptionsFlag;
 
   /**
    * IDE configuration
    */
   ide?: IDEOptions<AltairFastifyPluginOptions>;
+
+  /**
+   * Custom Fastify Route options
+   */
+  routeOptions?: Omit<RouteOptions, 'method' | 'url' | 'handler'>;
 }
 
 export interface FastifyEnvelopContext {
@@ -65,17 +75,24 @@ export function CreateFastifyApp(config: FastifyEnvelopAppOptions = {}): Fastify
   const { appBuilder, gql, modules, registerModule } = createEnvelopAppFactory(config, {
     contextTypeName: 'FastifyEnvelopContext',
   });
-  const { buildContext, subscriptions, path = '/graphql', buildSubscriptionsContext, ide } = config;
+  const {
+    buildContext,
+    websocketSubscriptions,
+    path = '/graphql',
+    buildWebsocketSubscriptionsContext,
+    ide,
+    routeOptions = {},
+  } = config;
 
-  const subscriptionsClientFactoryPromise = CreateSubscriptionsServer(subscriptions);
+  const subscriptionsClientFactoryPromise = CreateSubscriptionsServer(websocketSubscriptions);
 
   async function handleSubscriptions(getEnveloped: Envelop<unknown>, instance: FastifyInstance) {
-    if (!subscriptions) return;
+    if (!websocketSubscriptions) return;
 
     const subscriptionsClientFactory = await subscriptionsClientFactoryPromise;
     assert(subscriptionsClientFactory);
 
-    const subscriptionsServer = subscriptionsClientFactory(getEnveloped, buildSubscriptionsContext);
+    const subscriptionsServer = subscriptionsClientFactory(getEnveloped, buildWebsocketSubscriptionsContext);
 
     const wsServers = subscriptionsServer[0] === 'both' ? subscriptionsServer[2] : ([subscriptionsServer[1]] as const);
 
@@ -144,12 +161,12 @@ export function CreateFastifyApp(config: FastifyEnvelopAppOptions = {}): Fastify
     return appBuilder({
       prepare,
       adapterFactory(getEnveloped) {
-        const EnvelopApp: FastifyPluginCallback = async function FastifyPlugin(instance, _opts) {
+        const EnvelopApp: FastifyPluginCallback<{}> = async function FastifyPlugin(instance) {
           const idePromise = handleIDE(ide, {
             async handleAltair(options) {
               const { default: AltairFastify } = await import('altair-fastify-plugin');
 
-              instance.register(AltairFastify, {
+              await instance.register(AltairFastify, {
                 subscriptionsEndpoint: `ws://localhost:3000/${path}`,
                 ...options,
               });
@@ -164,6 +181,7 @@ export function CreateFastifyApp(config: FastifyEnvelopAppOptions = {}): Fastify
           const subscriptionsPromise = handleSubscriptions(getEnveloped, instance);
 
           instance.route({
+            ...routeOptions,
             method: ['GET', 'POST'],
             url: path,
             async handler(req, reply) {
@@ -178,14 +196,14 @@ export function CreateFastifyApp(config: FastifyEnvelopAppOptions = {}): Fastify
 
               const { operationName, query, variables } = getGraphQLParameters(request);
 
-              const contextFactory = async (helixCtx: ExecutionContext) => {
+              async function contextFactory(helixCtx: ExecutionContext) {
                 const [envelopCtx, customCtx] = await Promise.all([
                   contextFactoryEnvelop({ reply, ...helixCtx }),
                   buildContext?.({ request: req, reply }),
                 ]);
 
                 return Object.assign(envelopCtx, customCtx);
-              };
+              }
 
               const result = await processRequest({
                 operationName,

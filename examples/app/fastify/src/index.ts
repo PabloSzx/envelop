@@ -9,7 +9,9 @@ const fastifyApp = Fastify({
 buildApp(async () => {
   await import('./modules');
 }).then(({ EnvelopApp }) => {
-  fastifyApp.register(EnvelopApp);
+  fastifyApp.register(EnvelopApp, {
+    logLevel: 'error',
+  });
 
   fastifyApp.listen(3000);
 });

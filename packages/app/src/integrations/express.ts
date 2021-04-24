@@ -5,7 +5,7 @@ import { createServer, IncomingMessage, Server } from 'http';
 
 import { IDEOptions, handleIDE } from '../common/ide.js';
 import { BaseEnvelopAppOptions, createEnvelopAppFactory } from '../common/index.js';
-import { BuildSubscriptionsContext, CreateSubscriptionsServer, SubscriptionsFlag } from '../common/subscriptions.js';
+import { BuildSubscriptionsContext, CreateSubscriptionsServer, SubscriptionsFlag } from '../common/websocketSubscriptions.js';
 import { getPathname } from '../common/url.js';
 
 import type { Socket } from 'net';
@@ -26,6 +26,11 @@ export interface ExpressContextArgs {
 
 export interface ExpressEnvelopAppOptions extends BaseEnvelopAppOptions {
   /**
+   * @default "/graphql"
+   */
+  path?: string;
+
+  /**
    * JSON body-parser options
    */
   bodyParserJSONOptions?: BodyParserOptions;
@@ -38,12 +43,12 @@ export interface ExpressEnvelopAppOptions extends BaseEnvelopAppOptions {
   /**
    * Build Context for subscriptions
    */
-  buildSubscriptionsContext?: BuildSubscriptionsContext;
+  buildWebsocketSubscriptionsContext?: BuildSubscriptionsContext;
 
   /**
-   * Enable Subscriptions
+   * Enable Websocket Subscriptions
    */
-  subscriptions?: SubscriptionsFlag;
+  websocketSubscriptions?: SubscriptionsFlag;
 
   /**
    * IDE configuration
@@ -79,21 +84,21 @@ export function CreateExpressApp(config: ExpressEnvelopAppOptions = {}): Express
   const {
     buildContext,
     path = '/graphql',
-    subscriptions,
-    buildSubscriptionsContext,
+    websocketSubscriptions,
+    buildWebsocketSubscriptionsContext,
     bodyParserJSONOptions: jsonOptions,
     ide,
   } = config;
 
-  const subscriptionsClientFactoryPromise = CreateSubscriptionsServer(subscriptions);
+  const subscriptionsClientFactoryPromise = CreateSubscriptionsServer(websocketSubscriptions);
 
   async function handleSubscriptions(getEnveloped: Envelop<unknown>, appInstance: Express, optionsServer: Server | undefined) {
-    if (!subscriptions) return;
+    if (!websocketSubscriptions) return;
 
     const subscriptionsClientFactory = await subscriptionsClientFactoryPromise;
     assert(subscriptionsClientFactory);
 
-    const subscriptionsServer = subscriptionsClientFactory(getEnveloped, buildSubscriptionsContext);
+    const subscriptionsServer = subscriptionsClientFactory(getEnveloped, buildWebsocketSubscriptionsContext);
 
     const wsServers = subscriptionsServer[0] === 'both' ? subscriptionsServer[2] : ([subscriptionsServer[1]] as const);
 
@@ -193,14 +198,14 @@ export function CreateExpressApp(config: ExpressEnvelopAppOptions = {}): Express
 
           const { parse, validate, contextFactory: contextFactoryEnvelop, execute, schema, subscribe } = getEnveloped();
 
-          const contextFactory = async (helixCtx: ExecutionContext) => {
+          async function contextFactory(helixCtx: ExecutionContext) {
             const [envelopCtx, customCtx] = await Promise.all([
               contextFactoryEnvelop({ response: res, ...helixCtx }),
               buildContext?.({ request: req, response: res }),
             ]);
 
             return Object.assign(envelopCtx, customCtx);
-          };
+          }
 
           const result = await processRequest({
             operationName,

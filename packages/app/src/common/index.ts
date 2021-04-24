@@ -27,11 +27,6 @@ export interface BaseEnvelopAppOptions
   extends Partial<Omit<EnvelopOptions, 'initialSchema'>>,
     Partial<Omit<ApplicationConfig, 'modules'>> {
   /**
-   * @default "/graphql"
-   */
-  path?: string;
-
-  /**
    * Pre-built schema
    */
   schema?: GraphQLSchema;
