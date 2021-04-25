@@ -1,18 +1,11 @@
+import { request } from 'graphql-request';
 import { useQuery } from 'react-query';
-import { request, gql } from 'graphql-request';
+
+import { HelloDocument, HelloQuery } from '../src/envelop.generated';
 
 export default function Index() {
   const { data, isLoading } = useQuery('hello', async () => {
-    const { hello } = await request<{
-      hello: string;
-    }>(
-      '/api/graphql',
-      gql`
-        query {
-          hello
-        }
-      `
-    );
+    const { hello } = await request<HelloQuery>('/api/graphql', HelloDocument);
 
     return hello;
   });

@@ -37,3 +37,5 @@ export type { BaseEnvelopAppOptions, ExecutableSchemaDefinition } from './app';
 export type { AltairOptions, GraphiQLOptions, IDEOptions } from '../common/ide';
 
 export type { ScalarsConfig } from './scalars';
+
+export type { CodegenConfig, CodegenDocumentsConfig } from './codegen/typescript';

@@ -22,6 +22,7 @@ export const { registerModule, buildApp } = CreateApp({
     scalars: {
       DateTime: 'string',
     },
+    documents: 'src/graphql/*',
   },
   outputSchema: './schema.gql',
   scalars: {

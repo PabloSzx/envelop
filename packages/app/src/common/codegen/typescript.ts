@@ -5,14 +5,32 @@ import { codegen } from '@graphql-codegen/core';
 import * as typescriptPlugin from '@graphql-codegen/typescript';
 import * as typescriptOperationsPlugin from '@graphql-codegen/typescript-operations';
 import * as typescriptResolversPlugin from '@graphql-codegen/typescript-resolvers';
+
 import { printSchemaWithDirectives } from '@graphql-tools/utils';
 
+import { stripUndefineds } from '../utils/object.js';
 import { formatPrettier } from './prettier.js';
 import { writeFileIfChanged } from './write.js';
 
+import type { Types } from '@graphql-codegen/plugin-helpers';
+import type { Source } from '@graphql-tools/utils';
+import type { LoadTypedefsOptions, UnnormalizedTypeDefPointer } from '@graphql-tools/load';
 import type { TypeScriptPluginConfig } from '@graphql-codegen/typescript';
 import type { TypeScriptResolversPluginConfig } from '@graphql-codegen/typescript-resolvers/config';
 import type { BaseEnvelopAppOptions, InternalEnvelopConfig } from '../app';
+import type { CodegenPlugin } from '@graphql-codegen/plugin-helpers';
+
+export interface CodegenDocumentsConfig {
+  /**
+   * @default true
+   */
+  useTypedDocumentNode?: boolean;
+
+  /**
+   * Configuration used while loading the documents
+   */
+  loadDocuments?: Partial<LoadTypedefsOptions>;
+}
 
 export interface CodegenConfig extends TypeScriptPluginConfig, TypeScriptResolversPluginConfig {
   /**
@@ -49,6 +67,39 @@ export interface CodegenConfig extends TypeScriptPluginConfig, TypeScriptResolve
    * @default console.error
    */
   onError?: (err: unknown) => void;
+
+  /**
+   * GraphQL Codegen plugin context
+   */
+  pluginContext?: Record<string, any>;
+
+  /**
+   * Extra plugins map
+   */
+  extraPluginsMap?: Record<string, CodegenPlugin<any>>;
+
+  /**
+   * Extra plugins config
+   */
+  extraPluginsConfig?: Types.ConfiguredPlugin[];
+
+  /**
+   * Asynchronously loads executable documents (i.e. operations and fragments) from
+   * the provided pointers. The pointers may be individual files or a glob pattern.
+   * The files themselves may be `.graphql` files or `.js` and `.ts` (in which
+   * case they will be parsed using graphql-tag-pluck).
+   */
+  documents?: UnnormalizedTypeDefPointer | UnnormalizedTypeDefPointer[];
+
+  /**
+   * Documents config
+   */
+  documentsConfig?: CodegenDocumentsConfig;
+
+  /**
+   * Skip documents validation
+   */
+  skipDocumentsValidation?: boolean;
 }
 
 export async function EnvelopCodegen(
@@ -59,7 +110,24 @@ export async function EnvelopCodegen(
   const moduleName = `@envelop/app/${internalConfig.moduleName}`;
   const schema = parse(printSchemaWithDirectives(executableSchema));
 
-  const { codegen: { targetPath, deepPartialResolvers, preImportCode = '', scalars, onError, ...codegenOptions } = {} } = options;
+  const {
+    codegen: {
+      targetPath,
+      deepPartialResolvers,
+      preImportCode = '',
+      scalars,
+      onError,
+      pluginContext,
+      skipDocumentsValidation,
+      documents: documentsArg,
+      documentsConfig = {},
+      extraPluginsMap,
+      extraPluginsConfig,
+      ...codegenOptions
+    } = {},
+  } = options;
+
+  const { useTypedDocumentNode = true, loadDocuments: loadDocumentsConfig } = documentsConfig;
 
   const config: TypeScriptPluginConfig & TypeScriptResolversPluginConfig = {
     useTypeImports: true,
@@ -69,16 +137,39 @@ export async function EnvelopCodegen(
     ...codegenOptions,
   };
 
+  const pluginMap: Record<string, CodegenPlugin<any>> = {
+    typescript: typescriptPlugin,
+    typescriptResolvers: typescriptResolversPlugin,
+    typescriptOperations: typescriptOperationsPlugin,
+    ...stripUndefineds(extraPluginsMap),
+  };
+
+  const documents: Source[] = [];
+
+  if (documentsArg) {
+    const [{ loadDocuments }, { GraphQLFileLoader }, typedDocumentNode, { CodeFileLoader }] = await Promise.all([
+      import('@graphql-tools/load'),
+      import('@graphql-tools/graphql-file-loader'),
+      useTypedDocumentNode ? import('@graphql-codegen/typed-document-node') : null,
+      import('@graphql-tools/code-file-loader'),
+    ]);
+
+    const loadedDocuments = await loadDocuments(documentsArg, {
+      loaders: [new GraphQLFileLoader(), new CodeFileLoader()],
+      ...stripUndefineds(loadDocumentsConfig),
+    });
+
+    documents.push(...loadedDocuments);
+
+    if (typedDocumentNode) pluginMap.typedDocumentNode = typedDocumentNode;
+  }
+
   const codegenCode = await codegen({
     schema,
-    documents: [],
+    documents,
     config,
     filename: 'envelop.generated.ts',
-    pluginMap: {
-      typescript: typescriptPlugin,
-      typescriptResolvers: typescriptResolversPlugin,
-      typescriptOperations: typescriptOperationsPlugin,
-    },
+    pluginMap,
     plugins: [
       {
         typescript: {},
@@ -89,7 +180,17 @@ export async function EnvelopCodegen(
       {
         typescriptOperations: {},
       },
+      ...(useTypedDocumentNode && documentsArg
+        ? [
+            {
+              typedDocumentNode: {},
+            },
+          ]
+        : []),
+      ...(extraPluginsConfig || []),
     ],
+    pluginContext,
+    skipDocumentsValidation,
   });
 
   const code = await formatPrettier(

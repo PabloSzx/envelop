@@ -1,6 +1,7 @@
 /* eslint-disable no-use-before-define */
 
 import type { GraphQLResolveInfo } from 'graphql';
+import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
 export type Maybe<T> = T | null;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
@@ -145,6 +146,22 @@ export type Resolvers<ContextType = any> = {
  * Use "Resolvers" root object instead. If you wish to get "IResolvers", add "typesPrefix: I" to your config.
  */
 export type IResolvers<ContextType = any> = Resolvers<ContextType>;
+
+export type HelloQueryVariables = Exact<{ [key: string]: never }>;
+
+export type HelloQuery = { __typename?: 'Query' } & Pick<Query, 'hello'>;
+
+export const HelloDocument: DocumentNode<HelloQuery, HelloQueryVariables> = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'Hello' },
+      selectionSet: { kind: 'SelectionSet', selections: [{ kind: 'Field', name: { kind: 'Name', value: 'hello' } }] },
+    },
+  ],
+};
 
 declare module '@envelop/app/nextjs' {
   interface EnvelopResolvers extends Resolvers<import('@envelop/app/nextjs').EnvelopContext> {}

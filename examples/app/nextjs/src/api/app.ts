@@ -16,5 +16,6 @@ export const { buildApp, registerModule, gql } = CreateApp({
     preImportCode: `
     /* eslint-disable no-use-before-define */
     `,
+    documents: 'src/graphql/*',
   },
 });
