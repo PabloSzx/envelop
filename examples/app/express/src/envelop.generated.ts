@@ -1,6 +1,6 @@
 /* eslint-disable no-use-before-define */
 
-import type { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from "graphql";
+import type { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
 export type Maybe<T> = T | null;
 export type Exact<T extends { [key: string]: unknown }> = {
   [K in keyof T]: T[K];
@@ -20,14 +20,14 @@ export type Scalars = {
 };
 
 export type Query = {
-  __typename?: "Query";
-  hello: Scalars["String"];
-  hello2: Scalars["String"];
+  __typename?: 'Query';
+  hello: Scalars['String'];
+  hello2: Scalars['String'];
 };
 
 export type Subscription = {
-  __typename?: "Subscription";
-  hello: Scalars["String"];
+  __typename?: 'Subscription';
+  hello: Scalars['String'];
 };
 
 export type ResolverTypeWrapper<T> = Promise<T> | T;
@@ -69,13 +69,7 @@ export type SubscriptionResolveFn<TResult, TParent, TContext, TArgs> = (
   info: GraphQLResolveInfo
 ) => TResult | Promise<TResult>;
 
-export interface SubscriptionSubscriberObject<
-  TResult,
-  TKey extends string,
-  TParent,
-  TContext,
-  TArgs
-> {
+export interface SubscriptionSubscriberObject<TResult, TKey extends string, TParent, TContext, TArgs> {
   subscribe: SubscriptionSubscribeFn<{ [key in TKey]: TResult }, TParent, TContext, TArgs>;
   resolve?: SubscriptionResolveFn<TResult, { [key in TKey]: TResult }, TContext, TArgs>;
 }
@@ -89,13 +83,7 @@ export type SubscriptionObject<TResult, TKey extends string, TParent, TContext, 
   | SubscriptionSubscriberObject<TResult, TKey, TParent, TContext, TArgs>
   | SubscriptionResolverObject<TResult, TParent, TContext, TArgs>;
 
-export type SubscriptionResolver<
-  TResult,
-  TKey extends string,
-  TParent = {},
-  TContext = {},
-  TArgs = {}
-> =
+export type SubscriptionResolver<TResult, TKey extends string, TParent = {}, TContext = {}, TArgs = {}> =
   | ((...args: any[]) => SubscriptionObject<TResult, TKey, TParent, TContext, TArgs>)
   | SubscriptionObject<TResult, TKey, TParent, TContext, TArgs>;
 
@@ -124,45 +112,38 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
   Query: ResolverTypeWrapper<{}>;
-  String: ResolverTypeWrapper<
-    import("@pablosz/envelop-app/express").DeepPartial<Scalars["String"]>
-  >;
+  String: ResolverTypeWrapper<import('@pablosz/envelop-app/express').DeepPartial<Scalars['String']>>;
   Subscription: ResolverTypeWrapper<{}>;
-  DateTime: ResolverTypeWrapper<
-    import("@pablosz/envelop-app/express").DeepPartial<Scalars["DateTime"]>
-  >;
-  Boolean: ResolverTypeWrapper<
-    import("@pablosz/envelop-app/express").DeepPartial<Scalars["Boolean"]>
-  >;
+  DateTime: ResolverTypeWrapper<import('@pablosz/envelop-app/express').DeepPartial<Scalars['DateTime']>>;
+  Boolean: ResolverTypeWrapper<import('@pablosz/envelop-app/express').DeepPartial<Scalars['Boolean']>>;
 };
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
   Query: {};
-  String: import("@pablosz/envelop-app/express").DeepPartial<Scalars["String"]>;
+  String: import('@pablosz/envelop-app/express').DeepPartial<Scalars['String']>;
   Subscription: {};
-  DateTime: import("@pablosz/envelop-app/express").DeepPartial<Scalars["DateTime"]>;
-  Boolean: import("@pablosz/envelop-app/express").DeepPartial<Scalars["Boolean"]>;
+  DateTime: import('@pablosz/envelop-app/express').DeepPartial<Scalars['DateTime']>;
+  Boolean: import('@pablosz/envelop-app/express').DeepPartial<Scalars['Boolean']>;
 };
 
 export type QueryResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Query"] = ResolversParentTypes["Query"]
+  ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']
 > = {
-  hello?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
-  hello2?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  hello?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  hello2?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
 };
 
 export type SubscriptionResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Subscription"] = ResolversParentTypes["Subscription"]
+  ParentType extends ResolversParentTypes['Subscription'] = ResolversParentTypes['Subscription']
 > = {
-  hello?: SubscriptionResolver<ResolversTypes["String"], "hello", ParentType, ContextType>;
+  hello?: SubscriptionResolver<ResolversTypes['String'], 'hello', ParentType, ContextType>;
 };
 
-export interface DateTimeScalarConfig
-  extends GraphQLScalarTypeConfig<ResolversTypes["DateTime"], any> {
-  name: "DateTime";
+export interface DateTimeScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['DateTime'], any> {
+  name: 'DateTime';
 }
 
 export type Resolvers<ContextType = any> = {
@@ -177,7 +158,6 @@ export type Resolvers<ContextType = any> = {
  */
 export type IResolvers<ContextType = any> = Resolvers<ContextType>;
 
-declare module "@pablosz/envelop-app/express" {
-  interface EnvelopResolvers
-    extends Resolvers<import("@pablosz/envelop-app/express").EnvelopContext> {}
+declare module '@pablosz/envelop-app/express' {
+  interface EnvelopResolvers extends Resolvers<import('@pablosz/envelop-app/express').EnvelopContext> {}
 }

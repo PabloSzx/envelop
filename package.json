@@ -2,12 +2,23 @@
   "name": "app-envelop",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
-  "scripts": {},
-  "author": "PabloSz <pablosaez1995@gmail.com>",
   "license": "MIT",
+  "author": "PabloSz <pablosaez1995@gmail.com>",
+  "main": "index.js",
+  "scripts": {
+    "prepare": "husky install",
+    "pretty": "pretty-quick",
+    "pretty-all": "prettier -w **/*.ts **/*.js"
+  },
   "dependencies": {
+    "@types/node": "^14.14.41",
+    "@types/prettier": "^2.2.3",
+    "husky": "^6.0.0",
     "prettier": "^2.2.1",
-    "@types/prettier": "^2.2.3"
+    "pretty-quick": "^3.1.0",
+    "typescript": "^4.2.4"
+  },
+  "engines": {
+    "pnpm": ">=6.2.1"
   }
 }

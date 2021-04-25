@@ -1,13 +1,13 @@
-import { CreateApp, BuildContextArgs, InferFunctionReturn } from "@pablosz/envelop-app/express";
+import { CreateApp, BuildContextArgs, InferFunctionReturn } from '@pablosz/envelop-app/express';
 
 function buildContext({ request }: BuildContextArgs) {
   return {
     request,
-    foo: "bar",
+    foo: 'bar',
   };
 }
 
-declare module "@pablosz/envelop-app/express" {
+declare module '@pablosz/envelop-app/express' {
   interface EnvelopContext extends InferFunctionReturn<typeof buildContext> {}
 }
 
@@ -15,15 +15,15 @@ export const { registerModule, buildApp, gql } = CreateApp({
   codegen: {
     federation: true,
     deepPartialResolvers: true,
-    targetPath: "./src/envelop.generated.ts",
+    targetPath: './src/envelop.generated.ts',
     preImportCode: `
     /* eslint-disable no-use-before-define */
     `,
     scalars: {
-      DateTime: "string",
+      DateTime: 'string',
     },
   },
-  outputSchema: "./schema.gql",
+  outputSchema: './schema.gql',
   scalars: {
     DateTime: true,
   },

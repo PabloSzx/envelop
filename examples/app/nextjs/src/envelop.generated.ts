@@ -1,15 +1,13 @@
 /* eslint-disable no-use-before-define */
 
-import type { GraphQLResolveInfo } from "graphql";
-import type { TypedDocumentNode as DocumentNode } from "@graphql-typed-document-node/core";
+import type { GraphQLResolveInfo } from 'graphql';
+import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
 export type Maybe<T> = T | null;
 export type Exact<T extends { [key: string]: unknown }> = {
   [K in keyof T]: T[K];
 };
-export type MakeOptional<T, K extends keyof T> = Omit<T, K> &
-  { [SubKey in K]?: Maybe<T[SubKey]> };
-export type MakeMaybe<T, K extends keyof T> = Omit<T, K> &
-  { [SubKey in K]: Maybe<T[SubKey]> };
+export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
+export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
   ID: string;
@@ -20,14 +18,14 @@ export type Scalars = {
 };
 
 export type Query = {
-  __typename?: "Query";
-  hello: Scalars["String"];
-  hello2: Scalars["String"];
+  __typename?: 'Query';
+  hello: Scalars['String'];
+  hello2: Scalars['String'];
 };
 
 export type Subscription = {
-  __typename?: "Subscription";
-  hello: Scalars["String"];
+  __typename?: 'Subscription';
+  hello: Scalars['String'];
 };
 
 export type ResolverTypeWrapper<T> = Promise<T> | T;
@@ -69,25 +67,9 @@ export type SubscriptionResolveFn<TResult, TParent, TContext, TArgs> = (
   info: GraphQLResolveInfo
 ) => TResult | Promise<TResult>;
 
-export interface SubscriptionSubscriberObject<
-  TResult,
-  TKey extends string,
-  TParent,
-  TContext,
-  TArgs
-> {
-  subscribe: SubscriptionSubscribeFn<
-    { [key in TKey]: TResult },
-    TParent,
-    TContext,
-    TArgs
-  >;
-  resolve?: SubscriptionResolveFn<
-    TResult,
-    { [key in TKey]: TResult },
-    TContext,
-    TArgs
-  >;
+export interface SubscriptionSubscriberObject<TResult, TKey extends string, TParent, TContext, TArgs> {
+  subscribe: SubscriptionSubscribeFn<{ [key in TKey]: TResult }, TParent, TContext, TArgs>;
+  resolve?: SubscriptionResolveFn<TResult, { [key in TKey]: TResult }, TContext, TArgs>;
 }
 
 export interface SubscriptionResolverObject<TResult, TParent, TContext, TArgs> {
@@ -95,26 +77,12 @@ export interface SubscriptionResolverObject<TResult, TParent, TContext, TArgs> {
   resolve: SubscriptionResolveFn<TResult, any, TContext, TArgs>;
 }
 
-export type SubscriptionObject<
-  TResult,
-  TKey extends string,
-  TParent,
-  TContext,
-  TArgs
-> =
+export type SubscriptionObject<TResult, TKey extends string, TParent, TContext, TArgs> =
   | SubscriptionSubscriberObject<TResult, TKey, TParent, TContext, TArgs>
   | SubscriptionResolverObject<TResult, TParent, TContext, TArgs>;
 
-export type SubscriptionResolver<
-  TResult,
-  TKey extends string,
-  TParent = {},
-  TContext = {},
-  TArgs = {}
-> =
-  | ((
-      ...args: any[]
-    ) => SubscriptionObject<TResult, TKey, TParent, TContext, TArgs>)
+export type SubscriptionResolver<TResult, TKey extends string, TParent = {}, TContext = {}, TArgs = {}> =
+  | ((...args: any[]) => SubscriptionObject<TResult, TKey, TParent, TContext, TArgs>)
   | SubscriptionObject<TResult, TKey, TParent, TContext, TArgs>;
 
 export type TypeResolveFn<TTypes, TParent = {}, TContext = {}> = (
@@ -131,12 +99,7 @@ export type IsTypeOfResolverFn<T = {}, TContext = {}> = (
 
 export type NextResolverFn<T> = () => Promise<T>;
 
-export type DirectiveResolverFn<
-  TResult = {},
-  TParent = {},
-  TContext = {},
-  TArgs = {}
-> = (
+export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs = {}> = (
   next: NextResolverFn<TResult>,
   parent: TParent,
   args: TArgs,
@@ -147,37 +110,32 @@ export type DirectiveResolverFn<
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
   Query: ResolverTypeWrapper<{}>;
-  String: ResolverTypeWrapper<Scalars["String"]>;
+  String: ResolverTypeWrapper<Scalars['String']>;
   Subscription: ResolverTypeWrapper<{}>;
-  Boolean: ResolverTypeWrapper<Scalars["Boolean"]>;
+  Boolean: ResolverTypeWrapper<Scalars['Boolean']>;
 };
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
   Query: {};
-  String: Scalars["String"];
+  String: Scalars['String'];
   Subscription: {};
-  Boolean: Scalars["Boolean"];
+  Boolean: Scalars['Boolean'];
 };
 
 export type QueryResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Query"] = ResolversParentTypes["Query"]
+  ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']
 > = {
-  hello?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
-  hello2?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  hello?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  hello2?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
 };
 
 export type SubscriptionResolvers<
   ContextType = any,
-  ParentType extends ResolversParentTypes["Subscription"] = ResolversParentTypes["Subscription"]
+  ParentType extends ResolversParentTypes['Subscription'] = ResolversParentTypes['Subscription']
 > = {
-  hello?: SubscriptionResolver<
-    ResolversTypes["String"],
-    "hello",
-    ParentType,
-    ContextType
-  >;
+  hello?: SubscriptionResolver<ResolversTypes['String'], 'hello', ParentType, ContextType>;
 };
 
 export type Resolvers<ContextType = any> = {
@@ -193,24 +151,23 @@ export type IResolvers<ContextType = any> = Resolvers<ContextType>;
 
 export type HelloQueryVariables = Exact<{ [key: string]: never }>;
 
-export type HelloQuery = { __typename?: "Query" } & Pick<Query, "hello">;
+export type HelloQuery = { __typename?: 'Query' } & Pick<Query, 'hello'>;
 
 export const HelloDocument: DocumentNode<HelloQuery, HelloQueryVariables> = {
-  kind: "Document",
+  kind: 'Document',
   definitions: [
     {
-      kind: "OperationDefinition",
-      operation: "query",
-      name: { kind: "Name", value: "Hello" },
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'Hello' },
       selectionSet: {
-        kind: "SelectionSet",
-        selections: [{ kind: "Field", name: { kind: "Name", value: "hello" } }],
+        kind: 'SelectionSet',
+        selections: [{ kind: 'Field', name: { kind: 'Name', value: 'hello' } }],
       },
     },
   ],
 };
 
-declare module "@envelop/app/nextjs" {
-  interface EnvelopResolvers
-    extends Resolvers<import("@envelop/app/nextjs").EnvelopContext> {}
+declare module '@envelop/app/nextjs' {
+  interface EnvelopResolvers extends Resolvers<import('@envelop/app/nextjs').EnvelopContext> {}
 }

@@ -1,5 +1,5 @@
-import { GraphiQLHandler } from "@pablosz/envelop-app/nextjs";
+import { GraphiQLHandler } from '@pablosz/envelop-app/nextjs';
 
 export default GraphiQLHandler({
-  endpoint: "/api/graphql",
+  endpoint: '/api/graphql',
 });

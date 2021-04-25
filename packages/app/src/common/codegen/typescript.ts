@@ -1,22 +1,22 @@
-import { GraphQLSchema, parse } from "graphql";
-import { resolve } from "path";
+import { GraphQLSchema, parse } from 'graphql';
+import { resolve } from 'path';
 
-import { codegen } from "@graphql-codegen/core";
-import * as typescriptPlugin from "@graphql-codegen/typescript";
-import * as typescriptOperationsPlugin from "@graphql-codegen/typescript-operations";
-import * as typescriptResolversPlugin from "@graphql-codegen/typescript-resolvers";
-import { printSchemaWithDirectives } from "@graphql-tools/utils";
+import { codegen } from '@graphql-codegen/core';
+import * as typescriptPlugin from '@graphql-codegen/typescript';
+import * as typescriptOperationsPlugin from '@graphql-codegen/typescript-operations';
+import * as typescriptResolversPlugin from '@graphql-codegen/typescript-resolvers';
+import { printSchemaWithDirectives } from '@graphql-tools/utils';
 
-import { stripUndefineds } from "../utils/object.js";
-import { formatPrettier } from "./prettier.js";
-import { writeFileIfChanged } from "./write.js";
+import { stripUndefineds } from '../utils/object.js';
+import { formatPrettier } from './prettier.js';
+import { writeFileIfChanged } from './write.js';
 
-import type { CodegenPlugin, Types } from "@graphql-codegen/plugin-helpers";
-import type { Source } from "@graphql-tools/utils";
-import type { LoadTypedefsOptions, UnnormalizedTypeDefPointer } from "@graphql-tools/load";
-import type { TypeScriptPluginConfig } from "@graphql-codegen/typescript";
-import type { TypeScriptResolversPluginConfig } from "@graphql-codegen/typescript-resolvers/config";
-import type { BaseEnvelopAppOptions, InternalEnvelopConfig } from "../app";
+import type { CodegenPlugin, Types } from '@graphql-codegen/plugin-helpers';
+import type { Source } from '@graphql-tools/utils';
+import type { LoadTypedefsOptions, UnnormalizedTypeDefPointer } from '@graphql-tools/load';
+import type { TypeScriptPluginConfig } from '@graphql-codegen/typescript';
+import type { TypeScriptResolversPluginConfig } from '@graphql-codegen/typescript-resolvers/config';
+import type { BaseEnvelopAppOptions, InternalEnvelopConfig } from '../app';
 
 export interface CodegenDocumentsConfig {
   /**
@@ -112,7 +112,7 @@ export async function EnvelopCodegen(
     codegen: {
       targetPath,
       deepPartialResolvers,
-      preImportCode = "",
+      preImportCode = '',
       scalars,
       onError,
       pluginContext,
@@ -145,16 +145,11 @@ export async function EnvelopCodegen(
   const documents: Source[] = [];
 
   if (documentsArg) {
-    const [
-      { loadDocuments },
-      { GraphQLFileLoader },
-      typedDocumentNode,
-      { CodeFileLoader },
-    ] = await Promise.all([
-      import("@graphql-tools/load"),
-      import("@graphql-tools/graphql-file-loader"),
-      useTypedDocumentNode ? import("@graphql-codegen/typed-document-node") : null,
-      import("@graphql-tools/code-file-loader"),
+    const [{ loadDocuments }, { GraphQLFileLoader }, typedDocumentNode, { CodeFileLoader }] = await Promise.all([
+      import('@graphql-tools/load'),
+      import('@graphql-tools/graphql-file-loader'),
+      useTypedDocumentNode ? import('@graphql-codegen/typed-document-node') : null,
+      import('@graphql-tools/code-file-loader'),
     ]);
 
     const loadedDocuments = await loadDocuments(documentsArg, {
@@ -171,7 +166,7 @@ export async function EnvelopCodegen(
     schema,
     documents,
     config,
-    filename: "envelop.generated.ts",
+    filename: 'envelop.generated.ts',
     pluginMap,
     plugins: [
       {
@@ -205,10 +200,8 @@ export async function EnvelopCodegen(
         interface EnvelopResolvers extends Resolvers<import("${moduleName}").EnvelopContext> { }
     }
   `,
-    "typescript"
+    'typescript'
   );
 
-  await writeFileIfChanged(resolve(targetPath ?? "./src/envelop.generated.ts"), code).catch(
-    onError
-  );
+  await writeFileIfChanged(resolve(targetPath ?? './src/envelop.generated.ts'), code).catch(onError);
 }

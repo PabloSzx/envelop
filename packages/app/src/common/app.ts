@@ -1,29 +1,21 @@
-import { isSchema } from "graphql";
-import {
-  Application,
-  ApplicationConfig,
-  createApplication,
-  createModule,
-  gql,
-  Module,
-  TypeDefs,
-} from "graphql-modules";
+import { isSchema } from 'graphql';
+import { Application, ApplicationConfig, createApplication, createModule, gql, Module, TypeDefs } from 'graphql-modules';
 
-import { Envelop, envelop, useSchema } from "@envelop/core";
-import { useGraphQLModules } from "@envelop/graphql-modules";
-import { mergeSchemasAsync, MergeSchemasConfig } from "@graphql-tools/merge";
-import { IExecutableSchemaDefinition, makeExecutableSchema } from "@graphql-tools/schema";
+import { Envelop, envelop, useSchema } from '@envelop/core';
+import { useGraphQLModules } from '@envelop/graphql-modules';
+import { mergeSchemasAsync, MergeSchemasConfig } from '@graphql-tools/merge';
+import { IExecutableSchemaDefinition, makeExecutableSchema } from '@graphql-tools/schema';
 
-import type { ScalarsConfig } from "./scalars";
-import type { GraphQLSchema } from "graphql";
-import type { Plugin } from "@envelop/core";
-import type { EnvelopContext, EnvelopModuleConfig, EnvelopResolvers } from "./types";
-import type { CodegenConfig } from "./codegen/typescript";
+import type { ScalarsConfig } from './scalars';
+import type { GraphQLSchema } from 'graphql';
+import type { Plugin } from '@envelop/core';
+import type { EnvelopContext, EnvelopModuleConfig, EnvelopResolvers } from './types';
+import type { CodegenConfig } from './codegen/typescript';
 
 export type AdapterFactory<T> = (envelop: Envelop<unknown>, modulesApplication: Application) => T;
 
 export interface InternalEnvelopConfig {
-  moduleName: "express" | "fastify" | "nextjs" | "http" | "koa";
+  moduleName: 'express' | 'fastify' | 'nextjs' | 'http' | 'koa';
 }
 
 export interface InternalAppBuildOptions<T> {
@@ -39,7 +31,7 @@ export interface EnvelopAppFactoryType {
 }
 
 export interface ExecutableSchemaDefinition<TContext = EnvelopContext>
-  extends Omit<IExecutableSchemaDefinition<TContext>, "resolvers"> {
+  extends Omit<IExecutableSchemaDefinition<TContext>, 'resolvers'> {
   resolvers?: EnvelopResolvers<TContext> | EnvelopResolvers<TContext>[];
 }
 
@@ -47,21 +39,16 @@ interface EnvelopOptions {
   plugins?: Plugin[];
 }
 
-export interface BaseEnvelopAppOptions<TContext>
-  extends EnvelopOptions,
-    Partial<ApplicationConfig> {
+export interface BaseEnvelopAppOptions<TContext> extends EnvelopOptions, Partial<ApplicationConfig> {
   /**
    * Pre-built schema
    */
-  schema?:
-    | GraphQLSchema
-    | ExecutableSchemaDefinition<TContext>
-    | Array<GraphQLSchema | ExecutableSchemaDefinition<TContext>>;
+  schema?: GraphQLSchema | ExecutableSchemaDefinition<TContext> | Array<GraphQLSchema | ExecutableSchemaDefinition<TContext>>;
 
   /**
    * Customize configuration of schema merging
    */
-  mergeSchemasConfig?: Omit<MergeSchemasConfig, "schemas">;
+  mergeSchemasConfig?: Omit<MergeSchemasConfig, 'schemas'>;
 
   /**
    * Enable code generation, by default it's enabled if `NODE_ENV` is not `production` nor `test`
@@ -132,7 +119,7 @@ export function createEnvelopAppFactory<TContext>(
       const modules = [...factoryModules];
 
       const {
-        enableCodegen = process.env.NODE_ENV !== "production" && process.env.NODE_ENV !== "test",
+        enableCodegen = process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test',
         plugins: manualPlugins = [],
         schema: manualSchema,
         middlewares,
@@ -147,7 +134,7 @@ export function createEnvelopAppFactory<TContext>(
       } = config;
 
       if (scalars) {
-        await import("./scalars.js").then(({ createScalarsModule }) => {
+        await import('./scalars.js').then(({ createScalarsModule }) => {
           const scalarsModule = createScalarsModule(scalars);
 
           if (scalarsModule) modules.push(scalarsModule);
@@ -161,18 +148,11 @@ export function createEnvelopAppFactory<TContext>(
         schemaBuilder,
       });
 
-      const plugins = modules.length
-        ? [useGraphQLModules(modulesApplication), ...manualPlugins]
-        : [...manualPlugins];
+      const plugins = modules.length ? [useGraphQLModules(modulesApplication), ...manualPlugins] : [...manualPlugins];
 
       if (manualSchema) {
-        const schemas = (Array.isArray(manualSchema)
-          ? manualSchema
-          : [manualSchema]
-        ).map((schemaValue) =>
-          isSchema(schemaValue)
-            ? schemaValue
-            : makeExecutableSchema(schemaValue as IExecutableSchemaDefinition)
+        const schemas = (Array.isArray(manualSchema) ? manualSchema : [manualSchema]).map(schemaValue =>
+          isSchema(schemaValue) ? schemaValue : makeExecutableSchema(schemaValue as IExecutableSchemaDefinition)
         );
 
         if (schemas.length > 1) {
@@ -203,7 +183,7 @@ export function createEnvelopAppFactory<TContext>(
       });
 
       if (enableCodegen) {
-        import("./codegen/handle.js")
+        import('./codegen/handle.js')
           .then(({ handleCodegen }) => {
             handleCodegen(getEnveloped, config, internalConfig);
           })

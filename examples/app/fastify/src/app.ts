@@ -1,18 +1,13 @@
-import {
-  BuildContextArgs,
-  CreateApp,
-  gql,
-  InferFunctionReturn,
-} from "@pablosz/envelop-app/fastify";
+import { BuildContextArgs, CreateApp, gql, InferFunctionReturn } from '@pablosz/envelop-app/fastify';
 
 function buildContext({ request }: BuildContextArgs) {
   return {
     request,
-    foo: "bar",
+    foo: 'bar',
   };
 }
 
-declare module "@pablosz/envelop-app/fastify" {
+declare module '@pablosz/envelop-app/fastify' {
   interface EnvelopContext extends InferFunctionReturn<typeof buildContext> {}
 }
 
@@ -20,16 +15,16 @@ export const { registerModule, buildApp } = CreateApp({
   codegen: {
     federation: true,
     deepPartialResolvers: true,
-    targetPath: "./src/envelop.generated.ts",
+    targetPath: './src/envelop.generated.ts',
     preImportCode: `
     /* eslint-disable no-use-before-define */
     `,
     scalars: {
-      DateTime: "string",
+      DateTime: 'string',
     },
-    documents: "src/graphql/*",
+    documents: 'src/graphql/*',
   },
-  outputSchema: "./schema.gql",
+  outputSchema: './schema.gql',
   scalars: {
     DateTime: 1,
   },
@@ -40,7 +35,7 @@ export const { registerModule, buildApp } = CreateApp({
     buildSubscriptionsContext({ request }) {
       return {
         request,
-        foo: "baz",
+        foo: 'baz',
       };
     },
   },
@@ -49,7 +44,7 @@ export const { registerModule, buildApp } = CreateApp({
     graphiql: true,
   },
   routeOptions: {
-    logLevel: "info",
+    logLevel: 'info',
   },
   schema: {
     typeDefs: gql`
@@ -60,7 +55,7 @@ export const { registerModule, buildApp } = CreateApp({
     resolvers: {
       Query: {
         hello3(_root, _args, _ctx) {
-          return "zzz";
+          return 'zzz';
         },
       },
     },
