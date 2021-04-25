@@ -1,4 +1,4 @@
-import { CreateApp, BuildContextArgs, InferFunctionReturn, gql } from '@envelop/app/fastify';
+import { BuildContextArgs, CreateApp, gql, InferFunctionReturn } from '@envelop/app/fastify';
 
 function buildContext({ request }: BuildContextArgs) {
   return {

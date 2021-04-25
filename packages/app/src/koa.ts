@@ -107,12 +107,20 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
           const { parse, validate, contextFactory: contextFactoryEnvelop, execute, schema, subscribe } = getEnveloped();
 
           async function contextFactory(helixCtx: ExecutionContext) {
-            const [envelopCtx, customCtx] = await Promise.all([
-              contextFactoryEnvelop({ response: ctx.request, ...helixCtx }),
-              buildContext?.({ request: ctx.request, response: ctx.response }),
-            ]);
+            if (buildContext) {
+              return contextFactoryEnvelop(
+                Object.assign(
+                  {},
+                  helixCtx,
+                  await buildContext({
+                    request: ctx.request,
+                    response: ctx.response,
+                  })
+                )
+              );
+            }
 
-            return Object.assign(envelopCtx, customCtx);
+            return contextFactoryEnvelop(helixCtx);
           }
 
           const result = await processRequest({

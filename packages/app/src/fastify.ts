@@ -19,7 +19,7 @@ export type EnvelopAppPlugin = FastifyPluginCallback<{}, Server>;
 
 export interface BuildContextArgs {
   request: FastifyRequest;
-  reply: FastifyReply;
+  response: FastifyReply;
 }
 
 export interface EnvelopAppOptions extends BaseEnvelopAppOptions<EnvelopContext> {
@@ -146,14 +146,19 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
     const app = appBuilder({
       prepare,
       adapterFactory(getEnveloped) {
-        const EnvelopApp: FastifyPluginCallback<{}> = async function FastifyPlugin(instance) {
+        return async function FastifyPlugin(instance: FastifyInstance) {
           const idePromise = handleIDE(ide, {
-            async handleAltair(options) {
+            async handleAltair({ path, ...options }) {
               const { default: AltairFastify } = await import('altair-fastify-plugin');
 
               await instance.register(AltairFastify, {
                 subscriptionsEndpoint: `ws://localhost:3000/${path}`,
+                path,
                 ...options,
+              });
+
+              instance.get(path.endsWith('/') ? path.slice(0, path.length - 1) : path + '/', (_request, reply) => {
+                reply.redirect(path);
               });
             },
             handleGraphiQL(options) {
@@ -182,12 +187,20 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
               const { operationName, query, variables } = getGraphQLParameters(request);
 
               async function contextFactory(helixCtx: ExecutionContext) {
-                const [envelopCtx, customCtx] = await Promise.all([
-                  contextFactoryEnvelop({ reply, ...helixCtx }),
-                  buildContext?.({ request: req, reply }),
-                ]);
+                if (buildContext) {
+                  return contextFactoryEnvelop(
+                    Object.assign(
+                      {},
+                      helixCtx,
+                      await buildContext({
+                        request: req,
+                        response: reply,
+                      })
+                    )
+                  );
+                }
 
-                return Object.assign(envelopCtx, customCtx);
+                return contextFactoryEnvelop(helixCtx);
               }
 
               const result = await processRequest({
@@ -259,13 +272,11 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
 
           await Promise.all([idePromise, subscriptionsPromise]);
         };
-
-        return EnvelopApp;
       },
     });
 
-    return async function (instance, opts) {
-      instance.register(await app, opts);
+    return async function EnvelopPlugin(instance) {
+      await (await app)(instance);
     };
   }
 

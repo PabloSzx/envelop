@@ -1702,6 +1702,26 @@
     "@opentelemetry/semantic-conventions" "^0.18.2"
     lodash.merge "^4.6.2"
 
+"@pablosz/tsup@^0.1.4":
+  version "0.1.4"
+  resolved "https://registry.yarnpkg.com/@pablosz/tsup/-/tsup-0.1.4.tgz#b16a90681af8f42943119f633d0d380d5678ba0d"
+  integrity sha512-p4E7dm/+Z5iUaUENGLXI5sE6IB77WaJCamsaw5DB/Ae8yCw88Y6pVzWDfTud4Xfcl2o/51H+irA2YROxQdCYBg==
+  dependencies:
+    cac "^6.7.3"
+    chalk "^4.1.1"
+    chokidar "^3.5.1"
+    debug "^4.3.1"
+    esbuild "^0.11.14"
+    execa "^5.0.0"
+    globby "^11.0.3"
+    jju "^1.4.0"
+    joycon "^3.0.1"
+    postcss-load-config "^3.0.1"
+    resolve-from "^5.0.0"
+    rollup "^2.45.2"
+    sucrase "^3.18.1"
+    tree-kill "^1.2.2"
+
 "@panva/asn1.js@^1.0.0":
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@panva/asn1.js/-/asn1.js-1.0.0.tgz#dd55ae7b8129e02049f009408b97c61ccf9032f6"
@@ -3468,7 +3488,7 @@ bytes@3.1.0:
   resolved "https://registry.yarnpkg.com/bytes/-/bytes-3.1.0.tgz#f6cf7933a360e0588fa9fde85651cdc7f805d1f6"
   integrity sha512-zauLjrfCG+xvoyaqLoV8bLVXXNGC4JqlxFCutSDWA6fJrTo2ZuvLYTqZ7aHBLZSMOopbzwv8f+wZcVzfVTI2Dg==
 
-cac@^6.7.2:
+cac@^6.7.3:
   version "6.7.3"
   resolved "https://registry.yarnpkg.com/cac/-/cac-6.7.3.tgz#10410b8611677990cc2e3c8b576d471c1d71b768"
   integrity sha512-ECVqVZh74qgSuZG9YOt2OJPI3wGcf+EwwuF/XIOYqZBD0KZYLtgPWqFPxmDPQ6joxI1nOlvVgRV6VT53Ooyocg==
@@ -3600,7 +3620,7 @@ chalk@^3.0.0:
     ansi-styles "^4.1.0"
     supports-color "^7.1.0"
 
-chalk@^4.0.0, chalk@^4.1.0:
+chalk@^4.0.0, chalk@^4.1.0, chalk@^4.1.1:
   version "4.1.1"
   resolved "https://registry.yarnpkg.com/chalk/-/chalk-4.1.1.tgz#c80b3fab28bf6371e6863325eee67e618b77e6ad"
   integrity sha512-diHzdDKxcU+bAsUboHLPEDQiw0qEe0qd7SYUn3HgcFlWgbDcfLGswOHYeGrHKzG9z6UYf01d9VFMfZxPM1xZSg==
@@ -4553,7 +4573,7 @@ es6-object-assign@^1.1.0:
   resolved "https://registry.yarnpkg.com/es6-object-assign/-/es6-object-assign-1.1.0.tgz#c2c3582656247c39ea107cb1e6652b6f9f24523c"
   integrity sha1-wsNYJlYkfDnqEHyx5mUrb58kUjw=
 
-esbuild@^0.11.11, esbuild@^0.11.12:
+esbuild@^0.11.11, esbuild@^0.11.14:
   version "0.11.14"
   resolved "https://registry.yarnpkg.com/esbuild/-/esbuild-0.11.14.tgz#0f4beba211d6d23e2825f61a89ccff1eef96361b"
   integrity sha512-ejheEPkqhq5y0LM9rG9e+3yDihPtqeeE4NZmG7VQiSGJ3CjO4HvPOHmhhttSksfSztjLAGo2+0/zSIvlqj4JOQ==
@@ -6823,6 +6843,11 @@ jest@26.6.3:
     "@jest/core" "^26.6.3"
     import-local "^3.0.2"
     jest-cli "^26.6.3"
+
+jju@^1.4.0:
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/jju/-/jju-1.4.0.tgz#a3abe2718af241a2b2904f84a625970f389ae32a"
+  integrity sha1-o6vicYryQaKykE+EpiWXDzia4yo=
 
 joi@^17.3.0:
   version "17.4.0"
@@ -10307,25 +10332,6 @@ tsscmp@1.0.6:
   version "1.0.6"
   resolved "https://registry.yarnpkg.com/tsscmp/-/tsscmp-1.0.6.tgz#85b99583ac3589ec4bfef825b5000aa911d605eb"
   integrity sha512-LxhtAkPDTkVCMQjt2h6eBVY28KCjikZqZfMcC15YBeNjkgUpdCfBu5HoiOTDu86v6smE8yOjyEktJ8hlbANHQA==
-
-tsup@^4.9.2:
-  version "4.9.2"
-  resolved "https://registry.yarnpkg.com/tsup/-/tsup-4.9.2.tgz#be80cd1fbf7a7039f4730a8894c008c905022136"
-  integrity sha512-Xs06k34FBD0dgNfg2jpXaMN5CUZHm31OLDaIQoNJFzEv9Ii1kRdWB9Xs8U7STaBQaa4INkxruhk+1CZUh73tCw==
-  dependencies:
-    cac "^6.7.2"
-    chalk "^4.1.0"
-    chokidar "^3.5.1"
-    debug "^4.3.1"
-    esbuild "^0.11.12"
-    execa "^5.0.0"
-    globby "^11.0.3"
-    joycon "^3.0.1"
-    postcss-load-config "^3.0.1"
-    resolve-from "^5.0.0"
-    rollup "^2.45.2"
-    sucrase "^3.18.1"
-    tree-kill "^1.2.2"
 
 tsutils@^3.17.1:
   version "3.21.0"

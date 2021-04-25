@@ -46,9 +46,7 @@ export const CreateSubscriptionsServer = async (flag: SubscriptionsFlag | undefi
 
   const oldTransport =
     flag === 'legacy' || flag === 'all'
-      ? import('subscriptions-transport-ws/dist/server.js').then(value => {
-          return value.default.SubscriptionServer;
-        })
+      ? import('subscriptions-transport-ws/dist/server.js').then(v => v.SubscriptionServer)
       : null;
 
   const [ws, subscriptionsTransportWs, useGraphQLWSServer] = await Promise.all([
