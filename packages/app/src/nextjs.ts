@@ -158,16 +158,23 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
   };
 }
 
-export interface GraphiQLHandlerOptions extends RenderGraphiQLOptions {}
+export interface GraphiQLHandlerOptions extends RenderGraphiQLOptions {
+  /**
+   * The endpoint requests should be sent. Defaults to `"/api/graphql"`.
+   */
+  endpoint?: string;
+}
 
 export function GraphiQLHandler(options: GraphiQLHandlerOptions = {}): NextApiHandler<unknown> {
   const { endpoint = '/api/graphql', ...renderOptions } = options;
+
+  const html = renderGraphiQL({ ...renderOptions, endpoint });
   return function (req, res) {
     if (req.method !== 'GET') return res.status(404).end();
 
     res.setHeader('content-type', 'text/html');
 
-    return res.send(renderGraphiQL({ ...renderOptions, endpoint }));
+    return res.send(html);
   };
 }
 
@@ -178,6 +185,13 @@ export interface AltairHandlerOptions extends Omit<RenderOptions, 'baseURL'> {
    * @default "/api/altair"
    */
   path?: string;
+
+  /**
+   * URL to set as the server endpoint
+   *
+   * @default "/api/graphql"
+   */
+  endpointURL?: string;
 }
 
 export function AltairHandler(options: AltairHandlerOptions = {}): NextApiHandler<unknown> {
