@@ -1,0 +1,13 @@
+{
+  "name": "app-envelop",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {},
+  "author": "PabloSz <pablosaez1995@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "prettier": "^2.2.1",
+    "@types/prettier": "^2.2.3"
+  }
+}
