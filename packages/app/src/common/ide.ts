@@ -38,13 +38,18 @@ export type IDEOptions<
     };
 
 export interface InternalIDEOptions<AltairOptions extends RenderOptions = RenderOptions> {
-  handleAltair: (options: AltairOptions & { path: string }) => Promise<void>;
+  handleAltair: (options: AltairOptions & { path: string }) => Promise<void> | void;
   handleGraphiQL: (graphiqlHTML: GraphiQLOptions & { html: string; path: string }) => void | Promise<void>;
 }
 
-export async function handleIDE(userOptions: IDEOptions = true, internal: InternalIDEOptions): Promise<void> {
-  if (!userOptions) return;
+export interface IDEConfig {
+  altairOptions: AltairOptions & { path: string };
+  graphiQLOptions: GraphiQLOptions & { path: string };
+  isAltairEnabled: boolean;
+  isGraphiQLEnabled: boolean;
+}
 
+export function parseIDEConfig(userOptions: IDEOptions): IDEConfig {
   const options = typeof userOptions === 'boolean' ? { altair: true, graphiql: false } : userOptions;
 
   const altairOptions = {
@@ -59,6 +64,19 @@ export async function handleIDE(userOptions: IDEOptions = true, internal: Intern
   const isAltairEnabled = !!options.altair;
 
   const isGraphiQLEnabled = !!options.graphiql;
+
+  return {
+    altairOptions,
+    graphiQLOptions,
+    isAltairEnabled,
+    isGraphiQLEnabled,
+  };
+}
+
+export async function handleIDE(userOptions: IDEOptions = true, internal: InternalIDEOptions): Promise<void> {
+  if (!userOptions) return;
+
+  const { isAltairEnabled, isGraphiQLEnabled, altairOptions, graphiQLOptions } = parseIDEConfig(userOptions);
 
   await Promise.all([
     isAltairEnabled ? internal.handleAltair(altairOptions) : null,

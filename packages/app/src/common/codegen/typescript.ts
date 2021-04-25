@@ -5,20 +5,18 @@ import { codegen } from '@graphql-codegen/core';
 import * as typescriptPlugin from '@graphql-codegen/typescript';
 import * as typescriptOperationsPlugin from '@graphql-codegen/typescript-operations';
 import * as typescriptResolversPlugin from '@graphql-codegen/typescript-resolvers';
-
 import { printSchemaWithDirectives } from '@graphql-tools/utils';
 
 import { stripUndefineds } from '../utils/object.js';
 import { formatPrettier } from './prettier.js';
 import { writeFileIfChanged } from './write.js';
 
-import type { Types } from '@graphql-codegen/plugin-helpers';
+import type { CodegenPlugin, Types } from '@graphql-codegen/plugin-helpers';
 import type { Source } from '@graphql-tools/utils';
 import type { LoadTypedefsOptions, UnnormalizedTypeDefPointer } from '@graphql-tools/load';
 import type { TypeScriptPluginConfig } from '@graphql-codegen/typescript';
 import type { TypeScriptResolversPluginConfig } from '@graphql-codegen/typescript-resolvers/config';
 import type { BaseEnvelopAppOptions, InternalEnvelopConfig } from '../app';
-import type { CodegenPlugin } from '@graphql-codegen/plugin-helpers';
 
 export interface CodegenDocumentsConfig {
   /**
