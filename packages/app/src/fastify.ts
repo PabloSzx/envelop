@@ -4,12 +4,7 @@ import { gql, Module, TypeDefs } from 'graphql-modules';
 
 import { BaseEnvelopAppOptions, createEnvelopAppFactory } from './common/app.js';
 import { handleIDE, IDEOptions } from './common/ide.js';
-import {
-  BuildSubscriptionsContext,
-  CreateSubscriptionsServer,
-  SubscriptionsFlag,
-  WebsocketSubscriptionsOptions,
-} from './common/subscriptions/websocket.js';
+import { CreateSubscriptionsServer, WebsocketSubscriptionsOptions } from './common/subscriptions/websocket.js';
 
 import type { Envelop } from '@envelop/types';
 import type { ExecutionContext } from 'graphql-helix/dist/types';
@@ -37,19 +32,9 @@ export interface EnvelopAppOptions extends BaseEnvelopAppOptions<EnvelopContext>
   buildContext?: (args: BuildContextArgs) => Record<string, unknown> | Promise<Record<string, unknown>>;
 
   /**
-   * Build Context for subscriptions
+   * Websocket Suscriptions configuration
    */
-  buildWebsocketSubscriptionsContext?: BuildSubscriptionsContext;
-
-  /**
-   * Enable Websocket Subscriptions
-   */
-  websocketSubscriptions?: SubscriptionsFlag;
-
-  /**
-   * Custom Websocket Suscriptions options
-   */
-  websocketSubscriptionsOptions?: WebsocketSubscriptionsOptions;
+  websocketSubscriptions?: WebsocketSubscriptionsOptions;
 
   /**
    * IDE configuration
@@ -77,7 +62,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
   const { appBuilder, gql, modules, registerModule } = createEnvelopAppFactory(config, {
     moduleName: 'fastify',
   });
-  const { websocketSubscriptions, path = '/graphql', buildWebsocketSubscriptionsContext, websocketSubscriptionsOptions } = config;
+  const { websocketSubscriptions, path = '/graphql' } = config;
 
   const subscriptionsClientFactoryPromise = CreateSubscriptionsServer(websocketSubscriptions);
 
@@ -87,11 +72,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
     const subscriptionsClientFactory = await subscriptionsClientFactoryPromise;
     assert(subscriptionsClientFactory);
 
-    const handleUpgrade = subscriptionsClientFactory(
-      getEnveloped,
-      buildWebsocketSubscriptionsContext,
-      websocketSubscriptionsOptions
-    );
+    const handleUpgrade = subscriptionsClientFactory(getEnveloped);
 
     const state = handleUpgrade(instance.server, path);
 

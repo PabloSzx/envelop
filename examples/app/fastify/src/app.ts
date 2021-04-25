@@ -29,13 +29,16 @@ export const { registerModule, buildApp } = CreateApp({
     DateTime: 1,
   },
   buildContext,
-  buildWebsocketSubscriptionsContext({ request }) {
-    return {
-      request,
-      foo: 'baz',
-    };
+  websocketSubscriptions: {
+    graphQLWS: true,
+    subscriptionsTransport: true,
+    buildSubscriptionsContext({ request }) {
+      return {
+        request,
+        foo: 'baz',
+      };
+    },
   },
-  websocketSubscriptions: 'all',
   ide: {
     altair: true,
     graphiql: true,

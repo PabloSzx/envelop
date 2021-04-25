@@ -28,7 +28,10 @@ export const { registerModule, buildApp, gql } = CreateApp({
     DateTime: true,
   },
   buildContext,
-  websocketSubscriptions: 'all',
+  websocketSubscriptions: {
+    graphQLWS: true,
+    subscriptionsTransport: true,
+  },
   ide: {
     altair: true,
     graphiql: true,

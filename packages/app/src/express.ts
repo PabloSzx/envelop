@@ -6,12 +6,7 @@ import { createServer, Server } from 'http';
 
 import { BaseEnvelopAppOptions, createEnvelopAppFactory } from './common/app.js';
 import { handleIDE, IDEOptions } from './common/ide.js';
-import {
-  BuildSubscriptionsContext,
-  CreateSubscriptionsServer,
-  SubscriptionsFlag,
-  WebsocketSubscriptionsOptions,
-} from './common/subscriptions/websocket.js';
+import { CreateSubscriptionsServer, WebsocketSubscriptionsOptions } from './common/subscriptions/websocket.js';
 
 import type { Envelop } from '@envelop/types';
 import type { ExecutionContext } from 'graphql-helix/dist/types';
@@ -40,19 +35,9 @@ export interface EnvelopAppOptions extends BaseEnvelopAppOptions<EnvelopContext>
   buildContext?: (args: BuildContextArgs) => Record<string, unknown> | Promise<Record<string, unknown>>;
 
   /**
-   * Build Context for subscriptions
+   * Websocket Subscriptions configuration
    */
-  buildWebsocketSubscriptionsContext?: BuildSubscriptionsContext;
-
-  /**
-   * Enable Websocket Subscriptions
-   */
-  websocketSubscriptions?: SubscriptionsFlag;
-
-  /**
-   * Custom Websocket Suscriptions options
-   */
-  websocketSubscriptionsOptions?: WebsocketSubscriptionsOptions;
+  websocketSubscriptions?: WebsocketSubscriptionsOptions;
 
   /**
    * IDE configuration
@@ -80,7 +65,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
     moduleName: 'express',
   });
 
-  const { path = '/graphql', websocketSubscriptions, buildWebsocketSubscriptionsContext, websocketSubscriptionsOptions } = config;
+  const { path = '/graphql', websocketSubscriptions } = config;
 
   const subscriptionsClientFactoryPromise = CreateSubscriptionsServer(websocketSubscriptions);
 
@@ -90,11 +75,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
     const subscriptionsClientFactory = await subscriptionsClientFactoryPromise;
     assert(subscriptionsClientFactory);
 
-    const handleUpgrade = subscriptionsClientFactory(
-      getEnveloped,
-      buildWebsocketSubscriptionsContext,
-      websocketSubscriptionsOptions
-    );
+    const handleUpgrade = subscriptionsClientFactory(getEnveloped);
 
     const server = optionsServer || createServer(appInstance);
 

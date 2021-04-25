@@ -10,15 +10,13 @@ import type { Socket } from 'net';
 import type { ServerOptions as SubscriptionsTransportOptions } from 'subscriptions-transport-ws/dist/server';
 import type { ServerOptions as GraphQLWSOptions } from 'graphql-ws';
 
-export type SubscriptionsFlag = boolean | 'legacy' | 'all';
-
-export interface SubscriptionContextArgs {
+export interface BuildSubscriptionContextArgs {
   request: IncomingMessage;
   connectionParams?: Readonly<Record<string, unknown>>;
 }
 
 export type BuildSubscriptionsContext = (
-  args: SubscriptionContextArgs
+  args: BuildSubscriptionContextArgs
 ) => Record<string, unknown> | Promise<Record<string, unknown>>;
 
 export type CommonSubscriptionsServerTuple =
@@ -52,11 +50,9 @@ function handleUpgrade(httpServer: HttpServer, path: string, wsTuple: CommonSubs
       });
     }
 
-    const protocol = rawRequest.headers['sec-websocket-protocol'];
-
     switch (wsTuple[0]) {
       case 'both': {
-        const server = wsTuple[1](protocol);
+        const server = wsTuple[1](rawRequest.headers['sec-websocket-protocol']);
 
         return server.handleUpgrade(rawRequest, socket, head, ws => {
           server.emit('connection', ws, rawRequest);
@@ -76,18 +72,18 @@ function handleUpgrade(httpServer: HttpServer, path: string, wsTuple: CommonSubs
   return state;
 }
 
-export interface WebsocketSubscriptionsOptions {
-  subscriptionsTransport?: Omit<SubscriptionsTransportOptions, 'schema' | 'execute' | 'subscribe' | 'onConnect'>;
-  graphQLWS?: Omit<GraphQLWSOptions, 'schema' | 'execute' | 'subscribe' | 'context' | 'validate'>;
-}
+export type WebsocketSubscriptionsOptions =
+  | {
+      subscriptionsTransport?: Omit<SubscriptionsTransportOptions, 'schema' | 'execute' | 'subscribe' | 'onConnect'> | boolean;
+      graphQLWS?: Omit<GraphQLWSOptions, 'schema' | 'execute' | 'subscribe' | 'context' | 'validate'> | boolean;
+      buildSubscriptionsContext?: BuildSubscriptionsContext;
+      wsOptions?: Pick<WebSocket.ServerOptions, 'verifyClient' | 'clientTracking' | 'perMessageDeflate' | 'maxPayload'>;
+    }
+  | boolean
+  | 'legacy';
 
 export type CommonSubscriptionsServer = Promise<
-  | ((
-      getEnveloped: Envelop<unknown>,
-      customContext: BuildSubscriptionsContext | undefined,
-      options: WebsocketSubscriptionsOptions | undefined
-    ) => (httpServer: HttpServer, path: string) => SubscriptionsState)
-  | null
+  ((getEnveloped: Envelop<unknown>) => (httpServer: HttpServer, path: string) => SubscriptionsState) | null
 >;
 
 type SubscriptionsTransportOnConnectArgs = [
@@ -98,62 +94,86 @@ type SubscriptionsTransportOnConnectArgs = [
   }
 ];
 
-export const CreateSubscriptionsServer = async (flag: SubscriptionsFlag | undefined): CommonSubscriptionsServer => {
-  if (!flag) return null;
+export const CreateSubscriptionsServer = async (
+  options: WebsocketSubscriptionsOptions | undefined
+): CommonSubscriptionsServer => {
+  const enableOldTransport = options === 'legacy' || (typeof options === 'object' && options.subscriptionsTransport);
+
+  const enableGraphQLWS = options === true || (typeof options === 'object' && options.graphQLWS);
+
+  const enableAll = enableOldTransport && enableGraphQLWS;
+
+  const enabled: 'new' | 'both' | 'legacy' | 'none' = enableAll
+    ? 'both'
+    : enableOldTransport
+    ? 'legacy'
+    : enableGraphQLWS
+    ? 'new'
+    : 'none';
+
+  if (enabled === 'none') return null;
+
+  const optionsObj =
+    typeof options === 'object'
+      ? {
+          subscriptionsTransport: typeof options.subscriptionsTransport === 'object' ? options.subscriptionsTransport : {},
+          graphQLWS: typeof options.graphQLWS === 'object' ? options.graphQLWS : {},
+          buildContext: options.buildSubscriptionsContext,
+          wsOptions: options.wsOptions,
+        }
+      : {};
 
   const GRAPHQL_TRANSPORT_WS_PROTOCOL = 'graphql-transport-ws';
   const GRAPHQL_WS = 'graphql-ws';
 
-  const oldTransport =
-    flag === 'legacy' || flag === 'all'
-      ? import('subscriptions-transport-ws/dist/server.js').then(v => v.SubscriptionServer)
-      : null;
-
   const [ws, subscriptionsTransportWs, useGraphQLWSServer] = await Promise.all([
     import('ws').then(v => v.default),
-    oldTransport,
-    flag === 'all' || flag === true ? import('graphql-ws/lib/use/ws').then(v => v.useServer) : null,
+    enableOldTransport ? import('subscriptions-transport-ws/dist/server.js').then(v => v.SubscriptionServer) : null,
+    enableGraphQLWS ? import('graphql-ws/lib/use/ws').then(v => v.useServer) : null,
   ]);
 
-  const wsServer: WebSocket.Server | [graphqlWsServer: WebSocket.Server, subWsServer: WebSocket.Server] =
-    flag === 'all'
-      ? [
-          /**
-           * graphql-ws
-           */
-          new ws.Server({
-            noServer: true,
-          }),
-          /**
-           * subscriptions-transport-ws
-           */
-          new ws.Server({
-            noServer: true,
-          }),
-        ]
-      : new ws.Server({
+  const wsServer: WebSocket.Server | [graphqlWsServer: WebSocket.Server, subWsServer: WebSocket.Server] = enableAll
+    ? [
+        /**
+         * graphql-ws
+         */
+        new ws.Server({
+          ...stripUndefineds(optionsObj.wsOptions),
           noServer: true,
-        });
+        }),
+        /**
+         * subscriptions-transport-ws
+         */
+        new ws.Server({
+          ...stripUndefineds(optionsObj.wsOptions),
+          noServer: true,
+        }),
+      ]
+    : new ws.Server({
+        ...stripUndefineds(optionsObj.wsOptions),
+        noServer: true,
+      });
 
-  return function (getEnveloped, customCtxFactory, options: WebsocketSubscriptionsOptions | undefined) {
+  const { buildContext } = optionsObj;
+
+  return function (getEnveloped) {
     const { schema, execute, subscribe, contextFactory, validate } = getEnveloped();
 
-    async function getContext(contextArgs: SubscriptionContextArgs) {
-      if (customCtxFactory) {
-        return contextFactory(Object.assign({}, await customCtxFactory(contextArgs)));
-      }
+    async function getContext(contextArgs: BuildSubscriptionContextArgs) {
+      if (buildContext) return contextFactory(Object.assign({}, await buildContext(contextArgs)));
+
       return contextFactory(contextArgs);
     }
 
     let wsTuple: CommonSubscriptionsServerTuple;
 
-    if (flag === true) {
+    if (enabled === 'new') {
       assert(!Array.isArray(wsServer));
       assert(useGraphQLWSServer);
 
       useGraphQLWSServer(
         {
-          ...stripUndefineds(options?.graphQLWS),
+          ...stripUndefineds(optionsObj.graphQLWS),
           schema,
           execute,
           subscribe,
@@ -166,14 +186,14 @@ export const CreateSubscriptionsServer = async (flag: SubscriptionsFlag | undefi
       );
 
       wsTuple = ['new', wsServer];
-    } else if (flag === 'all') {
+    } else if (enabled === 'both') {
       assert(subscriptionsTransportWs);
       assert(useGraphQLWSServer);
       assert(Array.isArray(wsServer));
 
       useGraphQLWSServer(
         {
-          ...stripUndefineds(options?.graphQLWS),
+          ...stripUndefineds(optionsObj.graphQLWS),
           schema,
           execute,
           subscribe,
@@ -187,7 +207,7 @@ export const CreateSubscriptionsServer = async (flag: SubscriptionsFlag | undefi
 
       subscriptionsTransportWs.create(
         {
-          ...stripUndefineds(options?.subscriptionsTransport),
+          ...stripUndefineds(optionsObj.subscriptionsTransport),
           schema,
           execute,
           subscribe,
@@ -215,7 +235,7 @@ export const CreateSubscriptionsServer = async (flag: SubscriptionsFlag | undefi
 
       subscriptionsTransportWs.create(
         {
-          ...stripUndefineds(options?.subscriptionsTransport),
+          ...stripUndefineds(optionsObj.subscriptionsTransport),
           schema,
           execute,
           subscribe,
