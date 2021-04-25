@@ -1,15 +1,18 @@
 import assert from 'assert';
-import { json, Router, Request, Response, Express } from 'express';
+import { Express, json, Request, Response, Router } from 'express';
 import { getGraphQLParameters, processRequest } from 'graphql-helix';
 import { gql, Module, TypeDefs } from 'graphql-modules';
-import { createServer, IncomingMessage, Server } from 'http';
+import { createServer, Server } from 'http';
 
 import { BaseEnvelopAppOptions, createEnvelopAppFactory } from './common/app.js';
 import { handleIDE, IDEOptions } from './common/ide.js';
-import { getPathname } from './common/utils/url.js';
-import { BuildSubscriptionsContext, CreateSubscriptionsServer, SubscriptionsFlag } from './common/subscriptions/websocket.js';
+import {
+  BuildSubscriptionsContext,
+  CreateSubscriptionsServer,
+  SubscriptionsFlag,
+  WebsocketSubscriptionsOptions,
+} from './common/subscriptions/websocket.js';
 
-import type { Socket } from 'net';
 import type { Envelop } from '@envelop/types';
 import type { ExecutionContext } from 'graphql-helix/dist/types';
 import type { EnvelopModuleConfig, EnvelopContext } from './common/types';
@@ -29,7 +32,7 @@ export interface EnvelopAppOptions extends BaseEnvelopAppOptions<EnvelopContext>
   /**
    * JSON body-parser options
    */
-  bodyParserJSONOptions?: BodyParserOptions;
+  bodyParserJSONOptions?: BodyParserOptions | false;
 
   /**
    * Build Context
@@ -45,6 +48,11 @@ export interface EnvelopAppOptions extends BaseEnvelopAppOptions<EnvelopContext>
    * Enable Websocket Subscriptions
    */
   websocketSubscriptions?: SubscriptionsFlag;
+
+  /**
+   * Custom Websocket Suscriptions options
+   */
+  websocketSubscriptionsOptions?: WebsocketSubscriptionsOptions;
 
   /**
    * IDE configuration
@@ -72,7 +80,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
     moduleName: 'express',
   });
 
-  const { path = '/graphql', websocketSubscriptions, buildWebsocketSubscriptionsContext } = config;
+  const { path = '/graphql', websocketSubscriptions, buildWebsocketSubscriptionsContext, websocketSubscriptionsOptions } = config;
 
   const subscriptionsClientFactoryPromise = CreateSubscriptionsServer(websocketSubscriptions);
 
@@ -82,9 +90,11 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
     const subscriptionsClientFactory = await subscriptionsClientFactoryPromise;
     assert(subscriptionsClientFactory);
 
-    const subscriptionsServer = subscriptionsClientFactory(getEnveloped, buildWebsocketSubscriptionsContext);
-
-    const wsServers = subscriptionsServer[0] === 'both' ? subscriptionsServer[2] : ([subscriptionsServer[1]] as const);
+    const handleUpgrade = subscriptionsClientFactory(
+      getEnveloped,
+      buildWebsocketSubscriptionsContext,
+      websocketSubscriptionsOptions
+    );
 
     const server = optionsServer || createServer(appInstance);
 
@@ -92,48 +102,19 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
       return server.listen(...args);
     };
 
-    let closing = false;
-
-    server.on('upgrade', (rawRequest: IncomingMessage, socket: Socket, head: Buffer) => {
-      const requestUrl = getPathname(rawRequest.url);
-
-      if (closing || requestUrl !== path) {
-        return wsServers[0].handleUpgrade(rawRequest, socket, head, webSocket => {
-          webSocket.close(1001);
-        });
-      }
-
-      const protocol = rawRequest.headers['sec-websocket-protocol'];
-
-      switch (subscriptionsServer[0]) {
-        case 'both': {
-          const server = subscriptionsServer[1](protocol);
-
-          return server.handleUpgrade(rawRequest, socket, head, ws => {
-            server.emit('connection', ws, rawRequest);
-          });
-        }
-        case 'new':
-        case 'legacy': {
-          const server = subscriptionsServer[1];
-
-          return server.handleUpgrade(rawRequest, socket, head, ws => {
-            server.emit('connection', ws, rawRequest);
-          });
-        }
-      }
-    });
+    const state = handleUpgrade(server, path);
 
     const oldClose = server.close;
     server.close = function (cb) {
-      closing = true;
+      state.closing = true;
 
       oldClose.call(this, cb);
 
-      for (const server of wsServers) {
-        for (const client of server.clients) {
+      for (const wsServer of state.wsServers) {
+        for (const client of wsServer.clients) {
           client.close();
         }
+        wsServer.close();
       }
 
       return server;
@@ -141,28 +122,23 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
   }
 
   async function buildApp({ prepare, app, server }: BuildAppOptions): Promise<Router> {
-    const { buildContext, path = '/graphql', bodyParserJSONOptions: jsonOptions, ide } = config;
+    const { buildContext, path = '/graphql', bodyParserJSONOptions: jsonOptions = {}, ide } = config;
     return appBuilder({
       prepare,
       async adapterFactory(getEnveloped) {
         const EnvelopApp = Router();
 
-        EnvelopApp.use(json(jsonOptions));
+        if (jsonOptions) EnvelopApp.use(json(jsonOptions));
 
-        const IDEPromise = handleIDE(ide, {
-          async handleAltair(options) {
+        const IDEPromise = handleIDE(ide, path, {
+          async handleAltair(ideOptions) {
             const { altairExpress } = await import('altair-express-middleware');
 
-            EnvelopApp.use(
-              options.path,
-              altairExpress({
-                ...options,
-              })
-            );
+            EnvelopApp.use(ideOptions.path, altairExpress(ideOptions));
           },
-          handleGraphiQL(options) {
-            EnvelopApp.use(options.path, (_req, res) => {
-              res.type('html').send(options.html);
+          handleGraphiQL({ path, html }) {
+            EnvelopApp.use(path, (_req, res) => {
+              res.type('html').send(html);
             });
           },
         });

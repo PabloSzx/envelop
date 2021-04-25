@@ -69,7 +69,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
     const appPromise = appBuilder({
       prepare,
       adapterFactory(getEnveloped): AsyncRequestHandler {
-        const { altairOptions, graphiQLOptions, isAltairEnabled, isGraphiQLEnabled } = parseIDEConfig(ide);
+        const { altairOptions, graphiQLOptions, isAltairEnabled, isGraphiQLEnabled } = parseIDEConfig(ide, path);
 
         return async function (req, res) {
           const pathname = getPathname(req.url)!;

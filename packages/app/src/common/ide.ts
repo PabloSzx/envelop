@@ -43,18 +43,20 @@ export interface IDEConfig {
 
 export type NamesIDEs = 'altair' | 'graphiql';
 
-export function parseIDEConfig(userOptions: IDEOptions, defaultEnabled: NamesIDEs = 'altair'): IDEConfig {
+export function parseIDEConfig(userOptions: IDEOptions, graphqlPath?: string, defaultEnabled: NamesIDEs = 'altair'): IDEConfig {
   const options =
     typeof userOptions === 'boolean'
       ? { altair: defaultEnabled === 'altair', graphiql: defaultEnabled === 'graphiql' }
       : userOptions;
 
-  const altairOptions = {
+  const altairOptions: AltairOptions & { path: string } = {
     path: '/altair',
+    endpointURL: graphqlPath,
     ...(typeof options.altair === 'boolean' ? {} : stripUndefineds(options.altair) || {}),
   };
-  const graphiQLOptions = {
+  const graphiQLOptions: GraphiQLOptions & { path: string } = {
     path: '/graphiql',
+    endpoint: graphqlPath,
     ...(typeof options.graphiql === 'boolean' ? {} : stripUndefineds(options.graphiql) || {}),
   };
 
@@ -72,12 +74,17 @@ export function parseIDEConfig(userOptions: IDEOptions, defaultEnabled: NamesIDE
 
 export async function handleIDE(
   userOptions: IDEOptions = true,
+  graphqlPath: string,
   internal: InternalIDEOptions,
   defaultEnabled: NamesIDEs = 'altair'
 ): Promise<void> {
   if (!userOptions) return;
 
-  const { isAltairEnabled, isGraphiQLEnabled, altairOptions, graphiQLOptions } = parseIDEConfig(userOptions, defaultEnabled);
+  const { isAltairEnabled, isGraphiQLEnabled, altairOptions, graphiQLOptions } = parseIDEConfig(
+    userOptions,
+    graphqlPath,
+    defaultEnabled
+  );
 
   await Promise.all([
     isAltairEnabled ? internal.handleAltair(altairOptions) : null,

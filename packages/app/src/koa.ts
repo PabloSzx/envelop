@@ -39,7 +39,7 @@ export interface EnvelopAppOptions extends BaseEnvelopAppOptions<EnvelopContext>
   /**
    * [koa-bodyparser](http://npm.im/koa-bodyparser) options
    */
-  bodyParserOptions?: bodyParser.Options;
+  bodyParserOptions?: bodyParser.Options | false;
 }
 
 export interface BuildAppOptions {
@@ -65,22 +65,23 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
   });
 
   async function buildApp({ router, prepare }: BuildAppOptions): Promise<void> {
-    const { path = '/graphql', buildContext, ide, bodyParserOptions } = config;
+    const { path = '/graphql', buildContext, ide, bodyParserOptions = {} } = config;
 
     return appBuilder({
       prepare,
       async adapterFactory(getEnveloped): Promise<void> {
-        router.use(bodyParser(bodyParserOptions));
+        if (bodyParserOptions) router.use(bodyParser(bodyParserOptions));
 
         await handleIDE(
           ide,
+          path,
           {
-            async handleAltair({ path, ...opts }) {
+            async handleAltair({ path: idePath, ...opts }) {
               const { createRouteExplorer } = await import('altair-koa-middleware');
 
               createRouteExplorer({
                 router,
-                url: path,
+                url: idePath,
                 opts,
               });
             },

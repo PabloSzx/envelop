@@ -2,17 +2,20 @@ import assert from 'assert';
 import { getGraphQLParameters, processRequest } from 'graphql-helix';
 import { gql, Module, TypeDefs } from 'graphql-modules';
 
-import { handleIDE, IDEOptions } from './common/ide.js';
 import { BaseEnvelopAppOptions, createEnvelopAppFactory } from './common/app.js';
-import { BuildSubscriptionsContext, CreateSubscriptionsServer, SubscriptionsFlag } from './common/subscriptions/websocket.js';
-import { getPathname } from './common/utils/url.js';
+import { handleIDE, IDEOptions } from './common/ide.js';
+import {
+  BuildSubscriptionsContext,
+  CreateSubscriptionsServer,
+  SubscriptionsFlag,
+  WebsocketSubscriptionsOptions,
+} from './common/subscriptions/websocket.js';
 
 import type { Envelop } from '@envelop/types';
 import type { ExecutionContext } from 'graphql-helix/dist/types';
 import type { FastifyInstance, FastifyPluginCallback, FastifyReply, FastifyRequest, RouteOptions } from 'fastify';
-import type { Server, IncomingMessage } from 'http';
+import type { Server } from 'http';
 import type { EnvelopModuleConfig, EnvelopContext } from './common/types';
-import type { Socket } from 'net';
 import type { AltairFastifyPluginOptions } from 'altair-fastify-plugin';
 
 export type EnvelopAppPlugin = FastifyPluginCallback<{}, Server>;
@@ -44,6 +47,11 @@ export interface EnvelopAppOptions extends BaseEnvelopAppOptions<EnvelopContext>
   websocketSubscriptions?: SubscriptionsFlag;
 
   /**
+   * Custom Websocket Suscriptions options
+   */
+  websocketSubscriptionsOptions?: WebsocketSubscriptionsOptions;
+
+  /**
    * IDE configuration
    */
   ide?: IDEOptions<AltairFastifyPluginOptions>;
@@ -69,7 +77,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
   const { appBuilder, gql, modules, registerModule } = createEnvelopAppFactory(config, {
     moduleName: 'fastify',
   });
-  const { websocketSubscriptions, path = '/graphql', buildWebsocketSubscriptionsContext } = config;
+  const { websocketSubscriptions, path = '/graphql', buildWebsocketSubscriptionsContext, websocketSubscriptionsOptions } = config;
 
   const subscriptionsClientFactoryPromise = CreateSubscriptionsServer(websocketSubscriptions);
 
@@ -79,45 +87,17 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
     const subscriptionsClientFactory = await subscriptionsClientFactoryPromise;
     assert(subscriptionsClientFactory);
 
-    const subscriptionsServer = subscriptionsClientFactory(getEnveloped, buildWebsocketSubscriptionsContext);
+    const handleUpgrade = subscriptionsClientFactory(
+      getEnveloped,
+      buildWebsocketSubscriptionsContext,
+      websocketSubscriptionsOptions
+    );
 
-    const wsServers = subscriptionsServer[0] === 'both' ? subscriptionsServer[2] : ([subscriptionsServer[1]] as const);
-
-    let closing = false;
-
-    instance.server.on('upgrade', async (rawRequest: IncomingMessage, socket: Socket, head: Buffer) => {
-      const requestUrl = getPathname(rawRequest.url);
-
-      if (closing || requestUrl !== path) {
-        return wsServers[0].handleUpgrade(rawRequest, socket, head, (webSocket, _request) => {
-          webSocket.close(1001);
-        });
-      }
-
-      const protocol = rawRequest.headers['sec-websocket-protocol'];
-
-      switch (subscriptionsServer[0]) {
-        case 'both': {
-          const server = subscriptionsServer[1](protocol);
-
-          return server.handleUpgrade(rawRequest, socket, head, ws => {
-            server.emit('connection', ws, rawRequest);
-          });
-        }
-        case 'new':
-        case 'legacy': {
-          const server = subscriptionsServer[1];
-
-          return server.handleUpgrade(rawRequest, socket, head, ws => {
-            server.emit('connection', ws, rawRequest);
-          });
-        }
-      }
-    });
+    const state = handleUpgrade(instance.server, path);
 
     instance.addHook('onClose', function (_fastify, done) {
       Promise.all(
-        wsServers.map(
+        state.wsServers.map(
           server => new Promise<Error | undefined>(resolve => server.close(err => resolve(err)))
         )
       ).then(() => done(), done);
@@ -127,12 +107,12 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
 
     // Monkeypatching fastify.server.close as done already in https://github.com/fastify/fastify-websocket/blob/master/index.js#L134
     instance.server.close = function (cb) {
-      closing = true;
+      state.closing = true;
 
       oldClose.call(this, cb);
 
-      for (const server of wsServers) {
-        for (const client of server.clients) {
+      for (const wsServer of state.wsServers) {
+        for (const client of wsServer.clients) {
           client.close();
         }
       }
@@ -147,23 +127,22 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
       prepare,
       adapterFactory(getEnveloped) {
         return async function FastifyPlugin(instance: FastifyInstance) {
-          const idePromise = handleIDE(ide, {
-            async handleAltair({ path, ...options }) {
+          const idePromise = handleIDE(ide, path, {
+            async handleAltair({ path, ...ideOptions }) {
               const { default: AltairFastify } = await import('altair-fastify-plugin');
 
               await instance.register(AltairFastify, {
-                subscriptionsEndpoint: `ws://localhost:3000/${path}`,
                 path,
-                ...options,
+                ...ideOptions,
               });
 
               instance.get(path.endsWith('/') ? path.slice(0, path.length - 1) : path + '/', (_request, reply) => {
                 reply.redirect(path);
               });
             },
-            handleGraphiQL(options) {
-              instance.get(options.path, (_request, reply) => {
-                reply.type('text/html').send(options.html);
+            handleGraphiQL({ path, html }) {
+              instance.get(path, (_request, reply) => {
+                reply.type('text/html').send(html);
               });
             },
           });
