@@ -15,10 +15,6 @@ import type { ExecutionContext } from 'graphql-helix/dist/types';
 import type { EnvelopModuleConfig, EnvelopContext } from './common/types';
 import type { OptionsJson as BodyParserOptions } from 'body-parser';
 
-export interface EnvelopApp {
-  EnvelopApp: Router;
-}
-
 export interface BuildContextArgs {
   request: Request;
   response: Response;
@@ -68,7 +64,7 @@ export interface EnvelopAppBuilder {
   gql: typeof gql;
   modules: Module[];
   registerModule: (typeDefs: TypeDefs, options?: EnvelopModuleConfig | undefined) => Module;
-  buildApp(options: BuildAppOptions): Promise<EnvelopApp>;
+  buildApp(options: BuildAppOptions): Promise<Router>;
 }
 
 export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
@@ -144,7 +140,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
     };
   }
 
-  async function buildApp(buildOptions: BuildAppOptions): Promise<EnvelopApp> {
+  async function buildApp(buildOptions: BuildAppOptions): Promise<Router> {
     return appBuilder({
       prepare: buildOptions.prepare,
       async adapterFactory(getEnveloped) {
@@ -214,7 +210,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
           });
 
           if (result.type === 'RESPONSE') {
-            result.headers.forEach(({ name, value }) => res.setHeader(name, value));
+            res.type('application/json');
             res.status(result.status);
             res.json(result.payload);
           } else if (result.type === 'MULTIPART_RESPONSE') {
@@ -268,9 +264,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
 
         await Promise.all([IDEPromise, subscriptionsPromise]);
 
-        return {
-          EnvelopApp,
-        };
+        return EnvelopApp;
       },
     });
   }

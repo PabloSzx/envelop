@@ -12,20 +12,12 @@ export interface GraphiQLOptions extends RenderGraphiQLOptions {
   path?: string;
 }
 
-const defaultGraphiQLOptions: GraphiQLOptions & { path: string } = {
-  path: '/graphiql',
-};
-
 export interface AltairOptions extends RenderOptions {
   /**
    * @default "/altair"
    */
   path?: string;
 }
-
-const defaultAltairOptions: AltairOptions & { path: string } = {
-  path: '/altair',
-};
 
 export type IDEOptions<
   TAltairOptions extends AltairOptions = AltairOptions,
@@ -49,15 +41,20 @@ export interface IDEConfig {
   isGraphiQLEnabled: boolean;
 }
 
-export function parseIDEConfig(userOptions: IDEOptions): IDEConfig {
-  const options = typeof userOptions === 'boolean' ? { altair: true, graphiql: false } : userOptions;
+export type NamesIDEs = 'altair' | 'graphiql';
+
+export function parseIDEConfig(userOptions: IDEOptions, defaultEnabled: NamesIDEs = 'altair'): IDEConfig {
+  const options =
+    typeof userOptions === 'boolean'
+      ? { altair: defaultEnabled === 'altair', graphiql: defaultEnabled === 'graphiql' }
+      : userOptions;
 
   const altairOptions = {
-    ...defaultAltairOptions,
+    path: '/altair',
     ...(typeof options.altair === 'boolean' ? {} : stripUndefineds(options.altair) || {}),
   };
   const graphiQLOptions = {
-    ...defaultGraphiQLOptions,
+    path: '/graphiql',
     ...(typeof options.graphiql === 'boolean' ? {} : stripUndefineds(options.graphiql) || {}),
   };
 
@@ -73,10 +70,14 @@ export function parseIDEConfig(userOptions: IDEOptions): IDEConfig {
   };
 }
 
-export async function handleIDE(userOptions: IDEOptions = true, internal: InternalIDEOptions): Promise<void> {
+export async function handleIDE(
+  userOptions: IDEOptions = true,
+  internal: InternalIDEOptions,
+  defaultEnabled: NamesIDEs = 'altair'
+): Promise<void> {
   if (!userOptions) return;
 
-  const { isAltairEnabled, isGraphiQLEnabled, altairOptions, graphiQLOptions } = parseIDEConfig(userOptions);
+  const { isAltairEnabled, isGraphiQLEnabled, altairOptions, graphiQLOptions } = parseIDEConfig(userOptions, defaultEnabled);
 
   await Promise.all([
     isAltairEnabled ? internal.handleAltair(altairOptions) : null,

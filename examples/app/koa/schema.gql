@@ -6,6 +6,7 @@ schema {
 type Query {
   hello: String!
   hello2: String!
+  hello3: String!
 }
 
 type Subscription {

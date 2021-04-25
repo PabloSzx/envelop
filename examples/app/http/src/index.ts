@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+
 import { createServer } from 'http';
 
 import { buildApp } from './app';
@@ -13,6 +15,5 @@ const app = buildApp({
 });
 
 server.listen(3000, () => {
-  // eslint-disable-next-line no-console
   console.log('Listening on port 3000!');
 });

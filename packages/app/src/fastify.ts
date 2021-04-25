@@ -15,9 +15,7 @@ import type { EnvelopModuleConfig, EnvelopContext } from './common/types';
 import type { Socket } from 'net';
 import type { AltairFastifyPluginOptions } from 'altair-fastify-plugin';
 
-export interface EnvelopApp {
-  EnvelopApp: FastifyPluginCallback<{}, Server>;
-}
+export type EnvelopApp = FastifyPluginCallback<{}, Server>;
 
 export interface BuildContextArgs {
   request: FastifyRequest;
@@ -263,9 +261,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
           await Promise.all([idePromise, subscriptionsPromise]);
         };
 
-        return {
-          EnvelopApp,
-        };
+        return EnvelopApp;
       },
     });
   }

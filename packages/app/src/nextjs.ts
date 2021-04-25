@@ -87,7 +87,6 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
               'Content-Encoding': 'none',
             });
 
-            // If the request is closed by the client, we unsubscribe and stop executing the request
             req.on('close', () => {
               result.unsubscribe();
             });

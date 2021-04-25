@@ -1,6 +1,7 @@
 /* eslint-disable no-use-before-define */
 
 import type { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
+import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
 export type Maybe<T> = T | null;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
@@ -21,6 +22,7 @@ export type Query = {
   __typename?: 'Query';
   hello: Scalars['String'];
   hello2: Scalars['String'];
+  hello3: Scalars['String'];
 };
 
 export type Subscription = {
@@ -110,19 +112,19 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
   Query: ResolverTypeWrapper<{}>;
-  String: ResolverTypeWrapper<import('@envelop/app/express').DeepPartial<Scalars['String']>>;
+  String: ResolverTypeWrapper<import('@envelop/app/koa').DeepPartial<Scalars['String']>>;
   Subscription: ResolverTypeWrapper<{}>;
-  DateTime: ResolverTypeWrapper<import('@envelop/app/express').DeepPartial<Scalars['DateTime']>>;
-  Boolean: ResolverTypeWrapper<import('@envelop/app/express').DeepPartial<Scalars['Boolean']>>;
+  DateTime: ResolverTypeWrapper<import('@envelop/app/koa').DeepPartial<Scalars['DateTime']>>;
+  Boolean: ResolverTypeWrapper<import('@envelop/app/koa').DeepPartial<Scalars['Boolean']>>;
 };
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
   Query: {};
-  String: import('@envelop/app/express').DeepPartial<Scalars['String']>;
+  String: import('@envelop/app/koa').DeepPartial<Scalars['String']>;
   Subscription: {};
-  DateTime: import('@envelop/app/express').DeepPartial<Scalars['DateTime']>;
-  Boolean: import('@envelop/app/express').DeepPartial<Scalars['Boolean']>;
+  DateTime: import('@envelop/app/koa').DeepPartial<Scalars['DateTime']>;
+  Boolean: import('@envelop/app/koa').DeepPartial<Scalars['Boolean']>;
 };
 
 export type QueryResolvers<
@@ -131,6 +133,7 @@ export type QueryResolvers<
 > = {
   hello?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   hello2?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  hello3?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
 };
 
 export type SubscriptionResolvers<
@@ -156,6 +159,22 @@ export type Resolvers<ContextType = any> = {
  */
 export type IResolvers<ContextType = any> = Resolvers<ContextType>;
 
-declare module '@envelop/app/express' {
-  interface EnvelopResolvers extends Resolvers<import('@envelop/app/express').EnvelopContext> {}
+export type HelloQueryQueryVariables = Exact<{ [key: string]: never }>;
+
+export type HelloQueryQuery = { __typename?: 'Query' } & Pick<Query, 'hello'>;
+
+export const HelloQueryDocument: DocumentNode<HelloQueryQuery, HelloQueryQueryVariables> = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'HelloQuery' },
+      selectionSet: { kind: 'SelectionSet', selections: [{ kind: 'Field', name: { kind: 'Name', value: 'hello' } }] },
+    },
+  ],
+};
+
+declare module '@envelop/app/koa' {
+  interface EnvelopResolvers extends Resolvers<import('@envelop/app/koa').EnvelopContext> {}
 }

@@ -10,7 +10,7 @@ buildApp({
   async prepare() {
     await import('./modules');
   },
-}).then(({ EnvelopApp }) => {
+}).then(EnvelopApp => {
   fastifyApp.register(EnvelopApp, {
     logLevel: 'error',
   });

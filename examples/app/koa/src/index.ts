@@ -1,18 +1,21 @@
 /* eslint-disable no-console */
 
-import express from 'express';
+import Koa from 'koa';
+import KoaRouter from '@koa/router';
 
 import { buildApp } from './app';
 
-const app = express();
+const app = new Koa();
+
+const router = new KoaRouter();
 
 buildApp({
-  app,
   async prepare() {
     await import('./modules');
   },
-}).then(EnvelopApp => {
-  app.use(EnvelopApp);
+  router,
+}).then(() => {
+  app.use(router.routes()).use(router.allowedMethods());
 
   app.listen(3000, () => {
     console.log('Listening on port 3000!');
