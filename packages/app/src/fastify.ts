@@ -15,7 +15,7 @@ import type { EnvelopModuleConfig, EnvelopContext } from './common/types';
 import type { Socket } from 'net';
 import type { AltairFastifyPluginOptions } from 'altair-fastify-plugin';
 
-export type EnvelopApp = FastifyPluginCallback<{}, Server>;
+export type EnvelopAppPlugin = FastifyPluginCallback<{}, Server>;
 
 export interface BuildContextArgs {
   request: FastifyRequest;
@@ -62,7 +62,7 @@ export interface EnvelopAppBuilder {
   gql: typeof gql;
   modules: Module[];
   registerModule: (typeDefs: TypeDefs, options?: EnvelopModuleConfig | undefined) => Module;
-  buildApp(options?: BuildAppOptions): Promise<EnvelopApp>;
+  buildApp(options?: BuildAppOptions): EnvelopAppPlugin;
 }
 
 export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
@@ -141,13 +141,12 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
     };
   }
 
-  function buildApp({ prepare }: BuildAppOptions = {}): Promise<EnvelopApp> {
-    return appBuilder({
+  function buildApp({ prepare }: BuildAppOptions = {}): EnvelopAppPlugin {
+    const { buildContext, path = '/graphql', ide, routeOptions = {} } = config;
+    const app = appBuilder({
       prepare,
       adapterFactory(getEnveloped) {
         const EnvelopApp: FastifyPluginCallback<{}> = async function FastifyPlugin(instance) {
-          const { buildContext, path = '/graphql', ide, routeOptions = {} } = config;
-
           const idePromise = handleIDE(ide, {
             async handleAltair(options) {
               const { default: AltairFastify } = await import('altair-fastify-plugin');
@@ -264,6 +263,10 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
         return EnvelopApp;
       },
     });
+
+    return async function (instance, opts) {
+      instance.register(await app, opts);
+    };
   }
 
   return {

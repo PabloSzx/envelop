@@ -37,12 +37,13 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
     moduleName: 'nextjs',
   });
 
-  function buildApp(buildOptions: BuildAppOptions = {}): NextApiHandler<unknown> {
-    const app = appBuilder({
-      prepare: buildOptions.prepare,
-      async adapterFactory(getEnveloped): Promise<NextApiHandler<unknown>> {
-        const { buildContext } = config;
+  function buildApp({ prepare }: BuildAppOptions = {}): NextApiHandler<unknown> {
+    let app: NextApiHandler<unknown> | undefined;
+    const { buildContext } = config;
 
+    const appPromise = appBuilder({
+      prepare,
+      adapterFactory(getEnveloped): NextApiHandler<unknown> {
         return async function (req, res) {
           const request = {
             body: req.body,
@@ -132,8 +133,12 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
       },
     });
 
+    appPromise.then(handler => {
+      app = handler;
+    });
+
     return async function (req, res) {
-      await (await app)(req, res);
+      await (app || (await appPromise))(req, res);
     };
   }
 

@@ -62,12 +62,13 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
     moduleName: 'http',
   });
 
-  function buildApp(buildOptions: BuildAppOptions): AsyncRequestHandler {
-    const app = appBuilder({
-      prepare: buildOptions.prepare,
-      async adapterFactory(getEnveloped): Promise<(req: IncomingMessage, res: ServerResponse) => Promise<void>> {
-        const { buildContext, path = '/graphql', ide = { altair: true, graphiql: false }, handleNotFound = true } = config;
+  function buildApp({ prepare }: BuildAppOptions): AsyncRequestHandler {
+    let app: AsyncRequestHandler | undefined;
+    const { buildContext, path = '/graphql', ide = { altair: true, graphiql: false }, handleNotFound = true } = config;
 
+    const appPromise = appBuilder({
+      prepare,
+      adapterFactory(getEnveloped): AsyncRequestHandler {
         const { altairOptions, graphiQLOptions, isAltairEnabled, isGraphiQLEnabled } = parseIDEConfig(ide);
 
         return async function (req, res) {
@@ -201,9 +202,13 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
       },
     });
 
+    appPromise.then(handler => {
+      app = handler;
+    });
+
     return async function (req, res) {
       try {
-        await (await app)(req, res);
+        await (app || (await appPromise))(req, res);
       } catch (err) {
         res
           .writeHead(500, {

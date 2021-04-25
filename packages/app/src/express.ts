@@ -140,17 +140,11 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
     };
   }
 
-  async function buildApp(buildOptions: BuildAppOptions): Promise<Router> {
+  async function buildApp({ prepare, app, server }: BuildAppOptions): Promise<Router> {
+    const { buildContext, path = '/graphql', bodyParserJSONOptions: jsonOptions, ide } = config;
     return appBuilder({
-      prepare: buildOptions.prepare,
+      prepare,
       async adapterFactory(getEnveloped) {
-        const {
-          buildContext,
-          path = '/graphql',
-
-          bodyParserJSONOptions: jsonOptions,
-          ide,
-        } = config;
         const EnvelopApp = Router();
 
         EnvelopApp.use(json(jsonOptions));
@@ -173,7 +167,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
           },
         });
 
-        const subscriptionsPromise = handleSubscriptions(getEnveloped, buildOptions.app, buildOptions.server);
+        const subscriptionsPromise = handleSubscriptions(getEnveloped, app, server);
 
         EnvelopApp.use(path, async (req, res) => {
           const request = {

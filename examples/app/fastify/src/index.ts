@@ -6,14 +6,14 @@ const fastifyApp = Fastify({
   logger: true,
 });
 
-buildApp({
+const EnvelopPlugin = buildApp({
   async prepare() {
     await import('./modules');
   },
-}).then(EnvelopApp => {
-  fastifyApp.register(EnvelopApp, {
-    logLevel: 'error',
-  });
-
-  fastifyApp.listen(3000);
 });
+
+fastifyApp.register(EnvelopPlugin, {
+  logLevel: 'error',
+});
+
+fastifyApp.listen(3000);
