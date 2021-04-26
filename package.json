@@ -1,12 +1,12 @@
 {
   "name": "app-envelop",
   "version": "1.0.0",
+  "private": true,
   "description": "",
   "license": "MIT",
   "author": "PabloSz <pablosaez1995@gmail.com>",
   "main": "index.js",
   "scripts": {
-    "prepare": "husky install",
     "pretty": "pretty-quick",
     "pretty-all": "prettier -w **/*.ts **/*.js"
   },

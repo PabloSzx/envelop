@@ -1,6 +1,7 @@
 {
   "name": "example-app-http",
   "version": "1.0.0",
+  "private": true,
   "license": "MIT",
   "main": "index.js",
   "scripts": {
