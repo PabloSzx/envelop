@@ -1,6 +1,6 @@
 import assert from 'assert';
 
-import { stripUndefineds } from '../utils/object.js';
+import { cleanObject } from '../utils/object.js';
 import { getPathname } from '../utils/url.js';
 
 import type { Envelop } from '@envelop/types';
@@ -138,19 +138,19 @@ export const CreateSubscriptionsServer = async (
          * graphql-ws
          */
         new ws.Server({
-          ...stripUndefineds(optionsObj.wsOptions),
+          ...cleanObject(optionsObj.wsOptions),
           noServer: true,
         }),
         /**
          * subscriptions-transport-ws
          */
         new ws.Server({
-          ...stripUndefineds(optionsObj.wsOptions),
+          ...cleanObject(optionsObj.wsOptions),
           noServer: true,
         }),
       ]
     : new ws.Server({
-        ...stripUndefineds(optionsObj.wsOptions),
+        ...cleanObject(optionsObj.wsOptions),
         noServer: true,
       });
 
@@ -173,7 +173,7 @@ export const CreateSubscriptionsServer = async (
 
       useGraphQLWSServer(
         {
-          ...stripUndefineds(optionsObj.graphQLWS),
+          ...cleanObject(optionsObj.graphQLWS),
           schema,
           execute,
           subscribe,
@@ -193,7 +193,7 @@ export const CreateSubscriptionsServer = async (
 
       useGraphQLWSServer(
         {
-          ...stripUndefineds(optionsObj.graphQLWS),
+          ...cleanObject(optionsObj.graphQLWS),
           schema,
           execute,
           subscribe,
@@ -207,7 +207,7 @@ export const CreateSubscriptionsServer = async (
 
       subscriptionsTransportWs.create(
         {
-          ...stripUndefineds(optionsObj.subscriptionsTransport),
+          ...cleanObject(optionsObj.subscriptionsTransport),
           schema,
           execute,
           subscribe,
@@ -235,7 +235,7 @@ export const CreateSubscriptionsServer = async (
 
       subscriptionsTransportWs.create(
         {
-          ...stripUndefineds(optionsObj.subscriptionsTransport),
+          ...cleanObject(optionsObj.subscriptionsTransport),
           schema,
           execute,
           subscribe,

@@ -7,7 +7,7 @@ import * as typescriptOperationsPlugin from '@graphql-codegen/typescript-operati
 import * as typescriptResolversPlugin from '@graphql-codegen/typescript-resolvers';
 import { printSchemaWithDirectives } from '@graphql-tools/utils';
 
-import { stripUndefineds } from '../utils/object.js';
+import { cleanObject } from '../utils/object.js';
 import { formatPrettier } from './prettier.js';
 import { writeFileIfChanged } from './write.js';
 
@@ -139,7 +139,7 @@ export async function EnvelopCodegen(
     typescript: typescriptPlugin,
     typescriptResolvers: typescriptResolversPlugin,
     typescriptOperations: typescriptOperationsPlugin,
-    ...stripUndefineds(extraPluginsMap),
+    ...cleanObject(extraPluginsMap),
   };
 
   const documents: Source[] = [];
@@ -154,7 +154,7 @@ export async function EnvelopCodegen(
 
     const loadedDocuments = await loadDocuments(documentsArg, {
       loaders: [new GraphQLFileLoader(), new CodeFileLoader()],
-      ...stripUndefineds(loadDocumentsConfig),
+      ...cleanObject(loadDocumentsConfig),
     });
 
     documents.push(...loadedDocuments);

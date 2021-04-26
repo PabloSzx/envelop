@@ -1,4 +1,4 @@
-import { BuildContextArgs, CreateApp, gql, InferFunctionReturn } from '@pablosz/envelop-app/fastify';
+import { BuildContextArgs, CreateApp, gql, InferDataLoader, InferFunctionReturn } from '@pablosz/envelop-app/fastify';
 
 function buildContext({ request }: BuildContextArgs) {
   return {
@@ -7,11 +7,7 @@ function buildContext({ request }: BuildContextArgs) {
   };
 }
 
-declare module '@pablosz/envelop-app/fastify' {
-  interface EnvelopContext extends InferFunctionReturn<typeof buildContext> {}
-}
-
-export const { registerModule, buildApp } = CreateApp({
+export const { registerModule, buildApp, registerDataLoader } = CreateApp({
   codegen: {
     federation: true,
     deepPartialResolvers: true,
@@ -56,12 +52,21 @@ export const { registerModule, buildApp } = CreateApp({
     `,
     resolvers: {
       Query: {
-        hello3(_root, _args, _ctx) {
-          return 'zzz';
+        hello3(_root, _args, ctx) {
+          return ctx.stringRepeater.load('123');
         },
       },
     },
   },
 });
+
+const stringRepeatear = registerDataLoader('stringRepeater', DataLoader => {
+  return new DataLoader(async (keys: readonly string[]) => {
+    return keys.map(v => v.repeat(5));
+  });
+});
+declare module '@pablosz/envelop-app/fastify' {
+  interface EnvelopContext extends InferFunctionReturn<typeof buildContext>, InferDataLoader<typeof stringRepeatear> {}
+}
 
 export { gql };

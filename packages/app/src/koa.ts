@@ -10,6 +10,7 @@ import type * as KoaRouter from '@koa/router';
 import type { ExecutionContext } from 'graphql-helix/dist/types';
 import type { EnvelopModuleConfig, EnvelopContext, IDEOptions } from './common/types';
 import type { ParameterizedContext, Request, Response } from 'koa';
+import type { RegisterDataLoader } from './common/dataloader';
 
 export interface BuildContextArgs {
   request: Request;
@@ -54,11 +55,12 @@ export interface EnvelopAppBuilder {
   gql: typeof gql;
   modules: Module[];
   registerModule: (typeDefs: TypeDefs, options?: EnvelopModuleConfig | undefined) => Module;
+  registerDataLoader: RegisterDataLoader;
   buildApp(options: BuildAppOptions): Promise<void>;
 }
 
 export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
-  const { appBuilder, gql, modules, registerModule } = createEnvelopAppFactory(config, {
+  const { appBuilder, ...commonApp } = createEnvelopAppFactory(config, {
     moduleName: 'koa',
   });
 
@@ -224,14 +226,12 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
   }
 
   return {
+    ...commonApp,
     buildApp,
-    gql,
-    modules,
-    registerModule,
   };
 }
 
 export { gql };
 
-export * from './common/types.js';
+export * from './common/base.js';
 export * from './common/LazyPromise/lazyPromise.js';

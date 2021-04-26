@@ -8,6 +8,7 @@ import type { ExecutionContext, RenderGraphiQLOptions } from 'graphql-helix/dist
 import type { NextApiHandler, NextApiRequest, NextApiResponse } from 'next';
 import type { EnvelopModuleConfig, EnvelopContext } from './common/types';
 import type { RenderOptions } from 'altair-static';
+import type { RegisterDataLoader } from './common/dataloader';
 
 export interface BuildContextArgs {
   request: NextApiRequest;
@@ -29,11 +30,12 @@ export interface EnvelopAppBuilder {
   gql: typeof gql;
   modules: Module[];
   registerModule: (typeDefs: TypeDefs, options?: EnvelopModuleConfig | undefined) => Module;
+  registerDataLoader: RegisterDataLoader;
   buildApp(options?: BuildAppOptions): NextApiHandler<unknown>;
 }
 
 export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
-  const { appBuilder, gql, modules, registerModule } = createEnvelopAppFactory(config, {
+  const { appBuilder, ...commonApp } = createEnvelopAppFactory(config, {
     moduleName: 'nextjs',
   });
 
@@ -151,9 +153,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
   }
 
   return {
-    gql,
-    modules,
-    registerModule,
+    ...commonApp,
     buildApp,
   };
 }
@@ -252,5 +252,5 @@ export function AltairHandler(options: AltairHandlerOptions = {}): NextApiHandle
 
 export { gql };
 
-export * from './common/types.js';
+export * from './common/base.js';
 export * from './common/LazyPromise/lazyPromise.js';
