@@ -16,4 +16,4 @@ fastifyApp.register(EnvelopPlugin, {
   logLevel: 'error',
 });
 
-fastifyApp.listen(3000);
+fastifyApp.listen(process.env.PORT || 3000);
