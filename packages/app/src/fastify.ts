@@ -1,13 +1,11 @@
 import assert from 'assert';
-import { getGraphQLParameters, processRequest } from 'graphql-helix';
 import { gql } from 'graphql-modules';
 
-import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory } from './common/app.js';
+import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app.js';
 import { handleIDE, IDEOptions } from './common/ide/handle.js';
 import { CreateSubscriptionsServer, WebsocketSubscriptionsOptions } from './common/subscriptions/websocket.js';
 
 import type { Envelop } from '@envelop/types';
-import type { ExecutionContext } from 'graphql-helix/dist/types';
 import type { FastifyInstance, FastifyPluginCallback, FastifyReply, FastifyRequest, RouteOptions } from 'fastify';
 import type { Server } from 'http';
 import type { EnvelopContext } from './common/types';
@@ -131,9 +129,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
             ...routeOptions,
             method: ['GET', 'POST'],
             url: path,
-            async handler(req, reply) {
-              const { parse, validate, contextFactory: contextFactoryEnvelop, execute, schema, subscribe } = getEnveloped();
-
+            handler(req, reply) {
               const request = {
                 body: req.body,
                 headers: req.headers,
@@ -141,89 +137,28 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
                 query: req.query,
               };
 
-              const { operationName, query, variables } = getGraphQLParameters(request);
-
-              async function contextFactory(helixCtx: ExecutionContext) {
-                if (buildContext) {
-                  return contextFactoryEnvelop(
-                    Object.assign(
-                      {},
-                      helixCtx,
-                      await buildContext({
-                        request: req,
-                        response: reply,
-                      })
-                    )
-                  );
-                }
-
-                return contextFactoryEnvelop(helixCtx);
-              }
-
-              const result = await processRequest({
-                operationName,
-                query,
-                variables,
+              return handleRequest({
                 request,
-                schema,
-                parse,
-                validate,
-                execute,
-                contextFactory,
-                subscribe,
+                getEnveloped,
+                buildContextArgs() {
+                  return {
+                    request: req,
+                    response: reply,
+                  };
+                },
+                buildContext,
+                onResponse(result) {
+                  reply.status(result.status);
+                  reply.send(result.payload);
+                },
+                onMultiPartResponse(result, defaultHandle) {
+                  return defaultHandle(req.raw, reply.raw, result);
+                },
+                onPushResponse(result, defaultHandle) {
+                  reply.hijack();
+                  return defaultHandle(req.raw, reply.raw, result);
+                },
               });
-
-              if (result.type === 'RESPONSE') {
-                reply.status(result.status);
-                reply.send(result.payload);
-              } else if (result.type === 'MULTIPART_RESPONSE') {
-                reply.status(200);
-                reply.headers({
-                  Connection: 'keep-alive',
-                  'Content-Type': 'multipart/mixed; boundary="-"',
-                  'Transfer-Encoding': 'chunked',
-                });
-
-                req.raw.on('close', () => {
-                  result.unsubscribe();
-                });
-
-                reply.raw.write('---');
-
-                await result.subscribe(result => {
-                  const chunk = Buffer.from(JSON.stringify(result), 'utf8');
-                  const data = [
-                    '',
-                    'Content-Type: application/json; charset=utf-8',
-                    'Content-Length: ' + String(chunk.length),
-                    '',
-                    chunk,
-                  ];
-
-                  if (result.hasNext) {
-                    data.push('---');
-                  }
-
-                  reply.raw.write(data.join('\r\n'));
-                });
-
-                reply.raw.write('\r\n-----\r\n');
-              } else {
-                reply.hijack();
-                reply.raw.writeHead(200, {
-                  'Content-Type': 'text/event-stream',
-                  Connection: 'keep-alive',
-                  'Cache-Control': 'no-cache',
-                });
-
-                req.raw.on('close', () => {
-                  result.unsubscribe();
-                });
-
-                await result.subscribe(result => {
-                  reply.raw.write(`data: ${JSON.stringify(result)}\n\n`);
-                });
-              }
             },
           });
 

@@ -1,10 +1,10 @@
-import { getGraphQLParameters, processRequest, renderGraphiQL } from 'graphql-helix';
+import { renderGraphiQL } from 'graphql-helix';
 import { gql } from 'graphql-modules';
 
-import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory } from './common/app.js';
+import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app.js';
 import { LazyPromise } from './common/LazyPromise/lazyPromise.js';
 
-import type { ExecutionContext, RenderGraphiQLOptions } from 'graphql-helix/dist/types';
+import type { RenderGraphiQLOptions } from 'graphql-helix/dist/types';
 import type { NextApiHandler, NextApiRequest, NextApiResponse } from 'next';
 import type { EnvelopContext } from './common/types';
 import type { RenderOptions } from 'altair-static';
@@ -41,7 +41,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
     const appPromise = appBuilder({
       prepare,
       adapterFactory(getEnveloped): NextApiHandler<unknown> {
-        return async function (req, res) {
+        return (req, res) => {
           const request = {
             body: req.body,
             headers: req.headers,
@@ -49,91 +49,26 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
             query: req.query,
           };
 
-          const { operationName, query, variables } = getGraphQLParameters(request);
-
-          const { parse, validate, contextFactory: contextFactoryEnvelop, execute, schema, subscribe } = getEnveloped();
-
-          async function contextFactory(helixCtx: ExecutionContext) {
-            if (buildContext) {
-              return contextFactoryEnvelop(
-                Object.assign(
-                  {},
-                  helixCtx,
-                  await buildContext({
-                    request: req,
-                    response: res,
-                  })
-                )
-              );
-            }
-
-            return contextFactoryEnvelop(helixCtx);
-          }
-
-          const result = await processRequest({
-            operationName,
-            query,
-            variables,
+          return handleRequest({
             request,
-            schema,
-            parse,
-            validate,
-            contextFactory,
-            execute,
-            subscribe,
-          });
-
-          if (result.type === 'RESPONSE') {
-            res.status(result.status).json(result.payload);
-          } else if (result.type === 'MULTIPART_RESPONSE') {
-            res.writeHead(200, {
-              Connection: 'keep-alive',
-              'Content-Type': 'multipart/mixed; boundary="-"',
-              'Transfer-Encoding': 'chunked',
-              'Content-Encoding': 'none',
-            });
-
-            req.on('close', () => {
-              result.unsubscribe();
-            });
-
-            res.write('---');
-
-            await result.subscribe(result => {
-              const chunk = Buffer.from(JSON.stringify(result), 'utf8');
-              const data = [
-                '',
-                'Content-Type: application/json; charset=utf-8',
-                'Content-Length: ' + String(chunk.length),
-                '',
-                chunk,
-              ];
-
-              if (result.hasNext) {
-                data.push('---');
-              }
-
-              res.write(data.join('\r\n'));
-            });
-
-            res.write('\r\n-----\r\n');
-            res.end();
-          } else {
-            res.writeHead(200, {
-              'Content-Encoding': 'none',
-              'Content-Type': 'text/event-stream',
-              Connection: 'keep-alive',
-              'Cache-Control': 'no-cache',
-            });
-
-            req.on('close', () => {
-              result.unsubscribe();
-            });
-
-            await result.subscribe(result => {
-              res.write(`data: ${JSON.stringify(result)}\n\n`);
-            });
-          }
+            getEnveloped,
+            buildContext,
+            buildContextArgs() {
+              return {
+                request: req,
+                response: res,
+              };
+            },
+            onResponse(result) {
+              res.status(result.status).json(result.payload);
+            },
+            onMultiPartResponse(result, defaultHandle) {
+              return defaultHandle(req, res, result);
+            },
+            onPushResponse(result, defaultHandle) {
+              return defaultHandle(req, res, result);
+            },
+          }).then(() => {});
         };
       },
     });
