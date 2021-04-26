@@ -9,9 +9,11 @@ import type { IncomingMessage, Server as HttpServer } from 'http';
 import type { Socket } from 'net';
 import type { ServerOptions as SubscriptionsTransportOptions } from 'subscriptions-transport-ws/dist/server';
 import type { ServerOptions as GraphQLWSOptions } from 'graphql-ws';
+import type { ExecutionArgs } from 'graphql';
 
 export interface BuildSubscriptionContextArgs {
   request: IncomingMessage;
+  socket: WebSocket;
   connectionParams?: Readonly<Record<string, unknown>>;
 }
 
@@ -75,7 +77,7 @@ function handleUpgrade(httpServer: HttpServer, path: string, wsTuple: CommonSubs
 export type WebsocketSubscriptionsOptions =
   | {
       subscriptionsTransport?: Omit<SubscriptionsTransportOptions, 'schema' | 'execute' | 'subscribe' | 'onConnect'> | boolean;
-      graphQLWS?: Omit<GraphQLWSOptions, 'schema' | 'execute' | 'subscribe' | 'context' | 'validate'> | boolean;
+      graphQLWS?: Omit<GraphQLWSOptions, 'schema' | 'execute' | 'subscribe' | 'context' | 'validate' | 'onSubscribe'> | boolean;
       buildSubscriptionsContext?: BuildSubscriptionsContext;
       wsOptions?: Pick<WebSocket.ServerOptions, 'verifyClient' | 'clientTracking' | 'perMessageDeflate' | 'maxPayload'>;
     }
@@ -174,13 +176,29 @@ export const CreateSubscriptionsServer = async (
       useGraphQLWSServer(
         {
           ...cleanObject(optionsObj.graphQLWS),
-          schema,
           execute,
           subscribe,
-          context: ({ connectionParams, extra: { request } }) => {
-            return getContext({ connectionParams, request });
-          },
           validate,
+          async onSubscribe({ connectionParams, extra: { request, socket } }, { payload: { operationName, query, variables } }) {
+            const { schema, parse } = getEnveloped();
+
+            const args: ExecutionArgs = {
+              schema,
+              operationName: operationName,
+              document: parse(query),
+              variableValues: variables,
+              contextValue: await getContext({
+                connectionParams,
+                request,
+                socket,
+              }),
+            };
+
+            const errors = validate(schema, args.document);
+            if (errors.length) return errors;
+
+            return args;
+          },
         },
         wsServer
       );
@@ -194,13 +212,29 @@ export const CreateSubscriptionsServer = async (
       useGraphQLWSServer(
         {
           ...cleanObject(optionsObj.graphQLWS),
-          schema,
           execute,
           subscribe,
-          context: ({ connectionParams, extra: { request } }) => {
-            return getContext({ connectionParams, request });
-          },
           validate,
+          async onSubscribe({ connectionParams, extra: { request, socket } }, { payload: { operationName, query, variables } }) {
+            const { schema, parse, validate } = getEnveloped();
+
+            const args: ExecutionArgs = {
+              schema,
+              operationName: operationName,
+              document: parse(query),
+              variableValues: variables,
+              contextValue: await getContext({
+                connectionParams,
+                request,
+                socket,
+              }),
+            };
+
+            const errors = validate(schema, args.document);
+            if (errors.length) return errors;
+
+            return args;
+          },
         },
         wsServer[0]
       );
@@ -211,8 +245,8 @@ export const CreateSubscriptionsServer = async (
           schema,
           execute,
           subscribe,
-          onConnect(...[connectionParams, , { request }]: SubscriptionsTransportOnConnectArgs) {
-            return getContext({ connectionParams, request });
+          onConnect(...[connectionParams, socket, { request }]: SubscriptionsTransportOnConnectArgs) {
+            return getContext({ connectionParams, request, socket });
           },
         },
         wsServer[1]
@@ -239,8 +273,8 @@ export const CreateSubscriptionsServer = async (
           schema,
           execute,
           subscribe,
-          onConnect(...[connectionParams, , { request }]: SubscriptionsTransportOnConnectArgs) {
-            return getContext({ connectionParams, request });
+          onConnect(...[connectionParams, socket, { request }]: SubscriptionsTransportOnConnectArgs) {
+            return getContext({ connectionParams, request, socket });
           },
         },
         wsServer
