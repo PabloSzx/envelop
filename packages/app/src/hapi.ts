@@ -1,11 +1,9 @@
-import { getGraphQLParameters, processRequest } from 'graphql-helix';
 import { gql } from 'graphql-modules';
 
-import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory } from './common/app.js';
+import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app.js';
 import { handleIDE } from './common/ide/handle.js';
 import { RawAltairHandler } from './common/ide/rawAltair.js';
 
-import type { ExecutionContext } from 'graphql-helix/dist/types';
 import type { EnvelopContext, IDEOptions } from './common/types';
 import type { Request, ResponseToolkit, Plugin, Server } from '@hapi/hapi';
 
@@ -98,95 +96,30 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
                 query: req.query,
               };
 
-              const { operationName, query, variables } = getGraphQLParameters(request);
-
-              const { parse, validate, contextFactory: contextFactoryEnvelop, execute, schema, subscribe } = getEnveloped();
-
-              async function contextFactory(helixCtx: ExecutionContext) {
-                if (buildContext) {
-                  return contextFactoryEnvelop(
-                    Object.assign(
-                      {},
-                      helixCtx,
-                      await buildContext({
-                        request: req,
-                        h,
-                      })
-                    )
-                  );
-                }
-
-                return contextFactoryEnvelop(helixCtx);
-              }
-
-              const result = await processRequest({
-                operationName,
-                query,
-                variables,
+              return handleRequest({
                 request,
-                schema,
-                parse,
-                validate,
-                contextFactory,
-                execute,
-                subscribe,
+                getEnveloped,
+                buildContext,
+                buildContextArgs() {
+                  return {
+                    request: req,
+                    h,
+                  };
+                },
+                onResponse(result) {
+                  return h.response(result.payload).code(result.status).type('application/json');
+                },
+                async onMultiPartResponse(result, defaultHandle) {
+                  await defaultHandle(req.raw.req, req.raw.res, result);
+
+                  return h.abandon;
+                },
+                async onPushResponse(result, defaultHandle) {
+                  await defaultHandle(req.raw.req, req.raw.res, result);
+
+                  return h.abandon;
+                },
               });
-
-              if (result.type === 'RESPONSE') {
-                return h.response(result.payload).code(result.status).type('application/json');
-              } else if (result.type === 'MULTIPART_RESPONSE') {
-                req.raw.res.writeHead(200, {
-                  Connection: 'keep-alive',
-                  'Content-Type': 'multipart/mixed; boundary="-"',
-                  'Transfer-Encoding': 'chunked',
-                  'Content-Encoding': 'none',
-                });
-
-                req.raw.req.on('close', () => {
-                  result.unsubscribe();
-                });
-
-                req.raw.res.write('---');
-
-                await result.subscribe(result => {
-                  const chunk = Buffer.from(JSON.stringify(result), 'utf8');
-                  const data = [
-                    '',
-                    'Content-Type: application/json; charset=utf-8',
-                    'Content-Length: ' + String(chunk.length),
-                    '',
-                    chunk,
-                  ];
-
-                  if (result.hasNext) {
-                    data.push('---');
-                  }
-
-                  req.raw.res.write(data.join('\r\n'));
-                });
-
-                req.raw.res.write('\r\n-----\r\n');
-                req.raw.res.end();
-
-                return h.abandon;
-              } else {
-                req.raw.res.writeHead(200, {
-                  'Content-Encoding': 'none',
-                  'Content-Type': 'text/event-stream',
-                  Connection: 'keep-alive',
-                  'Cache-Control': 'no-cache',
-                });
-
-                req.raw.req.on('close', () => {
-                  result.unsubscribe();
-                });
-
-                await result.subscribe(result => {
-                  req.raw.res.write(`data: ${JSON.stringify(result)}\n\n`);
-                });
-
-                return h.abandon;
-              }
             },
           });
         };

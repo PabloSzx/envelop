@@ -1,13 +1,13 @@
-import { getGraphQLParameters, processRequest, renderGraphiQL } from 'graphql-helix';
+import { renderGraphiQL } from 'graphql-helix';
 import { gql } from 'graphql-modules';
 import querystring from 'querystring';
 
-import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory } from './common/app.js';
+import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app.js';
 import { parseIDEConfig } from './common/ide/handle.js';
 import { RawAltairHandler } from './common/ide/rawAltair.js';
 import { getPathname } from './common/utils/url.js';
 
-import type { ExecutionContext, RenderGraphiQLOptions } from 'graphql-helix/dist/types';
+import type { RenderGraphiQLOptions } from 'graphql-helix/dist/types';
 import type { EnvelopContext, IDEOptions } from './common/types';
 import type { RenderOptions } from 'altair-static';
 import type { IncomingMessage, ServerResponse } from 'http';
@@ -89,109 +89,38 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
             payload += chunk.toString('utf-8');
           });
 
-          const { parse, validate, contextFactory: contextFactoryEnvelop, execute, schema, subscribe } = getEnveloped();
+          req.on('end', () => {
+            const body = JSON.parse(payload || '{}');
 
-          async function contextFactory(helixCtx: ExecutionContext) {
-            if (buildContext) {
-              return contextFactoryEnvelop(
-                Object.assign(
-                  {},
-                  helixCtx,
-                  await buildContext({
-                    request: req,
-                    response: res,
-                  })
-                )
-              );
-            }
+            const urlQuery = req.url?.split('?')[1];
 
-            return contextFactoryEnvelop(helixCtx);
-          }
+            const request = {
+              body,
+              headers: req.headers,
+              method: req.method!,
+              query: urlQuery ? querystring.parse(urlQuery) : {},
+            };
 
-          req.on('end', async () => {
-            try {
-              const body = JSON.parse(payload || '{}');
-
-              const urlQuery = req.url?.split('?')[1];
-
-              const request = {
-                body,
-                headers: req.headers,
-                method: req.method!,
-                query: urlQuery ? querystring.parse(urlQuery) : {},
-              };
-
-              const { operationName, query, variables } = getGraphQLParameters(request);
-
-              const result = await processRequest({
-                operationName,
-                query,
-                variables,
-                request,
-                schema,
-                parse,
-                validate,
-                contextFactory,
-                execute,
-                subscribe,
-              });
-
-              if (result.type === 'RESPONSE') {
-                res.writeHead(result.status, {
-                  'content-type': 'application/json',
-                });
-
-                res.end(JSON.stringify(result.payload));
-              } else if (result.type === 'MULTIPART_RESPONSE') {
-                res.writeHead(200, {
-                  Connection: 'keep-alive',
-                  'Content-Type': 'multipart/mixed; boundary="-"',
-                  'Transfer-Encoding': 'chunked',
-                  'Content-Encoding': 'none',
-                });
-
-                req.on('close', () => {
-                  result.unsubscribe();
-                });
-
-                res.write('---');
-
-                await result.subscribe(result => {
-                  const chunk = Buffer.from(JSON.stringify(result), 'utf8');
-                  const data = [
-                    '',
-                    'Content-Type: application/json; charset=utf-8',
-                    'Content-Length: ' + String(chunk.length),
-                    '',
-                    chunk,
-                  ];
-
-                  if (result.hasNext) {
-                    data.push('---');
-                  }
-
-                  res.write(data.join('\r\n'));
-                });
-
-                res.write('\r\n-----\r\n');
-                res.end();
-              } else {
-                res.writeHead(200, {
-                  'Content-Encoding': 'none',
-                  'Content-Type': 'text/event-stream',
-                  Connection: 'keep-alive',
-                  'Cache-Control': 'no-cache',
-                });
-
-                req.on('close', () => {
-                  result.unsubscribe();
-                });
-
-                await result.subscribe(result => {
-                  res.write(`data: ${JSON.stringify(result)}\n\n`);
-                });
-              }
-            } catch (err) {
+            return handleRequest({
+              request,
+              getEnveloped,
+              buildContextArgs() {
+                return {
+                  request: req,
+                  response: res,
+                };
+              },
+              buildContext,
+              onResponse(result, defaultHandle) {
+                return defaultHandle(req, res, result);
+              },
+              onMultiPartResponse(result, defaultHandle) {
+                return defaultHandle(req, res, result);
+              },
+              onPushResponse(result, defaultHandle) {
+                return defaultHandle(req, res, result);
+              },
+            }).catch(err => {
               res
                 .writeHead(500, {
                   'Content-Type': 'application/json',
@@ -201,7 +130,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
                     message: err.message,
                   })
                 );
-            }
+            });
           });
         };
       },
