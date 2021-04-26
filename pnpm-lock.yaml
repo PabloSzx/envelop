@@ -58,6 +58,25 @@ importers:
       tsup-node: 0.1.0_typescript@4.2.4
       typescript: 4.2.4
 
+  examples/app/hapi:
+    specifiers:
+      '@graphql-typed-document-node/core': ^3.1.0
+      '@hapi/hapi': ^20.1.2
+      '@pablosz/envelop-app': workspace:^
+      '@types/hapi__hapi': ^20.0.7
+      '@types/node': ^14.14.41
+      tsup-node: ^0.1.0
+      typescript: ^4.2.4
+    dependencies:
+      '@graphql-typed-document-node/core': 3.1.0
+      '@hapi/hapi': 20.1.2
+      '@pablosz/envelop-app': link:../../../packages/app
+    devDependencies:
+      '@types/hapi__hapi': 20.0.7
+      '@types/node': 14.14.41
+      tsup-node: 0.1.0_typescript@4.2.4
+      typescript: 4.2.4
+
   examples/app/http:
     specifiers:
       '@graphql-typed-document-node/core': ^3.1.0
@@ -153,7 +172,7 @@ importers:
       '@koa/router': ^10.0.0
       '@types/body-parser': ^1.19.0
       '@types/express': ^4.17.11
-      '@types/hapi': ^18.0.5
+      '@types/hapi__hapi': ^20.0.7
       '@types/koa': ^2.13.1
       '@types/koa__router': ^8.0.4
       '@types/koa-bodyparser': ^4.3.0
@@ -219,7 +238,7 @@ importers:
       '@koa/router': 10.0.0
       '@types/body-parser': 1.19.0
       '@types/express': 4.17.11
-      '@types/hapi': 18.0.5
+      '@types/hapi__hapi': 20.0.7
       '@types/koa': 2.13.1
       '@types/koa__router': 8.0.4
       '@types/koa-bodyparser': 4.3.0
@@ -1124,19 +1143,16 @@ packages:
     dependencies:
       '@hapi/boom': 9.1.2
       '@hapi/hoek': 9.2.0
-    dev: true
 
   /@hapi/ammo/5.0.1:
     resolution: {integrity: sha512-FbCNwcTbnQP4VYYhLNGZmA76xb2aHg9AMPiy18NZyWMG310P5KdFGyA9v2rm5ujrIny77dEEIkMOwl0Xv+fSSA==}
     dependencies:
       '@hapi/hoek': 9.2.0
-    dev: true
 
   /@hapi/b64/5.0.0:
     resolution: {integrity: sha512-ngu0tSEmrezoiIaNGG6rRvKOUkUuDdf4XTPnONHGYfSGRmDqPZX5oJL6HAdKTo1UQHECbdB4OzhWrfgVppjHUw==}
     dependencies:
       '@hapi/hoek': 9.2.0
-    dev: true
 
   /@hapi/boom/9.1.2:
     resolution: {integrity: sha512-uJEJtiNHzKw80JpngDGBCGAmWjBtzxDCz17A9NO2zCi8LLBlb5Frpq4pXwyN+2JQMod4pKz5BALwyneCgDg89Q==}
@@ -1148,25 +1164,21 @@ packages:
     dependencies:
       '@hapi/boom': 9.1.2
       '@hapi/hoek': 9.2.0
-    dev: true
 
   /@hapi/bourne/2.0.0:
     resolution: {integrity: sha512-WEezM1FWztfbzqIUbsDzFRVMxSoLy3HugVcux6KDDtTqzPsLE8NDRHfXvev66aH1i2oOKKar3/XDjbvh/OUBdg==}
-    dev: true
 
   /@hapi/call/8.0.1:
     resolution: {integrity: sha512-bOff6GTdOnoe5b8oXRV3lwkQSb/LAWylvDMae6RgEWWntd0SHtkYbQukDHKlfaYtVnSAgIavJ0kqszF/AIBb6g==}
     dependencies:
       '@hapi/boom': 9.1.2
       '@hapi/hoek': 9.2.0
-    dev: true
 
   /@hapi/catbox-memory/5.0.1:
     resolution: {integrity: sha512-QWw9nOYJq5PlvChLWV8i6hQHJYfvdqiXdvTupJFh0eqLZ64Xir7mKNi96d5/ZMUAqXPursfNDIDxjFgoEDUqeQ==}
     dependencies:
       '@hapi/boom': 9.1.2
       '@hapi/hoek': 9.2.0
-    dev: true
 
   /@hapi/catbox/11.1.1:
     resolution: {integrity: sha512-u/8HvB7dD/6X8hsZIpskSDo4yMKpHxFd7NluoylhGrL6cUfYxdQPnvUp9YU2C6F9hsyBVLGulBd9vBN1ebfXOQ==}
@@ -1175,24 +1187,20 @@ packages:
       '@hapi/hoek': 9.2.0
       '@hapi/podium': 4.1.3
       '@hapi/validate': 1.1.3
-    dev: true
 
   /@hapi/content/5.0.2:
     resolution: {integrity: sha512-mre4dl1ygd4ZyOH3tiYBrOUBzV7Pu/EOs8VLGf58vtOEECWed8Uuw6B4iR9AN/8uQt42tB04qpVaMyoMQh0oMw==}
     dependencies:
       '@hapi/boom': 9.1.2
-    dev: true
 
   /@hapi/cryptiles/5.1.0:
     resolution: {integrity: sha512-fo9+d1Ba5/FIoMySfMqPBR/7Pa29J2RsiPrl7bkwo5W5o+AN1dAYQRi4SPrPwwVxVGKjgLOEWrsvt1BonJSfLA==}
     engines: {node: '>=12.0.0'}
     dependencies:
       '@hapi/boom': 9.1.2
-    dev: true
 
   /@hapi/file/2.0.0:
     resolution: {integrity: sha512-WSrlgpvEqgPWkI18kkGELEZfXr0bYLtr16iIN4Krh9sRnzBZN6nnWxHFxtsnP684wueEySBbXPDg/WfA9xJdBQ==}
-    dev: true
 
   /@hapi/hapi/20.1.2:
     resolution: {integrity: sha512-yLppH93as7vw+uaAMVcHEB13eBojuzGhcX948y/CGukNRAlnPV+c1EJGbYPLXVffpH8wCNsI7TrTaeifSFS6Vw==}
@@ -1216,7 +1224,6 @@ packages:
       '@hapi/teamwork': 5.1.0
       '@hapi/topo': 5.0.0
       '@hapi/validate': 1.1.3
-    dev: true
 
   /@hapi/heavy/7.0.1:
     resolution: {integrity: sha512-vJ/vzRQ13MtRzz6Qd4zRHWS3FaUc/5uivV2TIuExGTM9Qk+7Zzqj0e2G7EpE6KztO9SalTbiIkTh7qFKj/33cA==}
@@ -1224,7 +1231,6 @@ packages:
       '@hapi/boom': 9.1.2
       '@hapi/hoek': 9.2.0
       '@hapi/validate': 1.1.3
-    dev: true
 
   /@hapi/hoek/9.2.0:
     resolution: {integrity: sha512-sqKVVVOe5ivCaXDWivIJYVSaEgdQK9ul7a4Kity5Iw7u9+wBAPbX1RMSnLLmp7O4Vzj0WOWwMAJsTL00xwaNug==}
@@ -1237,14 +1243,12 @@ packages:
       '@hapi/bourne': 2.0.0
       '@hapi/cryptiles': 5.1.0
       '@hapi/hoek': 9.2.0
-    dev: true
 
   /@hapi/mimos/5.0.0:
     resolution: {integrity: sha512-EVS6wJYeE73InTlPWt+2e3Izn319iIvffDreci3qDNT+t3lA5ylJ0/SoTaID8e0TPNUkHUSsgJZXEmLHvoYzrA==}
     dependencies:
       '@hapi/hoek': 9.2.0
       mime-db: 1.47.0
-    dev: true
 
   /@hapi/nigel/4.0.2:
     resolution: {integrity: sha512-ht2KoEsDW22BxQOEkLEJaqfpoKPXxi7tvabXy7B/77eFtOyG5ZEstfZwxHQcqAiZhp58Ae5vkhEqI03kawkYNw==}
@@ -1252,7 +1256,6 @@ packages:
     dependencies:
       '@hapi/hoek': 9.2.0
       '@hapi/vise': 4.0.0
-    dev: true
 
   /@hapi/pez/5.0.3:
     resolution: {integrity: sha512-mpikYRJjtrbJgdDHG/H9ySqYqwJ+QU/D7FXsYciS9P7NYBXE2ayKDAy3H0ou6CohOCaxPuTV4SZ0D936+VomHA==}
@@ -1262,7 +1265,6 @@ packages:
       '@hapi/content': 5.0.2
       '@hapi/hoek': 9.2.0
       '@hapi/nigel': 4.0.2
-    dev: true
 
   /@hapi/podium/4.1.3:
     resolution: {integrity: sha512-ljsKGQzLkFqnQxE7qeanvgGj4dejnciErYd30dbrYzUOF/FyS/DOF97qcrT3bhoVwCYmxa6PEMhxfCPlnUcD2g==}
@@ -1270,21 +1272,18 @@ packages:
       '@hapi/hoek': 9.2.0
       '@hapi/teamwork': 5.1.0
       '@hapi/validate': 1.1.3
-    dev: true
 
   /@hapi/shot/5.0.5:
     resolution: {integrity: sha512-x5AMSZ5+j+Paa8KdfCoKh+klB78otxF+vcJR/IoN91Vo2e5ulXIW6HUsFTCU+4W6P/Etaip9nmdAx2zWDimB2A==}
     dependencies:
       '@hapi/hoek': 9.2.0
       '@hapi/validate': 1.1.3
-    dev: true
 
   /@hapi/somever/3.0.0:
     resolution: {integrity: sha512-Upw/kmKotC9iEmK4y047HMYe4LDKsE5NWfjgX41XNKmFvxsQL7OiaCWVhuyyhU0ShDGBfIAnCH8jZr49z/JzZA==}
     dependencies:
       '@hapi/bounce': 2.0.0
       '@hapi/hoek': 9.2.0
-    dev: true
 
   /@hapi/statehood/7.0.3:
     resolution: {integrity: sha512-pYB+pyCHkf2Amh67QAXz7e/DN9jcMplIL7Z6N8h0K+ZTy0b404JKPEYkbWHSnDtxLjJB/OtgElxocr2fMH4G7w==}
@@ -1296,7 +1295,6 @@ packages:
       '@hapi/hoek': 9.2.0
       '@hapi/iron': 6.0.0
       '@hapi/validate': 1.1.3
-    dev: true
 
   /@hapi/subtext/7.0.3:
     resolution: {integrity: sha512-CekDizZkDGERJ01C0+TzHlKtqdXZxzSWTOaH6THBrbOHnsr3GY+yiMZC+AfNCypfE17RaIakGIAbpL2Tk1z2+A==}
@@ -1308,31 +1306,26 @@ packages:
       '@hapi/hoek': 9.2.0
       '@hapi/pez': 5.0.3
       '@hapi/wreck': 17.1.0
-    dev: true
 
   /@hapi/teamwork/5.1.0:
     resolution: {integrity: sha512-llqoQTrAJDTXxG3c4Kz/uzhBS1TsmSBa/XG5SPcVXgmffHE1nFtyLIK0hNJHCB3EuBKT84adzd1hZNY9GJLWtg==}
     engines: {node: '>=12.0.0'}
-    dev: true
 
   /@hapi/topo/5.0.0:
     resolution: {integrity: sha512-tFJlT47db0kMqVm3H4nQYgn6Pwg10GTZHb1pwmSiv1K4ks6drQOtfEF5ZnPjkvC+y4/bUPHK+bc87QvLcL+WMw==}
     dependencies:
       '@hapi/hoek': 9.2.0
-    dev: true
 
   /@hapi/validate/1.1.3:
     resolution: {integrity: sha512-/XMR0N0wjw0Twzq2pQOzPBZlDzkekGcoCtzO314BpIEsbXdYGthQUbxgkGDf4nhk1+IPDAsXqWjMohRQYO06UA==}
     dependencies:
       '@hapi/hoek': 9.2.0
       '@hapi/topo': 5.0.0
-    dev: true
 
   /@hapi/vise/4.0.0:
     resolution: {integrity: sha512-eYyLkuUiFZTer59h+SGy7hUm+qE9p+UemePTHLlIWppEd+wExn3Df5jO04bFQTm7nleF5V8CtuYQYb+VFpZ6Sg==}
     dependencies:
       '@hapi/hoek': 9.2.0
-    dev: true
 
   /@hapi/wreck/17.1.0:
     resolution: {integrity: sha512-nx6sFyfqOpJ+EFrHX+XWwJAxs3ju4iHdbB/bwR8yTNZOiYmuhA8eCe7lYPtYmb4j7vyK/SlbaQsmTtUrMvPEBw==}
@@ -1340,7 +1333,6 @@ packages:
       '@hapi/boom': 9.1.2
       '@hapi/bourne': 2.0.0
       '@hapi/hoek': 9.2.0
-    dev: true
 
   /@koa/router/10.0.0:
     resolution: {integrity: sha512-z9ytrKWn/j/qUApMSJzZbUwkbLcN2ZXGq6UsqWkZb50Us+/Qpu0RwgZ6ytawVOhfFBZ1ai5iVWeD2Dcu0qcnJw==}
@@ -1478,14 +1470,6 @@ packages:
       '@types/node': 14.14.41
     dev: true
 
-  /@types/boom/7.3.0:
-    resolution: {integrity: sha512-PH7bfkt1nu4pnlxz+Ws+wwJJF1HE12W3ia+Iace2JT7q56DLH3hbyjOJyNHJYRxk3PkKaC36fHfHKyeG1rMgCA==}
-    dev: true
-
-  /@types/catbox/10.0.6:
-    resolution: {integrity: sha512-qS0VHlL6eBUUoUeBnI/ASCffoniS62zdV6IUtLSIjGKmRhZNawotaOMsTYivZOTZVktfe9koAJkD9XFac7tEEg==}
-    dev: true
-
   /@types/connect/3.4.34:
     resolution: {integrity: sha512-ePPA/JuI+X0vb+gSWlPKOY0NdNAie/rPUqX2GUPpbZwiKTkSPhjXWuee47E4MtE54QVzGCQMQkAL6JhV2E1+cQ==}
     dependencies:
@@ -1522,17 +1506,37 @@ packages:
       '@types/serve-static': 1.13.9
     dev: true
 
-  /@types/hapi/18.0.5:
-    resolution: {integrity: sha512-OnBslvAL//tsTZemW8wSGrVUj7BgtS16kBicgKCtEpHle9A3pOd7X4ViykKv/X3rh7g636mDzoqQ27+Ols5GQw==}
+  /@types/hapi__catbox/10.2.3:
+    resolution: {integrity: sha512-gs6MKMKXzWpSqeYsPaDIDAxD8jLNg7aFxgAJE6Jnc+ns072Z9fuh39/NF5gSk1KNoGCLnIpeZ0etT9gY9QDCKg==}
+    dev: true
+
+  /@types/hapi__hapi/20.0.7:
+    resolution: {integrity: sha512-tJcizTio7R5O5uIRIRowAwru6sTjCGxGzRopMjm0Li5kIlSTtJ80z3hxpNZOW/7zfAuLIuh/kgG7kDHajT6AYw==}
     dependencies:
-      '@types/boom': 7.3.0
-      '@types/catbox': 10.0.6
-      '@types/iron': 5.0.1
-      '@types/mimos': 3.0.2
+      '@hapi/boom': 9.1.2
+      '@hapi/iron': 6.0.0
+      '@types/hapi__catbox': 10.2.3
+      '@types/hapi__mimos': 4.1.3
+      '@types/hapi__podium': 3.4.1
+      '@types/hapi__shot': 4.1.1
       '@types/node': 14.14.41
-      '@types/podium': 1.0.0
-      '@types/shot': 4.0.0
       joi: 17.4.0
+    dev: true
+
+  /@types/hapi__mimos/4.1.3:
+    resolution: {integrity: sha512-vZiKXZ0QqwSh0v1z9/f/VEPvmAHQaAXeVK9kGQIQH+2cqxrb2IL4TSDF0aPhPnNzuCvcUWaeCuGXj8V79v/kEA==}
+    dependencies:
+      '@types/mime-db': 1.43.0
+    dev: true
+
+  /@types/hapi__podium/3.4.1:
+    resolution: {integrity: sha512-qgMyeXTZhGWvvUnXFavW2Pksf07IV1haBM/Fdq6cFi1lCIXhUHsaTrr2w651q+rhHZf+1dgP1vltJ0/quLxYYw==}
+    dev: true
+
+  /@types/hapi__shot/4.1.1:
+    resolution: {integrity: sha512-44Jj7jJAFgNVgfdbyVtBUbEIbYqWRKAbLR4kiQxBbVEdf8ZKfa5Hg1qg4QdzXBgjw0mopewU4wx1/eWRTVelNQ==}
+    dependencies:
+      '@types/node': 14.14.41
     dev: true
 
   /@types/http-assert/1.5.1:
@@ -1541,12 +1545,6 @@ packages:
 
   /@types/http-errors/1.8.0:
     resolution: {integrity: sha512-2aoSC4UUbHDj2uCsCxcG/vRMXey/m17bC7UwitVm5hn22nI8O8Y9iDpA76Orc+DWkQ4zZrOKEshCqR/jSuXAHA==}
-    dev: true
-
-  /@types/iron/5.0.1:
-    resolution: {integrity: sha512-Ng5BkVGPt7Tw9k1OJ6qYwuD9+dmnWgActmsnnrdvs4075N8V2go1f6Pz8omG3q5rbHjXN6yzzZDYo3JOgAE/Ug==}
-    dependencies:
-      '@types/node': 14.14.41
     dev: true
 
   /@types/keygrip/1.0.2:
@@ -1596,12 +1594,6 @@ packages:
     resolution: {integrity: sha512-YATxVxgRqNH6nHEIsvg6k2Boc1JHI9ZbH5iWFFv/MTkchz3b1ieGDa5T0a9RznNdI0KhVbdbWSN+KWWrQZRxTw==}
     dev: true
 
-  /@types/mimos/3.0.2:
-    resolution: {integrity: sha512-UG3sdP/9HOk0oA1l8VylaZ0fjy6O/QGEeivOK9JhMjgJkcBJRdfsI6FtXFtg6UH17txmxuDOiIsTlrpBkayK0A==}
-    dependencies:
-      '@types/mime-db': 1.43.0
-    dev: true
-
   /@types/minimatch/3.0.4:
     resolution: {integrity: sha512-1z8k4wzFnNjVK/tlxvrWuK5WMt6mydWWP7+zvH5eFep4oj+UkrfiJTRtjCeBXNpwaA/FYqqtb4/QS4ianFpIRA==}
     dev: false
@@ -1621,10 +1613,6 @@ packages:
 
   /@types/parse-json/4.0.0:
     resolution: {integrity: sha512-//oorEZjL6sbPcKUaCdIGlIUeH26mgzimjBB77G6XRgnDl/L5wOnpyBGRe/Mmf5CVW3PwEBE1NjiMZ/ssFh4wA==}
-    dev: true
-
-  /@types/podium/1.0.0:
-    resolution: {integrity: sha1-v6ohUb4rHWEJzGn3+qnawsujuyA=}
     dev: true
 
   /@types/prettier/2.2.3:
@@ -1665,12 +1653,6 @@ packages:
     resolution: {integrity: sha512-ZFqF6qa48XsPdjXV5Gsz0Zqmux2PerNd3a/ktL45mHpa19cuMi/cL8tcxdAx497yRh+QtYPuofjT9oWw9P7nkA==}
     dependencies:
       '@types/mime': 1.3.2
-      '@types/node': 14.14.41
-    dev: true
-
-  /@types/shot/4.0.0:
-    resolution: {integrity: sha512-Xv+n8yfccuicMlwBY58K5PVVNtXRm7uDzcwwmCarBxMP+XxGfnh1BI06YiVAsPbTAzcnYsrzpoS5QHeyV7LS8A==}
-    dependencies:
       '@types/node': 14.14.41
     dev: true
 
