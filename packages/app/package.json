@@ -8,7 +8,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsup src/index.ts --dts --format esm,cjs --target es2020",
-    "dev": "tsup src/index.ts --dts --format esm,cjs --target es2020 --watch"
+    "dev": "tsup src/index.ts --dts --format esm,cjs --target es2020 --watch src"
   },
   "dependencies": {
     "@envelop/core": "^0.1.2",
@@ -23,14 +23,15 @@
     "@graphql-tools/utils": "^7.7.1",
     "altair-fastify-plugin": "^4.0.0",
     "fastify": "^3.14.2",
-    "graphql": "latest",
+    "graphql": "^15.5.0",
     "graphql-helix": "1.2.3",
     "graphql-modules": "^1.4.2",
+    "mkdirp": "^1.0.4",
     "prettier": "^2.2.1"
   },
   "devDependencies": {
+    "@pablosz/tsup": "^0.0.6",
     "esbuild": "^0.11.11",
-    "tsup": "^4.8.21",
     "typescript": "^4.2.4"
   }
 }

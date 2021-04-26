@@ -40,7 +40,7 @@ export function CreateEnvelopAppFactory(config: BaseEnvelopAppOptions, internalC
             typeDefs: gql(scalarNames),
             resolvers: Object.keys(scalars).reduce((acum, scalarName) => {
               const resolver =
-                //@ts-expect-error
+                //@ts-ignore
                 scalarResolvers[scalarName];
 
               if (resolver) acum[scalarName] = resolver;
