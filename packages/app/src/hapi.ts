@@ -5,7 +5,7 @@ import { handleIDE } from './common/ide/handle.js';
 import { RawAltairHandler } from './common/ide/rawAltair.js';
 
 import type { EnvelopContext, IDEOptions } from './common/types';
-import type { Request, ResponseToolkit, Plugin, Server } from '@hapi/hapi';
+import type { Request, ResponseToolkit, Plugin, Server, Lifecycle } from '@hapi/hapi';
 
 export interface BuildContextArgs {
   request: Request;
@@ -96,7 +96,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
                 query: req.query,
               };
 
-              return handleRequest({
+              return handleRequest<BuildContextArgs, Lifecycle.ReturnValueTypes>({
                 request,
                 getEnveloped,
                 buildContext,

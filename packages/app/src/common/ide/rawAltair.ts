@@ -63,13 +63,12 @@ export function RawAltairHandler(options: RawAltairHandlerOptions): (req: Incomi
         case path:
         case baseURL: {
           res.setHeader('content-type', 'text/html');
-          res.end(
+          return res.end(
             renderAltair({
               ...renderOptions,
               baseURL,
             })
           );
-          return;
         }
         case undefined: {
           return res.writeHead(404).end();

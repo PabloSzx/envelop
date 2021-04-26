@@ -68,7 +68,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
             onPushResponse(result, defaultHandle) {
               return defaultHandle(req, res, result);
             },
-          }).then(() => {});
+          });
         };
       },
     });
