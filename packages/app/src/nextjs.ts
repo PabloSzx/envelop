@@ -1,14 +1,13 @@
 import { getGraphQLParameters, processRequest, renderGraphiQL } from 'graphql-helix';
-import { gql, Module, TypeDefs } from 'graphql-modules';
+import { gql } from 'graphql-modules';
 
-import { BaseEnvelopAppOptions, createEnvelopAppFactory } from './common/app.js';
+import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory } from './common/app.js';
 import { LazyPromise } from './common/LazyPromise/lazyPromise.js';
 
 import type { ExecutionContext, RenderGraphiQLOptions } from 'graphql-helix/dist/types';
 import type { NextApiHandler, NextApiRequest, NextApiResponse } from 'next';
-import type { EnvelopModuleConfig, EnvelopContext } from './common/types';
+import type { EnvelopContext } from './common/types';
 import type { RenderOptions } from 'altair-static';
-import type { RegisterDataLoader } from './common/dataloader';
 
 export interface BuildContextArgs {
   request: NextApiRequest;
@@ -26,11 +25,7 @@ export interface BuildAppOptions {
   prepare?: () => void | Promise<void>;
 }
 
-export interface EnvelopAppBuilder {
-  gql: typeof gql;
-  modules: Module[];
-  registerModule: (typeDefs: TypeDefs, options?: EnvelopModuleConfig | undefined) => Module;
-  registerDataLoader: RegisterDataLoader;
+export interface EnvelopAppBuilder extends BaseEnvelopBuilder {
   buildApp(options?: BuildAppOptions): NextApiHandler<unknown>;
 }
 

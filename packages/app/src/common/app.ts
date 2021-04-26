@@ -27,12 +27,16 @@ export interface InternalAppBuildOptions<T> {
   adapterFactory: AdapterFactory<T>;
 }
 
-export interface EnvelopAppFactoryType {
+export interface BaseEnvelopBuilder {
   registerModule: (typeDefs: TypeDefs, options?: EnvelopModuleConfig) => Module;
   registerDataLoader: RegisterDataLoader;
   gql: typeof gql;
-  appBuilder<T>(opts: InternalAppBuildOptions<T>): Promise<T>;
   modules: Module[];
+  plugins: Plugin[];
+}
+
+export interface EnvelopAppFactoryType extends BaseEnvelopBuilder {
+  appBuilder<T>(opts: InternalAppBuildOptions<T>): Promise<T>;
 }
 
 export interface ExecutableSchemaDefinition<TContext = EnvelopContext>
@@ -227,5 +231,6 @@ export function createEnvelopAppFactory<TContext>(
     appBuilder,
     gql,
     modules: factoryModules,
+    plugins: factoryPlugins,
   };
 }

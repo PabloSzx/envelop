@@ -1,18 +1,17 @@
 import assert from 'assert';
 import { Express, json, Request, Response, Router } from 'express';
 import { getGraphQLParameters, processRequest } from 'graphql-helix';
-import { gql, Module, TypeDefs } from 'graphql-modules';
+import { gql } from 'graphql-modules';
 import { createServer, Server } from 'http';
 
-import { BaseEnvelopAppOptions, createEnvelopAppFactory } from './common/app.js';
+import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory } from './common/app.js';
 import { handleIDE, IDEOptions } from './common/ide/handle.js';
 import { CreateSubscriptionsServer, WebsocketSubscriptionsOptions } from './common/subscriptions/websocket.js';
 
 import type { Envelop } from '@envelop/types';
 import type { ExecutionContext } from 'graphql-helix/dist/types';
-import type { EnvelopModuleConfig, EnvelopContext } from './common/types';
+import type { EnvelopContext } from './common/types';
 import type { OptionsJson as BodyParserOptions } from 'body-parser';
-import type { RegisterDataLoader } from './common/dataloader';
 
 export interface BuildContextArgs {
   request: Request;
@@ -54,11 +53,7 @@ export interface BuildAppOptions {
   prepare?: () => void | Promise<void>;
 }
 
-export interface EnvelopAppBuilder {
-  gql: typeof gql;
-  modules: Module[];
-  registerModule: (typeDefs: TypeDefs, options?: EnvelopModuleConfig | undefined) => Module;
-  registerDataLoader: RegisterDataLoader;
+export interface EnvelopAppBuilder extends BaseEnvelopBuilder {
   buildApp(options: BuildAppOptions): Promise<Router>;
 }
 
