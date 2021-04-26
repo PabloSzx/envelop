@@ -3,12 +3,13 @@ import { gql, Module, TypeDefs } from 'graphql-modules';
 import bodyParser from 'koa-bodyparser';
 
 import { BaseEnvelopAppOptions, createEnvelopAppFactory } from './common/app.js';
-import { handleIDE } from './common/ide.js';
+import { handleIDE } from './common/ide/handle.js';
+import { RawAltairHandlerDeps } from './common/ide/rawAltair.js';
 
 import type * as KoaRouter from '@koa/router';
 import type { ExecutionContext } from 'graphql-helix/dist/types';
 import type { EnvelopModuleConfig, EnvelopContext, IDEOptions } from './common/types';
-import type { Request, Response } from 'koa';
+import type { ParameterizedContext, Request, Response } from 'koa';
 
 export interface BuildContextArgs {
   request: Request;
@@ -29,10 +30,7 @@ export interface EnvelopAppOptions extends BaseEnvelopAppOptions<EnvelopContext>
   /**
    * IDE configuration
    *
-   * To enable [`Altair`](https://altair.sirmuel.design/) you will need to install `altair-koa-middleware`
-   * @see [https://npm.im/altair-koa-middleware](https://npm.im/altair-koa-middleware)
-   *
-   * @default { altair: false, graphiql: true }
+   * @default { altair: true, graphiql: true }
    */
   ide?: IDEOptions;
 
@@ -72,28 +70,57 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
       async adapterFactory(getEnveloped): Promise<void> {
         if (bodyParserOptions) router.use(bodyParser(bodyParserOptions));
 
-        await handleIDE(
-          ide,
-          path,
-          {
-            async handleAltair({ path: idePath, ...opts }) {
-              const { createRouteExplorer } = await import('altair-koa-middleware');
+        await handleIDE(ide, path, {
+          async handleAltair(ideOptions) {
+            const { path, baseURL, renderOptions, deps } = RawAltairHandlerDeps(ideOptions);
 
-              createRouteExplorer({
-                router,
-                url: idePath,
-                opts,
-              });
-            },
-            handleGraphiQL({ path, html }) {
-              router.get(path, ctx => {
-                ctx.type = 'html';
-                ctx.body = html;
-              });
-            },
+            async function altairHandler(
+              ctx: ParameterizedContext<any, KoaRouter.RouterParamContext<any, {}>, any>
+            ): Promise<unknown> {
+              const { renderAltair, getDistDirectory, readFile, resolve, lookup } = await deps;
+
+              switch (ctx.url) {
+                case path:
+                case baseURL: {
+                  ctx.type = 'html';
+
+                  ctx.body = renderAltair({
+                    ...renderOptions,
+                    baseURL,
+                  });
+                  return;
+                }
+                case undefined: {
+                  ctx.status = 404;
+                  return;
+                }
+                default: {
+                  const resolvedPath = resolve(getDistDirectory(), ctx.url.slice(baseURL.length));
+
+                  const result = await readFile(resolvedPath).catch(() => {});
+
+                  if (!result) return (ctx.status = 404);
+
+                  const contentType = lookup(resolvedPath);
+                  if (contentType) ctx.type = contentType;
+                  return (ctx.body = result);
+                }
+              }
+            }
+
+            const basePath = path.endsWith('/') ? path.slice(0, path.length - 1) : path;
+
+            router.get([basePath, basePath + '/(.*)'], async ctx => {
+              await altairHandler(ctx);
+            });
           },
-          'graphiql'
-        );
+          handleGraphiQL({ path, html }) {
+            router.get(path, ctx => {
+              ctx.type = 'html';
+              ctx.body = html;
+            });
+          },
+        });
 
         const main: KoaRouter.Middleware = async ctx => {
           const request = {

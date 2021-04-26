@@ -3,15 +3,14 @@ import { gql, Module, TypeDefs } from 'graphql-modules';
 import querystring from 'querystring';
 
 import { BaseEnvelopAppOptions, createEnvelopAppFactory } from './common/app.js';
-import { parseIDEConfig } from './common/ide.js';
-import { LazyPromise } from './common/LazyPromise/lazyPromise.js';
+import { parseIDEConfig } from './common/ide/handle.js';
+import { RawAltairHandler } from './common/ide/rawAltair.js';
 import { getPathname } from './common/utils/url.js';
 
 import type { ExecutionContext, RenderGraphiQLOptions } from 'graphql-helix/dist/types';
 import type { EnvelopModuleConfig, EnvelopContext, IDEOptions } from './common/types';
 import type { RenderOptions } from 'altair-static';
 import type { IncomingMessage, ServerResponse } from 'http';
-
 export interface BuildContextArgs {
   request: IncomingMessage;
   response: ServerResponse;
@@ -31,7 +30,7 @@ export interface EnvelopAppOptions extends BaseEnvelopAppOptions<EnvelopContext>
   /**
    * IDE configuration
    *
-   * @default { altair: true, graphiql: false }
+   * @default { altair: true, graphiql: true }
    */
   ide?: IDEOptions;
 
@@ -64,7 +63,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
 
   function buildApp({ prepare }: BuildAppOptions): AsyncRequestHandler {
     let app: AsyncRequestHandler | undefined;
-    const { buildContext, path = '/graphql', ide = { altair: true, graphiql: false }, handleNotFound = true } = config;
+    const { buildContext, path = '/graphql', ide = { altair: true, graphiql: true }, handleNotFound = true } = config;
 
     const appPromise = appBuilder({
       prepare,
@@ -264,70 +263,11 @@ export interface AltairHandlerOptions extends Omit<RenderOptions, 'baseURL'> {
 export function AltairHandler(options: AltairHandlerOptions = {}): AsyncRequestHandler {
   let { path = '/altair', endpointURL = '/graphql', ...renderOptions } = options;
 
-  const baseURL = path.endsWith('/') ? (path = path.slice(0, path.length - 1)) + '/' : path + '/';
-
-  const deps = LazyPromise(async () => {
-    const [
-      { getDistDirectory, renderAltair },
-      {
-        promises: { readFile },
-      },
-      { resolve },
-      { lookup },
-    ] = await Promise.all([import('altair-static'), import('fs'), import('path'), import('mime-types')]);
-
-    return {
-      getDistDirectory,
-      renderAltair,
-      readFile,
-      resolve,
-      lookup,
-    };
+  return RawAltairHandler({
+    path,
+    endpointURL,
+    ...renderOptions,
   });
-
-  return async function (req, res) {
-    try {
-      const { renderAltair, getDistDirectory, readFile, resolve, lookup } = await deps;
-      switch (req.url) {
-        case path:
-        case baseURL: {
-          res.setHeader('content-type', 'text/html');
-          res.end(
-            renderAltair({
-              ...renderOptions,
-              baseURL,
-              endpointURL,
-            })
-          );
-          return;
-        }
-        case undefined: {
-          return res.writeHead(404).end();
-        }
-        default: {
-          const resolvedPath = resolve(getDistDirectory(), req.url.slice(baseURL.length));
-
-          const result = await readFile(resolvedPath).catch(() => {});
-
-          if (!result) return res.writeHead(404).end();
-
-          const contentType = lookup(resolvedPath);
-          if (contentType) res.setHeader('content-type', contentType);
-          return res.end(result);
-        }
-      }
-    } catch (err) {
-      res
-        .writeHead(500, {
-          'content-type': 'application/json',
-        })
-        .end(
-          JSON.stringify({
-            message: err.message,
-          })
-        );
-    }
-  };
 }
 
 export { gql, getPathname };

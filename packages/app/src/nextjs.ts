@@ -173,8 +173,7 @@ export function GraphiQLHandler(options: GraphiQLHandlerOptions = {}): NextApiHa
     if (req.method !== 'GET') return res.status(404).end();
 
     res.setHeader('content-type', 'text/html');
-
-    return res.send(html);
+    res.send(html);
   };
 }
 
@@ -245,7 +244,7 @@ export function AltairHandler(options: AltairHandlerOptions = {}): NextApiHandle
 
         const contentType = lookup(resolvedPath);
         if (contentType) res.setHeader('content-type', contentType);
-        return res.end(result);
+        res.end(result);
       }
     }
   };

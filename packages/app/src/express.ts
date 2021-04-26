@@ -5,7 +5,7 @@ import { gql, Module, TypeDefs } from 'graphql-modules';
 import { createServer, Server } from 'http';
 
 import { BaseEnvelopAppOptions, createEnvelopAppFactory } from './common/app.js';
-import { handleIDE, IDEOptions } from './common/ide.js';
+import { handleIDE, IDEOptions } from './common/ide/handle.js';
 import { CreateSubscriptionsServer, WebsocketSubscriptionsOptions } from './common/subscriptions/websocket.js';
 
 import type { Envelop } from '@envelop/types';
@@ -42,7 +42,7 @@ export interface EnvelopAppOptions extends BaseEnvelopAppOptions<EnvelopContext>
   /**
    * IDE configuration
    *
-   * @default { altair: true, graphiql: false }
+   * @default { altair: true, graphiql: true }
    */
   ide?: IDEOptions;
 }

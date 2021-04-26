@@ -15,7 +15,7 @@ import type { CodegenConfig } from './codegen/typescript';
 export type AdapterFactory<T> = (envelop: Envelop<unknown>, modulesApplication: Application) => T;
 
 export interface InternalEnvelopConfig {
-  moduleName: 'express' | 'fastify' | 'nextjs' | 'http' | 'koa';
+  moduleName: 'express' | 'fastify' | 'nextjs' | 'http' | 'koa' | 'hapi';
 }
 
 export interface InternalAppBuildOptions<T> {
