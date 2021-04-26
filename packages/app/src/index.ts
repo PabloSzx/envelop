@@ -1,169 +1,109 @@
 import { getGraphQLParameters, processRequest } from 'graphql-helix';
-import { createApplication, createModule, gql, Module, ModuleConfig, TypeDefs } from 'graphql-modules';
+import { gql } from 'graphql-modules';
 
-import { envelop } from '@envelop/core';
-import { useGraphQLModules } from '@envelop/graphql-modules';
+import { CreateEnvelopAppFactory } from './common';
+import { BaseEnvelopAppOptions } from './types';
 
-import { DeepPartial } from './types';
+import type { ExecutionContext } from 'graphql-helix/dist/types';
+import type { FastifyPluginCallback, FastifyReply, FastifyRequest } from 'fastify';
+import type { Server } from 'http';
 
-import type { FastifyPluginCallback } from 'fastify';
-import type { IncomingHttpHeaders, Server } from 'http';
-import type { CodegenPluginsConfig } from './codegen';
-
-export interface EnvelopResolvers {}
-
-export type EnvelopModuleConfig = Omit<ModuleConfig, 'typeDefs' | 'id' | 'resolvers'> & {
-  id?: string;
-  resolvers?: EnvelopResolvers;
-};
-
-export interface Request {
-  body?: any;
-  headers: IncomingHttpHeaders;
-  method: string;
-  query: any;
+export interface FastifyEnvelopApp {
+  EnvelopAppPlugin: FastifyPluginCallback<Record<never, never>, Server>;
 }
 
-export interface EnvelopApp {
-  FastifyPlugin: FastifyPluginCallback<Record<never, never>, Server>;
+export interface FastifyEnvelopAppOptions extends BaseEnvelopAppOptions {
+  /**
+   * Build Context
+   */
+  buildContext?: (request: FastifyRequest, reply: FastifyReply) => Record<string, unknown> | Promise<Record<string, unknown>>;
 }
 
-export interface EnvelopAppOptions {
-  /**
-   * Allow deep partial type resolvers
-   *
-   * @default false
-   */
-  deepPartialResolvers?: boolean;
-  /**
-   * Add custom "graphql-codegen" config
-   */
-  codegenConfig?: CodegenPluginsConfig;
-  /**
-   * Generated target path
-   *
-   * @default "./src/envelop.generated.ts"
-   */
-  targetPath?: string;
-  /**
-   * Output schema target path or flag
-   *
-   * If `true`, defaults to `"schema.gql"`
-   * You can specify a `.gql`, `.graphql` or `.json` extension
-   *
-   * @default false
-   */
-  outputSchema?: boolean | string;
+export interface FastifyEnvelopContext {
+  reply: FastifyReply;
 }
 
-export function CreateEnvelopApp(config: EnvelopAppOptions = {}) {
-  let acumId = 0;
+export function CreateEnvelopApp(config: FastifyEnvelopAppOptions = {}) {
+  const { appBuilder, gql, modules, registerModule } = CreateEnvelopAppFactory(config, {
+    contextTypeName: 'FastifyEnvelopContext',
+  });
+  const { buildContext } = config;
 
-  let modules: Module[] = [];
+  function buildApp(prepare?: undefined): FastifyEnvelopApp;
+  function buildApp(prepare: () => Promise<void>): Promise<FastifyEnvelopApp>;
+  function buildApp(prepare: () => void): FastifyEnvelopApp;
+  function buildApp(prepare?: () => Promise<void> | void): FastifyEnvelopApp | Promise<FastifyEnvelopApp> {
+    return appBuilder({
+      prepare,
+      adapterFactory(getEnveloped) {
+        const EnvelopAppPlugin: FastifyPluginCallback = async function FastifyPlugin(instance, _opts) {
+          const { default: AltairFastify } = await import('altair-fastify-plugin');
 
-  function registerModule(typeDefs: TypeDefs, { id, ...options }: EnvelopModuleConfig = {}) {
-    id ||= ++acumId + '';
-    const module = createModule({
-      typeDefs,
-      id,
-      ...options,
+          instance.register(AltairFastify, {});
+
+          instance.route({
+            method: ['GET', 'POST'],
+            url: '/graphql',
+            async handler(req, reply) {
+              const { parse, validate, contextFactory: contextFactoryEnvelop, execute, schema, subscribe } = getEnveloped();
+
+              const request = {
+                body: req.body,
+                headers: req.headers,
+                method: req.method,
+                query: req.query,
+              };
+
+              const { operationName, query, variables } = getGraphQLParameters(request);
+
+              const contextFactory = async (helixCtx: ExecutionContext) => {
+                const [envelopCtx, customCtx] = await Promise.all([
+                  contextFactoryEnvelop({ reply, ...helixCtx }),
+                  buildContext?.(req, reply),
+                ]);
+
+                return Object.assign(envelopCtx, customCtx);
+              };
+
+              const result = await processRequest({
+                operationName,
+                query,
+                variables,
+                request,
+                schema,
+                parse,
+                validate,
+                execute,
+                contextFactory,
+                subscribe,
+              });
+
+              if (result.type === 'RESPONSE') {
+                reply.status(result.status);
+                reply.send(result.payload);
+              } else {
+                // You can find a complete example with GraphQL Subscriptions and stream/defer here:
+                // https://github.com/contrawork/graphql-helix/blob/master/examples/fastify/server.ts
+                reply.send({ errors: [{ message: 'Not Supported in this demo' }] });
+              }
+            },
+          });
+        };
+
+        return {
+          EnvelopAppPlugin,
+        };
+      },
     });
-
-    modules.push(module);
-
-    return module;
-  }
-
-  function buildApp(prepare?: undefined): EnvelopApp;
-  function buildApp(prepare: () => Promise<void>): Promise<EnvelopApp>;
-  function buildApp(prepare: () => void): EnvelopApp;
-  function buildApp(prepare?: () => Promise<void> | void): EnvelopApp | Promise<EnvelopApp> {
-    if (prepare) {
-      const result = prepare();
-      if (result instanceof Promise) {
-        return result.then(getApp);
-      }
-    }
-
-    return getApp();
-
-    function getApp() {
-      const GraphQLModulesApplication = createApplication({
-        modules,
-      });
-
-      if (config.outputSchema) {
-        import('./outputSchema').then(({ writeOutputSchema }) => {
-          writeOutputSchema(GraphQLModulesApplication.schema, config.outputSchema!).catch(console.error);
-        });
-      }
-
-      import('./codegen')
-        .then(({ EnvelopCodegen }) => {
-          EnvelopCodegen(GraphQLModulesApplication.schema, config).catch(console.error);
-        })
-        .catch(console.error);
-
-      const getEnveloped = envelop({
-        plugins: [useGraphQLModules(GraphQLModulesApplication)],
-      });
-
-      const FastifyPlugin: FastifyPluginCallback = async function FastifyPlugin(instance, _opts) {
-        const { default: AltairFastify } = await import('altair-fastify-plugin');
-
-        await instance.register(AltairFastify, {});
-
-        instance.route({
-          method: ['GET', 'POST'],
-          url: '/graphql',
-          async handler(req, res) {
-            const { parse, validate, contextFactory, execute, schema, subscribe } = getEnveloped();
-
-            const request: Request = {
-              body: req.body,
-              headers: req.headers,
-              method: req.method,
-              query: req.query,
-            };
-
-            const { operationName, query, variables } = getGraphQLParameters(req);
-
-            const result = await processRequest({
-              operationName,
-              query,
-              variables,
-              request,
-              schema,
-              parse,
-              validate,
-              execute,
-              contextFactory,
-              subscribe,
-            });
-
-            if (result.type === 'RESPONSE') {
-              res.status(result.status);
-              res.send(result.payload);
-            } else {
-              // You can find a complete example with GraphQL Subscriptions and stream/defer here:
-              // https://github.com/contrawork/graphql-helix/blob/master/examples/fastify/server.ts
-              res.send({ errors: [{ message: 'Not Supported in this demo' }] });
-            }
-          },
-        });
-      };
-
-      return {
-        FastifyPlugin,
-      };
-    }
   }
 
   return {
     gql,
+    modules,
     registerModule,
     buildApp,
   };
 }
 
-export { gql, DeepPartial };
+export { gql };
+export * from './types';

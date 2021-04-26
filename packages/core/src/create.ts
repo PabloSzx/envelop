@@ -23,7 +23,13 @@ import { Maybe } from 'graphql/jsutils/Maybe';
 const trackedSchemaSymbol = Symbol('TRACKED_SCHEMA');
 const resolversHooksSymbol = Symbol('RESOLVERS_HOOKS');
 
-export function envelop(options: { plugins: Plugin[]; extends?: Envelop[]; initialSchema?: GraphQLSchema }): Envelop {
+export interface EnvelopOptions {
+  plugins: Plugin[];
+  extends?: Envelop[];
+  initialSchema?: GraphQLSchema;
+}
+
+export function envelop(options: EnvelopOptions): Envelop {
   let schema: GraphQLSchema | undefined | null = options.initialSchema;
   let initDone = false;
   const childPlugins = (options.extends || []).reduce((prev, child) => [...prev, ...child._plugins], []);

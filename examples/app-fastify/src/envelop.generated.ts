@@ -1,4 +1,4 @@
-import type { GraphQLResolveInfo } from 'graphql';
+import type { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
 export type Maybe<T> = T | null;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
@@ -10,6 +10,8 @@ export type Scalars = {
   Boolean: boolean;
   Int: number;
   Float: number;
+  /** A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar. */
+  DateTime: any;
   _FieldSet: any;
 };
 
@@ -100,6 +102,7 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
+  DateTime: ResolverTypeWrapper<import('@envelop/app').DeepPartial<Scalars['DateTime']>>;
   Query: ResolverTypeWrapper<{}>;
   String: ResolverTypeWrapper<import('@envelop/app').DeepPartial<Scalars['String']>>;
   Boolean: ResolverTypeWrapper<import('@envelop/app').DeepPartial<Scalars['Boolean']>>;
@@ -107,10 +110,15 @@ export type ResolversTypes = {
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
+  DateTime: import('@envelop/app').DeepPartial<Scalars['DateTime']>;
   Query: {};
   String: import('@envelop/app').DeepPartial<Scalars['String']>;
   Boolean: import('@envelop/app').DeepPartial<Scalars['Boolean']>;
 };
+
+export interface DateTimeScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['DateTime'], any> {
+  name: 'DateTime';
+}
 
 export type QueryResolvers<
   ContextType = any,
@@ -121,6 +129,7 @@ export type QueryResolvers<
 };
 
 export type Resolvers<ContextType = any> = {
+  DateTime?: GraphQLScalarType;
   Query?: QueryResolvers<ContextType>;
 };
 
@@ -131,5 +140,5 @@ export type Resolvers<ContextType = any> = {
 export type IResolvers<ContextType = any> = Resolvers<ContextType>;
 
 declare module '@envelop/app' {
-  interface EnvelopResolvers extends Resolvers<{}> {}
+  interface EnvelopResolvers extends Resolvers<import('@envelop/app').FastifyEnvelopContext> {}
 }

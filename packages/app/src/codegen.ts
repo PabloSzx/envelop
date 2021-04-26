@@ -13,17 +13,48 @@ import { writeFileIfChanged } from './write';
 import type { TypeScriptPluginConfig } from '@graphql-codegen/typescript';
 import type { TypeScriptResolversPluginConfig } from '@graphql-codegen/typescript-resolvers/config';
 
-import type { EnvelopAppOptions } from './index';
+import type { FastifyEnvelopAppOptions } from './index';
+import type { InternalEnvelopConfig } from './common';
 
-export type CodegenPluginsConfig = TypeScriptPluginConfig & TypeScriptResolversPluginConfig;
+export interface CodegenConfig extends TypeScriptPluginConfig, TypeScriptResolversPluginConfig {
+  /**
+   * @description
+   * Will use import type {} rather than import {} when importing only types.
+   *
+   * This gives compatibility with TypeScript's "importsNotUsedAsValues": "error" option
+   *
+   * @default true
+   */
+  useTypeImports?: boolean;
 
-export async function EnvelopCodegen(executableSchema: GraphQLSchema, options: EnvelopAppOptions) {
+  /**
+   * Enable deep partial type resolvers
+   *
+   * @default false
+   */
+  deepPartialResolvers?: boolean;
+
+  /**
+   * Generated target path
+   *
+   * @default "./src/envelop.generated.ts"
+   */
+  targetPath?: string;
+}
+
+export async function EnvelopCodegen(
+  executableSchema: GraphQLSchema,
+  options: FastifyEnvelopAppOptions,
+  internalConfig: InternalEnvelopConfig
+) {
   const schema = parse(printSchemaWithDirectives(executableSchema));
 
-  const config: CodegenPluginsConfig = {
+  const { codegen: { targetPath, deepPartialResolvers, ...codegenOptions } = {} } = options;
+
+  const config: CodegenConfig = {
     useTypeImports: true,
-    defaultMapper: options.deepPartialResolvers ? 'import("@envelop/app").DeepPartial<{T}>' : undefined,
-    ...options.codegenConfig,
+    defaultMapper: deepPartialResolvers ? 'import("@envelop/app").DeepPartial<{T}>' : undefined,
+    ...codegenOptions,
   };
 
   const codegenCode = await codegen({
@@ -54,11 +85,11 @@ export async function EnvelopCodegen(executableSchema: GraphQLSchema, options: E
     ${codegenCode}
 
     declare module "@envelop/app" {
-        interface EnvelopResolvers extends Resolvers<{}> { }
+        interface EnvelopResolvers extends Resolvers<import("@envelop/app").${internalConfig.contextTypeName}> { }
     }
   `,
     'typescript'
   );
 
-  await writeFileIfChanged(resolve(options.targetPath ?? './src/envelop.generated.ts'), code);
+  await writeFileIfChanged(resolve(targetPath ?? './src/envelop.generated.ts'), code);
 }

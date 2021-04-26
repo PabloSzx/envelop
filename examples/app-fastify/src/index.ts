@@ -1,56 +1,15 @@
 import Fastify from 'fastify';
 
-import { CreateEnvelopApp } from '@envelop/app';
+import { buildApp } from './app';
 
-const app = Fastify({
+const fastifyApp = Fastify({
   logger: true,
 });
 
-const { registerModule, buildApp, gql } = CreateEnvelopApp({
-  deepPartialResolvers: true,
-  codegenConfig: {
-    federation: true,
-  },
-  targetPath: './src/envelop.generated.ts',
-  outputSchema: './schema.gql',
+buildApp(async () => {
+  await import('./modules');
+}).then(({ EnvelopAppPlugin }) => {
+  fastifyApp.register(EnvelopAppPlugin);
+
+  fastifyApp.listen(3000);
 });
-
-registerModule(
-  gql`
-    type Query {
-      hello: String!
-    }
-  `,
-  {
-    resolvers: {
-      Query: {
-        hello() {
-          return 'hello';
-        },
-      },
-    },
-  }
-);
-
-registerModule(
-  gql`
-    extend type Query {
-      hello2: String!
-    }
-  `,
-  {
-    resolvers: {
-      Query: {
-        hello2() {
-          return 'asd';
-        },
-      },
-    },
-  }
-);
-
-const { FastifyPlugin } = buildApp();
-
-app.register(FastifyPlugin);
-
-app.listen(3000);
