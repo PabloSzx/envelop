@@ -1,6 +1,6 @@
 import { renderGraphiQL } from 'graphql-helix';
 
-import { stripUndefineds } from '../utils/object.js';
+import { cleanObject } from '../utils/object.js';
 
 import type { RenderOptions } from 'altair-static';
 import type { RenderGraphiQLOptions } from 'graphql-helix/dist/types';
@@ -49,12 +49,12 @@ export function parseIDEConfig(userOptions: IDEOptions, graphqlPath?: string): I
   const altairOptions: AltairOptions & { path: string } = {
     path: '/altair',
     endpointURL: graphqlPath,
-    ...(typeof options.altair === 'boolean' ? {} : stripUndefineds(options.altair) || {}),
+    ...(typeof options.altair === 'boolean' ? {} : cleanObject(options.altair) || {}),
   };
   const graphiQLOptions: GraphiQLOptions & { path: string } = {
     path: '/graphiql',
     endpoint: graphqlPath,
-    ...(typeof options.graphiql === 'boolean' ? {} : stripUndefineds(options.graphiql) || {}),
+    ...(typeof options.graphiql === 'boolean' ? {} : cleanObject(options.graphiql) || {}),
   };
 
   const isAltairEnabled = !!options.altair;

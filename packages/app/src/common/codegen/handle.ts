@@ -1,5 +1,5 @@
 import type { Envelop } from '@envelop/types';
-import type { BaseEnvelopAppOptions, InternalEnvelopConfig } from '../app.js';
+import type { BaseEnvelopAppOptions, InternalEnvelopConfig } from '../app';
 
 export function handleCodegen(
   getEnveloped: Envelop<unknown>,

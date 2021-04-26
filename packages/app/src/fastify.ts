@@ -12,6 +12,7 @@ import type { FastifyInstance, FastifyPluginCallback, FastifyReply, FastifyReque
 import type { Server } from 'http';
 import type { EnvelopModuleConfig, EnvelopContext } from './common/types';
 import type { AltairFastifyPluginOptions } from 'altair-fastify-plugin';
+import type { RegisterDataLoader } from './common/dataloader';
 
 export type EnvelopAppPlugin = FastifyPluginCallback<{}, Server>;
 
@@ -55,11 +56,12 @@ export interface EnvelopAppBuilder {
   gql: typeof gql;
   modules: Module[];
   registerModule: (typeDefs: TypeDefs, options?: EnvelopModuleConfig | undefined) => Module;
+  registerDataLoader: RegisterDataLoader;
   buildApp(options?: BuildAppOptions): EnvelopAppPlugin;
 }
 
 export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
-  const { appBuilder, gql, modules, registerModule } = createEnvelopAppFactory(config, {
+  const { appBuilder, ...commonApp } = createEnvelopAppFactory(config, {
     moduleName: 'fastify',
   });
   const { websocketSubscriptions, path = '/graphql' } = config;
@@ -241,14 +243,12 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
   }
 
   return {
-    gql,
-    modules,
-    registerModule,
+    ...commonApp,
     buildApp,
   };
 }
 
 export { gql };
 
-export * from './common/types.js';
+export * from './common/base.js';
 export * from './common/LazyPromise/lazyPromise.js';

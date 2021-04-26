@@ -12,6 +12,7 @@ import type { Envelop } from '@envelop/types';
 import type { ExecutionContext } from 'graphql-helix/dist/types';
 import type { EnvelopModuleConfig, EnvelopContext } from './common/types';
 import type { OptionsJson as BodyParserOptions } from 'body-parser';
+import type { RegisterDataLoader } from './common/dataloader';
 
 export interface BuildContextArgs {
   request: Request;
@@ -57,11 +58,12 @@ export interface EnvelopAppBuilder {
   gql: typeof gql;
   modules: Module[];
   registerModule: (typeDefs: TypeDefs, options?: EnvelopModuleConfig | undefined) => Module;
+  registerDataLoader: RegisterDataLoader;
   buildApp(options: BuildAppOptions): Promise<Router>;
 }
 
 export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
-  const { appBuilder, gql, modules, registerModule } = createEnvelopAppFactory(config, {
+  const { appBuilder, ...commonApp } = createEnvelopAppFactory(config, {
     moduleName: 'express',
   });
 
@@ -229,14 +231,12 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
   }
 
   return {
-    gql,
-    modules,
-    registerModule,
+    ...commonApp,
     buildApp,
   };
 }
 
 export { gql };
 
-export * from './common/types.js';
+export * from './common/base.js';
 export * from './common/LazyPromise/lazyPromise.js';

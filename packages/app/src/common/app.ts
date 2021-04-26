@@ -6,11 +6,15 @@ import { useGraphQLModules } from '@envelop/graphql-modules';
 import { mergeSchemasAsync, MergeSchemasConfig } from '@graphql-tools/merge';
 import { IExecutableSchemaDefinition, makeExecutableSchema } from '@graphql-tools/schema';
 
+import { RegisterDataLoader, RegisterDataLoaderFactory } from './dataloader';
+import { cleanObject } from './utils/object.js';
+
 import type { ScalarsConfig } from './scalars';
 import type { GraphQLSchema } from 'graphql';
 import type { EnvelopOptions } from '@envelop/core';
 import type { EnvelopContext, EnvelopModuleConfig, EnvelopResolvers } from './types';
 import type { CodegenConfig } from './codegen/typescript';
+import type { useGraphQlJit } from '@envelop/graphql-jit';
 
 export type AdapterFactory<T> = (envelop: Envelop<unknown>, modulesApplication: Application) => T;
 
@@ -25,6 +29,7 @@ export interface InternalAppBuildOptions<T> {
 
 export interface EnvelopAppFactoryType {
   registerModule: (typeDefs: TypeDefs, options?: EnvelopModuleConfig) => Module;
+  registerDataLoader: RegisterDataLoader;
   gql: typeof gql;
   appBuilder<T>(opts: InternalAppBuildOptions<T>): Promise<T>;
   modules: Module[];
@@ -74,6 +79,13 @@ export interface BaseEnvelopAppOptions<TContext>
    * Add scalars
    */
   scalars?: ScalarsConfig;
+
+  /**
+   * Enable JIT Compilation using [graphql-jit](https://github.com/zalando-incubator/graphql-jit)
+   *
+   * @default false
+   */
+  jit?: boolean | Parameters<typeof useGraphQlJit>;
 }
 
 export function createEnvelopAppFactory<TContext>(
@@ -81,6 +93,7 @@ export function createEnvelopAppFactory<TContext>(
   internalConfig: InternalEnvelopConfig
 ): EnvelopAppFactoryType {
   const factoryModules = config.modules ? [...config.modules] : [];
+  const factoryPlugins = config.plugins ? [...config.plugins] : [];
 
   let acumId = 0;
   function registerModule(typeDefs: TypeDefs, { id, ...options }: EnvelopModuleConfig = {}) {
@@ -95,6 +108,7 @@ export function createEnvelopAppFactory<TContext>(
 
     return module;
   }
+  const registerDataLoader = RegisterDataLoaderFactory(factoryPlugins);
 
   async function appBuilder<T>({
     adapterFactory,
@@ -109,16 +123,18 @@ export function createEnvelopAppFactory<TContext>(
       return getApp();
     } finally {
       factoryModules.length = 0;
+      factoryPlugins.length = 0;
       if (config.modules) factoryModules.push(...config.modules);
+      if (config.plugins) factoryPlugins.push(...config.plugins);
       acumId = 0;
     }
 
     async function getApp() {
       const modules = [...factoryModules];
+      const plugins = [...factoryPlugins];
 
       const {
         enableCodegen = process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test',
-        plugins: manualPlugins = [],
         schema: manualSchema,
         middlewares,
         providers,
@@ -129,6 +145,7 @@ export function createEnvelopAppFactory<TContext>(
           onError: onCodegenError = console.error,
         } = {},
         mergeSchemasConfig,
+        jit = false,
       } = config;
 
       if (scalars) {
@@ -146,35 +163,45 @@ export function createEnvelopAppFactory<TContext>(
         schemaBuilder,
       });
 
-      const plugins = modules.length ? [useGraphQLModules(modulesApplication), ...manualPlugins] : [...manualPlugins];
+      if (modules.length) plugins.push(useGraphQLModules(modulesApplication));
 
-      if (manualSchema) {
-        const schemas = (Array.isArray(manualSchema) ? manualSchema : [manualSchema]).map(schemaValue =>
-          isSchema(schemaValue) ? schemaValue : makeExecutableSchema(schemaValue as IExecutableSchemaDefinition)
-        );
+      const jitPromise = jit
+        ? import('@envelop/graphql-jit').then(({ useGraphQlJit }) => {
+            plugins.push(typeof jit === 'object' ? useGraphQlJit(...jit) : useGraphQlJit());
+          })
+        : null;
 
-        if (schemas.length > 1) {
-          plugins.push(
-            useSchema(
-              await mergeSchemasAsync({
-                ...(mergeSchemasConfig || {}),
-                schemas: [...(modules.length ? [modulesApplication.schema] : []), ...schemas],
-              })
-            )
-          );
-        } else if (schemas[0]) {
-          plugins.push(
-            useSchema(
-              modules.length
-                ? await mergeSchemasAsync({
-                    ...(mergeSchemasConfig || {}),
-                    schemas: [modulesApplication.schema, schemas[0]],
+      const schemaPromise = manualSchema
+        ? (async () => {
+            const schemas = (Array.isArray(manualSchema) ? manualSchema : [manualSchema]).map(schemaValue =>
+              isSchema(schemaValue) ? schemaValue : makeExecutableSchema(schemaValue as IExecutableSchemaDefinition)
+            );
+
+            if (schemas.length > 1) {
+              plugins.push(
+                useSchema(
+                  await mergeSchemasAsync({
+                    ...cleanObject(mergeSchemasConfig),
+                    schemas: [...(modules.length ? [modulesApplication.schema] : []), ...schemas],
                   })
-                : schemas[0]
-            )
-          );
-        }
-      }
+                )
+              );
+            } else if (schemas[0]) {
+              plugins.push(
+                useSchema(
+                  modules.length
+                    ? await mergeSchemasAsync({
+                        ...cleanObject(mergeSchemasConfig),
+                        schemas: [modulesApplication.schema, schemas[0]],
+                      })
+                    : schemas[0]
+                )
+              );
+            }
+          })()
+        : null;
+
+      await Promise.all([jitPromise, schemaPromise]);
 
       const getEnveloped = envelop({
         plugins,
@@ -194,6 +221,7 @@ export function createEnvelopAppFactory<TContext>(
 
   return {
     registerModule,
+    registerDataLoader,
     appBuilder,
     gql,
     modules: factoryModules,
