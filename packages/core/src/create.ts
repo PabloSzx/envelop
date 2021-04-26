@@ -17,7 +17,7 @@ import {
   ExecutionResult,
   SubscriptionArgs,
 } from 'graphql';
-import { AfterCallback, AfterResolverPayload, DefaultContext, Envelop, OnResolverCalledHooks, Plugin } from '@envelop/types';
+import { AfterCallback, AfterResolverPayload, Envelop, OnResolverCalledHooks, Plugin } from '@envelop/types';
 import { Maybe } from 'graphql/jsutils/Maybe';
 
 const trackedSchemaSymbol = Symbol('TRACKED_SCHEMA');

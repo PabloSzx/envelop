@@ -1,10 +1,14 @@
-import { Application, createApplication, createModule, gql, Module, TypeDefs } from 'graphql-modules';
+import { Application, ApplicationConfig, createApplication, createModule, gql, Module, TypeDefs } from 'graphql-modules';
 import { resolvers as scalarResolvers, typeDefs as scalarTypeDefs } from 'graphql-scalars';
 
 import { Envelop, envelop } from '@envelop/core';
 import { useGraphQLModules } from '@envelop/graphql-modules';
 
-import { BaseEnvelopAppOptions, EnvelopModuleConfig } from './types';
+import type { GraphQLScalarType } from 'graphql';
+import type { EnvelopOptions } from '@envelop/core';
+
+import type { EnvelopModuleConfig } from './types';
+import type { CodegenConfig } from './codegen';
 
 export type AdapterFactory<T> = (envelop: Envelop<unknown>, modulesApplication: Application) => T;
 
@@ -12,11 +16,53 @@ export interface InternalEnvelopConfig {
   contextTypeName: string;
 }
 
-export function CreateEnvelopAppFactory(config: BaseEnvelopAppOptions, internalConfig: InternalEnvelopConfig) {
+export interface EnvelopAppFactoryType {
+  registerModule: (typeDefs: TypeDefs, options?: EnvelopModuleConfig) => Module;
+  gql: typeof gql;
+  appBuilder<T>(opts: { prepare?: () => void | Promise<void>; adapterFactory: AdapterFactory<T> }): T;
+  modules: Module[];
+}
+
+export interface BaseEnvelopAppOptions extends Partial<EnvelopOptions>, Partial<Omit<ApplicationConfig, 'modules'>> {
+  /**
+   * Enable code generation, by default it's enabled if `NODE_ENV` is not `production` nor `test`
+   *
+   * @default process.env.NODE_ENV !== "production" && process.env.NODE_ENV !== "test"
+   */
+  enableCodegen?: boolean;
+  /**
+   * Add custom codegen config
+   */
+  codegen?: CodegenConfig;
+  /**
+   * Output schema target path or flag
+   *
+   * If `true`, defaults to `"./schema.gql"`
+   * You can specify a `.gql`, `.graphql` or `.json` extension
+   *
+   * @default false
+   */
+  outputSchema?: boolean | string;
+  /**
+   * Add scalars
+   */
+  scalars?: '*' | { [k in keyof typeof scalarResolvers]?: boolean };
+}
+
+export function CreateEnvelopAppFactory(
+  config: BaseEnvelopAppOptions,
+  internalConfig: InternalEnvelopConfig
+): EnvelopAppFactoryType {
   const modules: Module[] = [];
   let acumId = 0;
 
-  const { scalars } = config;
+  const {
+    scalars,
+    codegen: {
+      // eslint-disable-next-line no-console
+      onError: onCodegenError = console.error,
+    } = {},
+  } = config;
 
   if (scalars) {
     if (scalars === '*') {
@@ -39,9 +85,7 @@ export function CreateEnvelopAppFactory(config: BaseEnvelopAppOptions, internalC
             id: 'scalars',
             typeDefs: gql(scalarNames),
             resolvers: Object.keys(scalars).reduce((acum, scalarName) => {
-              const resolver =
-                //@ts-ignore
-                scalarResolvers[scalarName];
+              const resolver = (scalarResolvers as Record<string, GraphQLScalarType>)[scalarName];
 
               if (resolver) acum[scalarName] = resolver;
               return acum;
@@ -114,15 +158,13 @@ export function CreateEnvelopAppFactory(config: BaseEnvelopAppOptions, internalC
       if (enableCodegen) {
         if (outputSchema) {
           import('./outputSchema').then(({ writeOutputSchema }) => {
-            writeOutputSchema(schema, config.outputSchema!).catch(console.error);
+            writeOutputSchema(schema, config.outputSchema!).catch(onCodegenError);
           });
         }
 
-        import('./codegen')
-          .then(({ EnvelopCodegen }) => {
-            EnvelopCodegen(schema, config, internalConfig).catch(console.error);
-          })
-          .catch(console.error);
+        import('./codegen').then(({ EnvelopCodegen }) => {
+          EnvelopCodegen(schema, config, internalConfig).catch(onCodegenError);
+        });
       }
 
       return adapterFactory(getEnveloped, modulesApplication);

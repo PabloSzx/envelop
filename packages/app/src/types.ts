@@ -1,18 +1,16 @@
-import type { ApplicationConfig, ModuleConfig } from 'graphql-modules';
+import type { ModuleConfig } from 'graphql-modules';
 import type { ExecutionContext } from 'graphql-helix/dist/types';
-import type { EnvelopOptions } from '@envelop/core';
-import type { resolvers as scalarResolvers } from 'graphql-scalars';
-
-import type { CodegenConfig } from './codegen';
 
 type PossiblePromise<T> = T | Promise<T>;
 
 export type DeepPartial<T> = T extends Function
   ? T
   : T extends Array<infer U>
-  ? DeepPartialArray<U>
+  ? // eslint-disable-next-line no-use-before-define
+    DeepPartialArray<U>
   : T extends object
-  ? DeepPartialObject<T>
+  ? // eslint-disable-next-line no-use-before-define
+    DeepPartialObject<T>
   : T | undefined;
 
 interface DeepPartialArray<T> extends Array<PossiblePromise<DeepPartial<PossiblePromise<T>>>> {}
@@ -29,28 +27,8 @@ export type EnvelopModuleConfig = Omit<ModuleConfig, 'typeDefs' | 'id' | 'resolv
 
 export interface EnvelopContext extends GraphQLModules.ModuleContext, ExecutionContext {}
 
-export interface BaseEnvelopAppOptions extends Partial<EnvelopOptions>, Partial<Omit<ApplicationConfig, 'modules'>> {
-  /**
-   * Enable code generation, by default it's enabled if `NODE_ENV` is not `production` nor `test`
-   *
-   * @default process.env.NODE_ENV !== "production" && process.env.NODE_ENV !== "test"
-   */
-  enableCodegen?: boolean;
-  /**
-   * Add custom codegen config
-   */
-  codegen?: CodegenConfig;
-  /**
-   * Output schema target path or flag
-   *
-   * If `true`, defaults to `"./schema.gql"`
-   * You can specify a `.gql`, `.graphql` or `.json` extension
-   *
-   * @default false
-   */
-  outputSchema?: boolean | string;
-  /**
-   * Add scalars
-   */
-  scalars?: '*' | { [k in keyof typeof scalarResolvers]?: boolean };
-}
+type PromiseType<T> = T extends PromiseLike<infer U> ? U : T;
+
+export type InferFunctionReturn<TFunction extends (...args: any) => any> = PromiseType<ReturnType<TFunction>>;
+
+export type { BaseEnvelopAppOptions } from './common';

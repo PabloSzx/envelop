@@ -1,4 +1,16 @@
-import { CreateEnvelopApp } from '@envelop/app';
+import { CreateEnvelopApp, FastifyContextArgs, InferFunctionReturn } from '@envelop/app';
+
+function buildContext({ reply, request }: FastifyContextArgs) {
+  return {
+    reply,
+    request,
+    foo: 'bar',
+  };
+}
+
+declare module '@envelop/app' {
+  interface FastifyEnvelopContext extends InferFunctionReturn<typeof buildContext> {}
+}
 
 export const { registerModule, buildApp, gql } = CreateEnvelopApp({
   codegen: {
@@ -10,4 +22,5 @@ export const { registerModule, buildApp, gql } = CreateEnvelopApp({
   scalars: {
     DateTime: true,
   },
+  buildContext,
 });

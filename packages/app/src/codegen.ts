@@ -40,13 +40,19 @@ export interface CodegenConfig extends TypeScriptPluginConfig, TypeScriptResolve
    * @default "./src/envelop.generated.ts"
    */
   targetPath?: string;
+
+  /**
+   * Handle Code Generation errors
+   * @default console.error
+   */
+  onError?: (err: unknown) => void;
 }
 
 export async function EnvelopCodegen(
   executableSchema: GraphQLSchema,
   options: FastifyEnvelopAppOptions,
   internalConfig: InternalEnvelopConfig
-) {
+): Promise<void> {
   const schema = parse(printSchemaWithDirectives(executableSchema));
 
   const { codegen: { targetPath, deepPartialResolvers, ...codegenOptions } = {} } = options;

@@ -6,19 +6,18 @@ import { printSchemaWithDirectives } from '@graphql-tools/utils';
 import { formatPrettier } from './prettier';
 import { writeFileIfChanged } from './write';
 
-export async function writeOutputSchema(schema: GraphQLSchema, config: string | boolean) {
-  if (!config) return;
+export async function writeOutputSchema(schema: GraphQLSchema, outputPath: string | boolean): Promise<void> {
+  if (!outputPath) return;
 
   let targetPath: string;
-  if (typeof config === 'boolean') {
+  if (typeof outputPath === 'boolean') {
     targetPath = resolve('./schema.gql');
   } else {
-    if (!config.endsWith('.gql') || config.endsWith('.graphql') || config.endsWith('.json')) {
-      console.error(`You have to specify a extension between '.gql', '.graphql' and '.json', received: "${config}"`);
-      return;
+    if (!outputPath.endsWith('.gql') || !outputPath.endsWith('.graphql') || !outputPath.endsWith('.json')) {
+      throw Error(`You have to specify a extension between '.gql', '.graphql' and '.json', received: "${outputPath}"`);
     }
 
-    targetPath = resolve(config);
+    targetPath = resolve(outputPath);
   }
 
   let schemaString: string;

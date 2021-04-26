@@ -5,7 +5,7 @@ import { dirname } from 'path';
 /**
  * Write the target file only if the content changed
  */
-export async function writeFileIfChanged(targetPath: string, content: string) {
+export async function writeFileIfChanged(targetPath: string, content: string): Promise<void> {
   const fileExists = existsSync(targetPath);
 
   if (fileExists) {
@@ -21,6 +21,4 @@ export async function writeFileIfChanged(targetPath: string, content: string) {
   await promises.writeFile(targetPath, content, {
     encoding: 'utf-8',
   });
-
-  return;
 }
