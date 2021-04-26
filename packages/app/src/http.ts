@@ -1,17 +1,16 @@
 import { getGraphQLParameters, processRequest, renderGraphiQL } from 'graphql-helix';
-import { gql, Module, TypeDefs } from 'graphql-modules';
+import { gql } from 'graphql-modules';
 import querystring from 'querystring';
 
-import { BaseEnvelopAppOptions, createEnvelopAppFactory } from './common/app.js';
+import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory } from './common/app.js';
 import { parseIDEConfig } from './common/ide/handle.js';
 import { RawAltairHandler } from './common/ide/rawAltair.js';
 import { getPathname } from './common/utils/url.js';
 
 import type { ExecutionContext, RenderGraphiQLOptions } from 'graphql-helix/dist/types';
-import type { EnvelopModuleConfig, EnvelopContext, IDEOptions } from './common/types';
+import type { EnvelopContext, IDEOptions } from './common/types';
 import type { RenderOptions } from 'altair-static';
 import type { IncomingMessage, ServerResponse } from 'http';
-import type { RegisterDataLoader } from './common/dataloader';
 
 export interface BuildContextArgs {
   request: IncomingMessage;
@@ -51,11 +50,7 @@ export interface BuildAppOptions {
 export type AsyncRequestHandler = (req: IncomingMessage, res: ServerResponse) => Promise<void>;
 export type RequestHandler = (req: IncomingMessage, res: ServerResponse) => void;
 
-export interface EnvelopAppBuilder {
-  gql: typeof gql;
-  modules: Module[];
-  registerModule: (typeDefs: TypeDefs, options?: EnvelopModuleConfig | undefined) => Module;
-  registerDataLoader: RegisterDataLoader;
+export interface EnvelopAppBuilder extends BaseEnvelopBuilder {
   buildApp(options?: BuildAppOptions): AsyncRequestHandler;
 }
 

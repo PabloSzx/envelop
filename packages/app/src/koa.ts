@@ -1,16 +1,15 @@
 import { getGraphQLParameters, processRequest } from 'graphql-helix';
-import { gql, Module, TypeDefs } from 'graphql-modules';
+import { gql } from 'graphql-modules';
 import bodyParser from 'koa-bodyparser';
 
-import { BaseEnvelopAppOptions, createEnvelopAppFactory } from './common/app.js';
+import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory } from './common/app.js';
 import { handleIDE } from './common/ide/handle.js';
 import { RawAltairHandlerDeps } from './common/ide/rawAltair.js';
 
 import type * as KoaRouter from '@koa/router';
 import type { ExecutionContext } from 'graphql-helix/dist/types';
-import type { EnvelopModuleConfig, EnvelopContext, IDEOptions } from './common/types';
+import type { EnvelopContext, IDEOptions } from './common/types';
 import type { ParameterizedContext, Request, Response } from 'koa';
-import type { RegisterDataLoader } from './common/dataloader';
 
 export interface BuildContextArgs {
   request: Request;
@@ -51,11 +50,7 @@ export interface BuildAppOptions {
   router: KoaRouter;
 }
 
-export interface EnvelopAppBuilder {
-  gql: typeof gql;
-  modules: Module[];
-  registerModule: (typeDefs: TypeDefs, options?: EnvelopModuleConfig | undefined) => Module;
-  registerDataLoader: RegisterDataLoader;
+export interface EnvelopAppBuilder extends BaseEnvelopBuilder {
   buildApp(options: BuildAppOptions): Promise<void>;
 }
 

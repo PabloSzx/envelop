@@ -1,7 +1,7 @@
 import { isSchema } from 'graphql';
 import { Application, ApplicationConfig, createApplication, createModule, gql, Module, TypeDefs } from 'graphql-modules';
 
-import { Envelop, envelop, useSchema } from '@envelop/core';
+import { Envelop, envelop, useSchema, Plugin } from '@envelop/core';
 import { useGraphQLModules } from '@envelop/graphql-modules';
 import { mergeSchemasAsync, MergeSchemasConfig } from '@graphql-tools/merge';
 import { IExecutableSchemaDefinition, makeExecutableSchema } from '@graphql-tools/schema';
@@ -11,7 +11,6 @@ import { cleanObject } from './utils/object.js';
 
 import type { ScalarsConfig } from './scalars';
 import type { GraphQLSchema } from 'graphql';
-import type { EnvelopOptions } from '@envelop/core';
 import type { EnvelopContext, EnvelopModuleConfig, EnvelopResolvers } from './types';
 import type { CodegenConfig } from './codegen/typescript';
 import type { useGraphQlJit } from '@envelop/graphql-jit';
@@ -27,12 +26,16 @@ export interface InternalAppBuildOptions<T> {
   adapterFactory: AdapterFactory<T>;
 }
 
-export interface EnvelopAppFactoryType {
+export interface BaseEnvelopBuilder {
   registerModule: (typeDefs: TypeDefs, options?: EnvelopModuleConfig) => Module;
   registerDataLoader: RegisterDataLoader;
   gql: typeof gql;
-  appBuilder<T>(opts: InternalAppBuildOptions<T>): Promise<T>;
   modules: Module[];
+  plugins: Plugin[];
+}
+
+export interface EnvelopAppFactoryType extends BaseEnvelopBuilder {
+  appBuilder<T>(opts: InternalAppBuildOptions<T>): Promise<T>;
 }
 
 export interface ExecutableSchemaDefinition<TContext = EnvelopContext>
@@ -40,9 +43,8 @@ export interface ExecutableSchemaDefinition<TContext = EnvelopContext>
   resolvers?: EnvelopResolvers<TContext> | EnvelopResolvers<TContext>[];
 }
 
-export interface BaseEnvelopAppOptions<TContext>
-  extends Partial<Omit<EnvelopOptions, 'initialSchema' | 'extends'>>,
-    Partial<ApplicationConfig> {
+export interface BaseEnvelopAppOptions<TContext> extends Partial<ApplicationConfig> {
+  plugins?: Plugin[];
   /**
    * Pre-built schema
    */
@@ -225,5 +227,6 @@ export function createEnvelopAppFactory<TContext>(
     appBuilder,
     gql,
     modules: factoryModules,
+    plugins: factoryPlugins,
   };
 }

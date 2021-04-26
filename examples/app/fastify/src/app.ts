@@ -7,7 +7,7 @@ function buildContext({ request }: BuildContextArgs) {
   };
 }
 
-export const { registerModule, buildApp, registerDataLoader } = CreateApp({
+export const { registerModule, buildApp, registerDataLoader, modules, plugins } = CreateApp({
   codegen: {
     federation: true,
     deepPartialResolvers: true,
@@ -58,6 +58,7 @@ export const { registerModule, buildApp, registerDataLoader } = CreateApp({
       },
     },
   },
+  jit: true,
 });
 
 const stringRepeatear = registerDataLoader('stringRepeater', DataLoader => {
