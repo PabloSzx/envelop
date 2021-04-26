@@ -6,7 +6,7 @@ import { useGraphQLModules } from '@envelop/graphql-modules';
 import { mergeSchemasAsync, MergeSchemasConfig } from '@graphql-tools/merge';
 import { IExecutableSchemaDefinition, makeExecutableSchema } from '@graphql-tools/schema';
 
-import { RegisterDataLoader, RegisterDataLoaderFactory } from './dataloader';
+import { RegisterDataLoader, RegisterDataLoaderFactory } from './dataloader.js';
 import { cleanObject } from './utils/object.js';
 
 import type { ScalarsConfig } from './scalars';
