@@ -5,8 +5,8 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "dev": "tsup --ignore-watch '**/*.generated.ts' --format esm src/index.ts --watch src --watch schema.gql --onSuccess \"pnpm dev:start\"",
-    "dev:start": "node dist/index.js"
+    "dev": "tsup --ignore-watch \"**/*.generated.ts\" --format esm src/index.ts --watch src --onSuccess \"node dist/index.js\"",
+    "start": "node dist/index.js"
   },
   "dependencies": {
     "@envelop/app": "^0.1.0",
@@ -20,7 +20,7 @@
     "graphql-scalars": "^1.9.0"
   },
   "devDependencies": {
-    "@pablosz/tsup": "^0.0.6",
+    "@pablosz/tsup": "^0.0.7",
     "@types/mkdirp": "^1.0.1",
     "esbuild": "^0.11.11",
     "typescript": "^4.2.4"

@@ -13,8 +13,10 @@ export async function writeOutputSchema(schema: GraphQLSchema, outputPath: strin
   if (typeof outputPath === 'boolean') {
     targetPath = resolve('./schema.gql');
   } else {
-    if (!outputPath.endsWith('.gql') || !outputPath.endsWith('.graphql') || !outputPath.endsWith('.json')) {
-      throw Error(`You have to specify a extension between '.gql', '.graphql' and '.json', received: "${outputPath}"`);
+    if (!(outputPath.endsWith('.gql') || outputPath.endsWith('.graphql') || outputPath.endsWith('.json'))) {
+      throw Error(
+        `You have to specify a extension between '.gql', '.graphql' and '.json' for the outputSchema, received: "${outputPath}"`
+      );
     }
 
     targetPath = resolve(outputPath);
