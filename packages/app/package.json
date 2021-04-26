@@ -8,6 +8,10 @@
       "import": "./dist/esm/express.js",
       "require": "./dist/cjs/express.js"
     },
+    "./extend": {
+      "import": "./dist/esm/extend.js",
+      "require": "./dist/cjs/extend.js"
+    },
     "./fastify": {
       "import": "./dist/esm/fastify.js",
       "require": "./dist/cjs/fastify.js"
