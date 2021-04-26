@@ -261,7 +261,7 @@ export interface AltairHandlerOptions extends Omit<RenderOptions, 'baseURL'> {
 }
 
 export function AltairHandler(options: AltairHandlerOptions = {}): AsyncRequestHandler {
-  let { path = '/altair', endpointURL = '/graphql', ...renderOptions } = options;
+  const { path = '/altair', endpointURL = '/graphql', ...renderOptions } = options;
 
   return RawAltairHandler({
     path,
