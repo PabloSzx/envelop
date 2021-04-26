@@ -1,4 +1,4 @@
-import { BuildContextArgs, CreateApp, gql, InferFunctionReturn } from '@pablosz/envelop-app/fastify';
+import { CreateApp, BuildContextArgs, InferFunctionReturn, gql } from '@pablosz/envelop-app/hapi';
 
 function buildContext({ request }: BuildContextArgs) {
   return {
@@ -7,7 +7,7 @@ function buildContext({ request }: BuildContextArgs) {
   };
 }
 
-declare module '@pablosz/envelop-app/fastify' {
+declare module '@pablosz/envelop-app/hapi' {
   interface EnvelopContext extends InferFunctionReturn<typeof buildContext> {}
 }
 
@@ -29,25 +29,7 @@ export const { registerModule, buildApp } = CreateApp({
     DateTime: 1,
   },
   buildContext,
-  websocketSubscriptions: {
-    graphQLWS: true,
-    subscriptionsTransport: true,
-    buildSubscriptionsContext({ request }) {
-      return {
-        request,
-        foo: 'baz',
-      };
-    },
-  },
-  ide: {
-    altair: true,
-    graphiql: {
-      subscriptionsEndpoint: 'http://localhost:3000/graphql',
-    },
-  },
-  routeOptions: {
-    logLevel: 'info',
-  },
+
   schema: {
     typeDefs: gql`
       type Query {
@@ -60,6 +42,13 @@ export const { registerModule, buildApp } = CreateApp({
           return 'zzz';
         },
       },
+    },
+  },
+
+  ide: {
+    altair: true,
+    graphiql: {
+      subscriptionsEndpoint: 'http://localhost:3000/graphql',
     },
   },
 });

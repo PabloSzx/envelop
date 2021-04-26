@@ -34,7 +34,7 @@ export type InferFunctionReturn<TFunction extends (...args: any) => any> = Promi
 
 export type { BaseEnvelopAppOptions, ExecutableSchemaDefinition } from './app';
 
-export type { AltairOptions, GraphiQLOptions, IDEOptions } from '../common/ide';
+export type { AltairOptions, GraphiQLOptions, IDEOptions } from './ide/handle';
 
 export type { ScalarsConfig } from './scalars';
 

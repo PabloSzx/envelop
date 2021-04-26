@@ -5,15 +5,14 @@
   "main": "index.js",
   "scripts": {
     "dev": "yarn dev:mjs",
-    "dev:cjs": "tsup-node src/index.ts --target node12 --format cjs --sourcemap --no-splitting --clean --watch src --onSuccess \"node dist/index.js\"",
-    "dev:mjs": "tsup-node src/index.ts --target es2020 --format esm --sourcemap --no-splitting --clean --watch src --onSuccess \"node dist/index.mjs\"",
+    "dev:cjs": "tsup-node src/index.ts --format cjs --sourcemap --no-splitting --watch src --onSuccess \"node dist/index.js\"",
+    "dev:mjs": "tsup-node src/index.ts --format esm --sourcemap --no-splitting --watch src --onSuccess \"node dist/index.mjs\"",
     "start": "node dist/index.js"
   },
   "dependencies": {
     "@graphql-typed-document-node/core": "^3.1.0",
     "@koa/router": "^10.0.0",
     "@pablosz/envelop-app": "workspace:^",
-    "altair-koa-middleware": "^4.0.2",
     "koa": "^2.13.1",
     "koa-bodyparser": "^4.3.0"
   },

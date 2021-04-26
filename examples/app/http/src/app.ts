@@ -47,7 +47,9 @@ export const { registerModule, buildApp } = CreateApp({
 
   ide: {
     altair: true,
-    graphiql: true,
+    graphiql: {
+      subscriptionsEndpoint: 'http://localhost:3000/graphql',
+    },
   },
 });
 
