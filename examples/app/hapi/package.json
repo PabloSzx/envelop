@@ -13,7 +13,8 @@
   "dependencies": {
     "@graphql-typed-document-node/core": "^3.1.0",
     "@hapi/hapi": "^20.1.2",
-    "@pablosz/envelop-app": "workspace:^"
+    "@pablosz/envelop-app": "workspace:^",
+    "graphql": "^15.5.0"
   },
   "devDependencies": {
     "@types/hapi__hapi": "^20.0.7",

@@ -12,7 +12,8 @@
   },
   "dependencies": {
     "@graphql-typed-document-node/core": "^3.1.0",
-    "@pablosz/envelop-app": "workspace:^"
+    "@pablosz/envelop-app": "workspace:^",
+    "graphql": "^15.5.0"
   },
   "devDependencies": {
     "@types/node": "^14.14.41",

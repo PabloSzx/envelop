@@ -7,6 +7,9 @@
   "author": "PabloSz <pablosaez1995@gmail.com>",
   "main": "index.js",
   "scripts": {
+    "dev": "pnpm -r --filter @pablosz/envelop-app dev:all",
+    "dev:cjs": "pnpm -r --filter @pablosz/envelop-app dev:all:cjs",
+    "dev:mjs": "pnpm -r --filter @pablosz/envelop-app dev:all:mjs",
     "pretty": "pretty-quick",
     "pretty-all": "prettier -w **/*.ts **/*.js"
   },

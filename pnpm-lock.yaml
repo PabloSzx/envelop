@@ -65,12 +65,14 @@ importers:
       '@pablosz/envelop-app': workspace:^
       '@types/hapi__hapi': ^20.0.7
       '@types/node': ^14.14.41
+      graphql: ^15.5.0
       tsup-node: ^0.1.0
       typescript: ^4.2.4
     dependencies:
-      '@graphql-typed-document-node/core': 3.1.0
+      '@graphql-typed-document-node/core': 3.1.0_graphql@15.5.0
       '@hapi/hapi': 20.1.2
       '@pablosz/envelop-app': link:../../../packages/app
+      graphql: 15.5.0
     devDependencies:
       '@types/hapi__hapi': 20.0.7
       '@types/node': 14.14.41
@@ -82,11 +84,13 @@ importers:
       '@graphql-typed-document-node/core': ^3.1.0
       '@pablosz/envelop-app': workspace:^
       '@types/node': ^14.14.41
+      graphql: ^15.5.0
       tsup-node: ^0.1.0
       typescript: ^4.2.4
     dependencies:
-      '@graphql-typed-document-node/core': 3.1.0
+      '@graphql-typed-document-node/core': 3.1.0_graphql@15.5.0
       '@pablosz/envelop-app': link:../../../packages/app
+      graphql: 15.5.0
     devDependencies:
       '@types/node': 14.14.41
       tsup-node: 0.1.0_typescript@4.2.4
@@ -101,14 +105,16 @@ importers:
       '@types/koa__router': ^8.0.4
       '@types/koa-bodyparser': ^4.3.0
       '@types/node': ^14.14.41
+      graphql: ^15.5.0
       koa: ^2.13.1
       koa-bodyparser: ^4.3.0
       tsup-node: ^0.1.0
       typescript: ^4.2.4
     dependencies:
-      '@graphql-typed-document-node/core': 3.1.0
+      '@graphql-typed-document-node/core': 3.1.0_graphql@15.5.0
       '@koa/router': 10.0.0
       '@pablosz/envelop-app': link:../../../packages/app
+      graphql: 15.5.0
       koa: 2.13.1
       koa-bodyparser: 4.3.0
     devDependencies:
@@ -1137,12 +1143,6 @@ packages:
       graphql: 15.5.0
       is-promise: 4.0.0
       tslib: 2.0.3
-    dev: false
-
-  /@graphql-typed-document-node/core/3.1.0:
-    resolution: {integrity: sha512-wYn6r8zVZyQJ6rQaALBEln5B1pzxb9shV5Ef97kTvn6yVGrqyXVnDqnU24MXnFubR+rZjBY9NWuxX3FB2sTsjg==}
-    peerDependencies:
-      graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0
     dev: false
 
   /@graphql-typed-document-node/core/3.1.0_graphql@15.5.0:
