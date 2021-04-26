@@ -170,10 +170,7 @@ export const HelloQueryDocument: DocumentNode<HelloQueryQuery, HelloQueryQueryVa
       kind: 'OperationDefinition',
       operation: 'query',
       name: { kind: 'Name', value: 'HelloQuery' },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [{ kind: 'Field', name: { kind: 'Name', value: 'hello' } }],
-      },
+      selectionSet: { kind: 'SelectionSet', selections: [{ kind: 'Field', name: { kind: 'Name', value: 'hello' } }] },
     },
   ],
 };

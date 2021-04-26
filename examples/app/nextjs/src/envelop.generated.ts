@@ -3,9 +3,7 @@
 import type { GraphQLResolveInfo } from 'graphql';
 import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
 export type Maybe<T> = T | null;
-export type Exact<T extends { [key: string]: unknown }> = {
-  [K in keyof T]: T[K];
-};
+export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
 /** All built-in and custom scalars, mapped to their actual values */
@@ -160,14 +158,11 @@ export const HelloDocument: DocumentNode<HelloQuery, HelloQueryVariables> = {
       kind: 'OperationDefinition',
       operation: 'query',
       name: { kind: 'Name', value: 'Hello' },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [{ kind: 'Field', name: { kind: 'Name', value: 'hello' } }],
-      },
+      selectionSet: { kind: 'SelectionSet', selections: [{ kind: 'Field', name: { kind: 'Name', value: 'hello' } }] },
     },
   ],
 };
 
-declare module '@envelop/app/nextjs' {
-  interface EnvelopResolvers extends Resolvers<import('@envelop/app/nextjs').EnvelopContext> {}
+declare module '@pablosz/envelop-app/nextjs' {
+  interface EnvelopResolvers extends Resolvers<import('@pablosz/envelop-app/nextjs').EnvelopContext> {}
 }
