@@ -5,7 +5,7 @@ import { createServer, Server } from 'http';
 
 import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app.js';
 import { handleIDE, IDEOptions } from './common/ide/handle.js';
-import { CreateSubscriptionsServer, WebsocketSubscriptionsOptions } from './common/subscriptions/websocket.js';
+import { CreateSubscriptionsServer, WebSocketSubscriptionsOptions } from './common/subscriptions/websocket.js';
 
 import type { Envelop } from '@envelop/types';
 import type { EnvelopContext } from './common/types';
@@ -35,7 +35,7 @@ export interface EnvelopAppOptions extends BaseEnvelopAppOptions<EnvelopContext>
   /**
    * Websocket Subscriptions configuration
    */
-  websocketSubscriptions?: WebsocketSubscriptionsOptions;
+  websocketSubscriptions?: WebSocketSubscriptionsOptions;
 
   /**
    * IDE configuration
@@ -60,7 +60,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
     moduleName: 'express',
   });
 
-  const { path = '/graphql', websocketSubscriptions } = config;
+  const { path = '/graphql', websocketSubscriptions, customHandleRequest } = config;
 
   const subscriptionsClientFactoryPromise = CreateSubscriptionsServer(websocketSubscriptions);
 
@@ -121,6 +121,8 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
 
         const subscriptionsPromise = handleSubscriptions(getEnveloped, app, server);
 
+        const requestHandler = customHandleRequest || handleRequest;
+
         EnvelopApp.use(path, (req, res, next) => {
           const request = {
             body: req.body,
@@ -129,7 +131,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
             query: req.query,
           };
 
-          return handleRequest({
+          return requestHandler({
             request,
             getEnveloped,
             buildContextArgs() {

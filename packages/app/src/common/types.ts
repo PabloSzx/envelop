@@ -40,6 +40,12 @@ export type { ScalarsConfig } from './scalars';
 
 export type { CodegenConfig, CodegenDocumentsConfig } from './codegen/typescript';
 
-export type { WebsocketSubscriptionsOptions, BuildSubscriptionContextArgs } from './subscriptions/websocket';
+export type {
+  WebSocketSubscriptionsOptions,
+  BuildSubscriptionContextArgs,
+  FilteredGraphQLWSOptions,
+  FilteredSubscriptionsTransportOptions,
+  WebSocketSubscriptionsObjectOptions,
+} from './subscriptions/websocket';
 
 export type { InferDataLoader } from './dataloader';

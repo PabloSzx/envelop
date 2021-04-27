@@ -3,7 +3,7 @@ import { gql } from 'graphql-modules';
 
 import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app.js';
 import { handleIDE, IDEOptions } from './common/ide/handle.js';
-import { CreateSubscriptionsServer, WebsocketSubscriptionsOptions } from './common/subscriptions/websocket.js';
+import { CreateSubscriptionsServer, WebSocketSubscriptionsOptions } from './common/subscriptions/websocket.js';
 
 import type { Envelop } from '@envelop/types';
 import type { FastifyInstance, FastifyPluginCallback, FastifyReply, FastifyRequest, RouteOptions } from 'fastify';
@@ -32,7 +32,7 @@ export interface EnvelopAppOptions extends BaseEnvelopAppOptions<EnvelopContext>
   /**
    * Websocket Suscriptions configuration
    */
-  websocketSubscriptions?: WebsocketSubscriptionsOptions;
+  websocketSubscriptions?: WebSocketSubscriptionsOptions;
 
   /**
    * IDE configuration
@@ -98,7 +98,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
   }
 
   function buildApp({ prepare }: BuildAppOptions = {}): EnvelopAppPlugin {
-    const { buildContext, path = '/graphql', ide, routeOptions = {} } = config;
+    const { buildContext, path = '/graphql', ide, routeOptions = {}, customHandleRequest } = config;
     const app = appBuilder({
       prepare,
       adapterFactory(getEnveloped) {
@@ -125,6 +125,8 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
 
           const subscriptionsPromise = handleSubscriptions(getEnveloped, instance);
 
+          const requestHandler = customHandleRequest || handleRequest;
+
           instance.route({
             ...routeOptions,
             method: ['GET', 'POST'],
@@ -137,7 +139,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
                 query: req.query,
               };
 
-              return handleRequest({
+              return requestHandler({
                 request,
                 getEnveloped,
                 buildContextArgs() {

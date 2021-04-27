@@ -14,6 +14,7 @@ import type { GraphQLSchema } from 'graphql';
 import type { EnvelopContext, EnvelopModuleConfig, EnvelopResolvers } from './types';
 import type { CodegenConfig } from './codegen/typescript';
 import type { useGraphQlJit } from '@envelop/graphql-jit';
+import type { handleRequest } from './request';
 
 export type AdapterFactory<T> = (envelop: Envelop<unknown>, modulesApplication: Application) => T;
 
@@ -88,6 +89,13 @@ export interface BaseEnvelopAppOptions<TContext> extends Partial<ApplicationConf
    * @default false
    */
   jit?: boolean | Parameters<typeof useGraphQlJit>;
+
+  /**
+   * **Advanced usage only**
+   *
+   * Override `handleRequest` logic
+   */
+  customHandleRequest?: typeof handleRequest;
 }
 
 export function createEnvelopAppFactory<TContext>(
