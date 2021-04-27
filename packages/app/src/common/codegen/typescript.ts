@@ -98,6 +98,11 @@ export interface CodegenConfig extends TypeScriptPluginConfig, TypeScriptResolve
    * Skip documents validation
    */
   skipDocumentsValidation?: boolean;
+
+  /**
+   * Transform the generated code
+   */
+  transformGenerated?: (code: string) => string | Promise<string>;
 }
 
 export async function EnvelopCodegen(
@@ -121,6 +126,7 @@ export async function EnvelopCodegen(
       documentsConfig = {},
       extraPluginsMap,
       extraPluginsConfig,
+      transformGenerated,
       ...codegenOptions
     } = {},
   } = options;
@@ -191,17 +197,21 @@ export async function EnvelopCodegen(
     skipDocumentsValidation,
   });
 
-  const code = await formatPrettier(
+  let code = await formatPrettier(
     `
-    ${preImportCode}
-    ${codegenCode}
+  ${preImportCode}
+  ${codegenCode}
 
-    declare module "${moduleName}" {
-        interface EnvelopResolvers extends Resolvers<import("${moduleName}").EnvelopContext> { }
-    }
-  `,
+  declare module "${moduleName}" {
+      interface EnvelopResolvers extends Resolvers<import("${moduleName}").EnvelopContext> { }
+  }
+`,
     'typescript'
   );
+
+  if (transformGenerated) {
+    code = await formatPrettier(await transformGenerated(code), 'typescript');
+  }
 
   await writeFileIfChanged(resolve(targetPath ?? './src/envelop.generated.ts'), code).catch(onError);
 }
