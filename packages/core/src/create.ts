@@ -17,19 +17,13 @@ import {
   ExecutionResult,
   SubscriptionArgs,
 } from 'graphql';
-import { AfterCallback, AfterResolverPayload, Envelop, OnResolverCalledHooks, Plugin } from '@envelop/types';
+import { AfterCallback, AfterResolverPayload, DefaultContext, Envelop, OnResolverCalledHooks, Plugin } from '@envelop/types';
 import { Maybe } from 'graphql/jsutils/Maybe';
 
 const trackedSchemaSymbol = Symbol('TRACKED_SCHEMA');
 const resolversHooksSymbol = Symbol('RESOLVERS_HOOKS');
 
-export interface EnvelopOptions {
-  plugins: Plugin[];
-  extends?: Envelop[];
-  initialSchema?: GraphQLSchema;
-}
-
-export function envelop(options: EnvelopOptions): Envelop {
+export function envelop(options: { plugins: Plugin[]; extends?: Envelop[]; initialSchema?: GraphQLSchema }): Envelop {
   let schema: GraphQLSchema | undefined | null = options.initialSchema;
   let initDone = false;
   const childPlugins = (options.extends || []).reduce((prev, child) => [...prev, ...child._plugins], []);

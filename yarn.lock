@@ -10270,10 +10270,10 @@ tsscmp@1.0.6:
   resolved "https://registry.yarnpkg.com/tsscmp/-/tsscmp-1.0.6.tgz#85b99583ac3589ec4bfef825b5000aa911d605eb"
   integrity sha512-LxhtAkPDTkVCMQjt2h6eBVY28KCjikZqZfMcC15YBeNjkgUpdCfBu5HoiOTDu86v6smE8yOjyEktJ8hlbANHQA==
 
-tsup-node@^0.1.0:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/tsup-node/-/tsup-node-0.1.0.tgz#76b3924812604336180263c0bd5f9fa883b14e63"
-  integrity sha512-A7Y3/OYDiqIoM2BhjoLeTPT/+fPByUY/L6cAwBUvOKDHz55i57WLibHyYvs/gvonA/k9qn7wJVmbDVGcrH2qfQ==
+tsup@^4.10.0:
+  version "4.10.0"
+  resolved "https://registry.yarnpkg.com/tsup/-/tsup-4.10.0.tgz#1181fb73193e40fe0d0adb1c27de41cce3139391"
+  integrity sha512-tD1htOPqqKr5VBAy4U9qtbNUDck8wrPoEcACZFH9djDnPWMRwUnSkleUk/vAJAO0igrWv2BlsIGvyWMPIi5dqA==
   dependencies:
     cac "^6.7.2"
     chalk "^4.1.0"
