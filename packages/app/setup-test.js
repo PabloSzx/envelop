@@ -25,7 +25,7 @@ module.exports = async () => {
         targetPath: resolve(__dirname, `./test/generated/envelop.generated.ts`),
         documents: join(__dirname, './test/graphql/*.gql'),
         transformGenerated(code) {
-          return code;
+          return code.replace(/@pablosz\/envelop-app\/http/g, '../../src/common/types');
         },
       },
     },

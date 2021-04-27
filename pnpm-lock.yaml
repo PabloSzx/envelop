@@ -234,10 +234,9 @@ importers:
       prettier: ^2.2.1
       subscriptions-transport-ws: ^0.9.18
       ts-jest: ^26.5.5
-      tsc-node-build: ^3.1.0
+      tsc-node-build: ^3.1.1
       typescript: ^4.2.4
       undici: ^3.3.6
-      undici-fetch: ^0.2.0
       ws: ^7.4.5
     dependencies:
       '@envelop/core': 0.1.3_graphql@15.5.0
@@ -296,10 +295,9 @@ importers:
       koa-bodyparser: 4.3.0
       next: 10.1.3_typescript@4.2.4
       ts-jest: 26.5.5_jest@26.6.3+typescript@4.2.4
-      tsc-node-build: 3.1.0_typescript@4.2.4
+      tsc-node-build: 3.1.1_typescript@4.2.4
       typescript: 4.2.4
       undici: 3.3.6
-      undici-fetch: 0.2.0
 
 packages:
 
@@ -7853,8 +7851,8 @@ packages:
     dependencies:
       typescript: 4.2.4
 
-  /tsc-node-build/3.1.0_typescript@4.2.4:
-    resolution: {integrity: sha512-Trg69DYUy+jPTawHIzyf1D4F+7ebqTgKwV9r+I5eNdgpiyG26nS9vgjjvL4QUue9tMgBvGN+47+s8MOidOMdPg==}
+  /tsc-node-build/3.1.1_typescript@4.2.4:
+    resolution: {integrity: sha512-1Y/PCY4vNftihhryoPv7A/BGs3r90ibGKg93HWSzpU0Dpj7/SWpqT6y5FCLRWFutLrHhl1OpQCb+UYXpZjk/PA==}
     hasBin: true
     peerDependencies:
       typescript: ^4.2.4
@@ -8044,12 +8042,6 @@ packages:
     resolution: {integrity: sha1-5z3T17DXxe2G+6xrCufYxqadUPo=}
     engines: {node: '>=0.10.0'}
     dev: false
-
-  /undici-fetch/0.2.0:
-    resolution: {integrity: sha512-7yVO/OhUgDmliJ4pJBU/VKbIA8BnQFR4Q604zwbs1/g2KiBavv6pKRkVGWaObjqq8uJHPnDDX/F7Nh/tkjnZcw==}
-    dependencies:
-      undici: 3.3.6
-    dev: true
 
   /undici/3.3.6:
     resolution: {integrity: sha512-/j3YTZ5AobMB4ZrTY72mzM54uFUX32v0R/JRW9G2vOyF1uSKYAx+WT8dMsAcRS13TOFISv094TxIyWYk+WEPsA==}
