@@ -50,7 +50,7 @@ importers:
       '@types/node': ^14.14.41
       express: ^4.17.1
       graphql: ^15.5.0
-      tsup-node: ^0.1.0
+      tsup: ^4.10.0
       typescript: ^4.2.4
     dependencies:
       '@graphql-typed-document-node/core': 3.1.0_graphql@15.5.0
@@ -60,7 +60,7 @@ importers:
     devDependencies:
       '@types/express': 4.17.11
       '@types/node': 14.14.41
-      tsup-node: 0.1.0_typescript@4.2.4
+      tsup: 4.10.0_typescript@4.2.4
       typescript: 4.2.4
 
   examples/app/fastify:
@@ -70,7 +70,7 @@ importers:
       '@types/node': ^14.14.41
       fastify: ^3.15.0
       graphql: ^15.5.0
-      tsup-node: ^0.1.0
+      tsup: ^4.10.0
       typescript: ^4.2.4
     dependencies:
       '@graphql-typed-document-node/core': 3.1.0_graphql@15.5.0
@@ -79,7 +79,7 @@ importers:
       graphql: 15.5.0
     devDependencies:
       '@types/node': 14.14.41
-      tsup-node: 0.1.0_typescript@4.2.4
+      tsup: 4.10.0_typescript@4.2.4
       typescript: 4.2.4
 
   examples/app/hapi:
@@ -90,7 +90,7 @@ importers:
       '@types/hapi__hapi': ^20.0.7
       '@types/node': ^14.14.41
       graphql: ^15.5.0
-      tsup-node: ^0.1.0
+      tsup: ^4.10.0
       typescript: ^4.2.4
     dependencies:
       '@graphql-typed-document-node/core': 3.1.0_graphql@15.5.0
@@ -100,7 +100,7 @@ importers:
     devDependencies:
       '@types/hapi__hapi': 20.0.7
       '@types/node': 14.14.41
-      tsup-node: 0.1.0_typescript@4.2.4
+      tsup: 4.10.0_typescript@4.2.4
       typescript: 4.2.4
 
   examples/app/http:
@@ -109,7 +109,7 @@ importers:
       '@pablosz/envelop-app': workspace:^
       '@types/node': ^14.14.41
       graphql: ^15.5.0
-      tsup-node: ^0.1.0
+      tsup: ^4.10.0
       typescript: ^4.2.4
     dependencies:
       '@graphql-typed-document-node/core': 3.1.0_graphql@15.5.0
@@ -117,7 +117,7 @@ importers:
       graphql: 15.5.0
     devDependencies:
       '@types/node': 14.14.41
-      tsup-node: 0.1.0_typescript@4.2.4
+      tsup: 4.10.0_typescript@4.2.4
       typescript: 4.2.4
 
   examples/app/koa:
@@ -132,7 +132,7 @@ importers:
       graphql: ^15.5.0
       koa: ^2.13.1
       koa-bodyparser: ^4.3.0
-      tsup-node: ^0.1.0
+      tsup: ^4.10.0
       typescript: ^4.2.4
     dependencies:
       '@graphql-typed-document-node/core': 3.1.0_graphql@15.5.0
@@ -146,7 +146,7 @@ importers:
       '@types/koa__router': 8.0.4
       '@types/koa-bodyparser': 4.3.0
       '@types/node': 14.14.41
-      tsup-node: 0.1.0_typescript@4.2.4
+      tsup: 4.10.0_typescript@4.2.4
       typescript: 4.2.4
 
   examples/app/nextjs:
@@ -7922,8 +7922,8 @@ packages:
     engines: {node: '>=0.6.x'}
     dev: false
 
-  /tsup-node/0.1.0_typescript@4.2.4:
-    resolution: {integrity: sha512-A7Y3/OYDiqIoM2BhjoLeTPT/+fPByUY/L6cAwBUvOKDHz55i57WLibHyYvs/gvonA/k9qn7wJVmbDVGcrH2qfQ==}
+  /tsup/4.10.0_typescript@4.2.4:
+    resolution: {integrity: sha512-tD1htOPqqKr5VBAy4U9qtbNUDck8wrPoEcACZFH9djDnPWMRwUnSkleUk/vAJAO0igrWv2BlsIGvyWMPIi5dqA==}
     hasBin: true
     peerDependencies:
       typescript: ^4.2.3
