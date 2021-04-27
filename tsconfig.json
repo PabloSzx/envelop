@@ -23,15 +23,10 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "paths": {
-      "@envelop/*": [
-        "packages/*/src/index.ts",
-        "packages/plugins/*/src/index.ts"
-      ]
+      "@envelop/app/*": ["packages/app/src/*.ts"],
+      "@envelop/*": ["packages/*/src/index.ts", "packages/plugins/*/src/index.ts"]
     }
   },
   "include": ["packages"],
-  "exclude": [
-    "**/dist",
-    "**/temp"
-  ]
+  "exclude": ["**/dist", "**/temp"]
 }
