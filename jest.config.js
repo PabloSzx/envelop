@@ -11,5 +11,6 @@ module.exports = {
       diagnostics: false,
     },
   },
+  globalSetup: './packages/app/setup-test.js',
   moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths, { prefix: '<rootDir>/' }),
 };

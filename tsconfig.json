@@ -23,7 +23,9 @@
     "noUnusedLocals": false,
     "resolveJsonModule": true,
     "skipLibCheck": true,
-    "paths": {}
+    "paths": {
+      "@envelop/app/*": ["packages/app/src/*.ts"]
+    }
   },
   "include": ["packages"],
   "exclude": ["**/dist", "**/temp"]

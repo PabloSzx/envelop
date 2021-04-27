@@ -1,60 +1,14 @@
 /* eslint-disable no-console */
 
 import getPort from 'get-port';
-import fetch from 'undici-fetch';
+import { request } from 'undici';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import { ExecutionResult, print, stripIgnoredCharacters } from 'graphql';
-import { makeExecutableSchema } from '@graphql-tools/schema';
-import { resolve, join } from 'path';
-import { gql } from 'graphql-modules';
+import { ExecutionResult, print } from 'graphql';
 
 const TearDownCallbacks = Array<() => Promise<unknown>>();
 
-const CodegenPromises = Array<Promise<void>>();
-
-function Codegen() {
-  const {
-    EnvelopCodegen,
-  } = require('../dist/cjs/common/codegen/typescript') as typeof import('../src/common/codegen/typescript');
-
-  CodegenPromises.push(
-    EnvelopCodegen(
-      makeExecutableSchema({
-        typeDefs: gql`
-          type Query {
-            hello: String!
-          }
-        `,
-      }),
-      {
-        enableCodegen: true,
-        codegen: {
-          preImportCode: `/* eslint-disable no-use-before-define */`,
-          targetPath: resolve(__dirname, `./generated/envelop.generated.ts`),
-          documents: join(__dirname, './graphql/*.gql'),
-          transformGenerated(code) {
-            return code.replace(/@pablosz\/envelop-app\/http/g, '../../src/common/types');
-          },
-        },
-      },
-      {
-        moduleName: 'http',
-      }
-    ).catch(console.error)
-  );
-}
-
-beforeAll(async () => {
-  // Needed because of a ts-jest issue with .js extensions, see https://github.com/kulshekhar/ts-jest/issues/1057
-  await require('tsc-node-build/src/main').build({
-    project: resolve(__dirname, '../tsconfig.json'),
-    skipEsm: true,
-  });
-  Codegen();
-});
-
 afterAll(async () => {
-  await Promise.all([...Array.from(TearDownCallbacks).map(cb => cb()), fetch.close(), ...CodegenPromises]);
+  await Promise.all([...Array.from(TearDownCallbacks).map(cb => cb())]);
 });
 
 export async function startExpressServer({
@@ -91,11 +45,36 @@ export async function startExpressServer({
     TearDownCallbacks.push(() => new Promise(resolve => server.close(resolve)));
   });
 
-  return async function <TData, TVariables>(document: TypedDocumentNode<TData, TVariables>) {
-    const Response = await fetch(`http://127.0.0.1:${port}/graphql?query=${stripIgnoredCharacters(print(document))}`);
+  return async function<TData, TVariables>(document: TypedDocumentNode<TData, TVariables>, variables?: TVariables) {
+    const { body } = await request(`http://127.0.0.1:${port}/graphql`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({ query: print(document), variables }),
+      path: null as any,
+    });
 
-    const result: ExecutionResult<TData> = await Response.json();
-
-    return result;
+    return getJSONFromStream(body);
   };
+}
+
+function getJSONFromStream<T>(stream: import('stream').Readable): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const chunks: Uint8Array[] = [];
+
+    stream.on('data', chunk => {
+      chunks.push(chunk);
+    });
+
+    stream.on('end', () => {
+      try {
+        const text = Buffer.concat(chunks).toString('utf-8');
+
+        resolve(JSON.parse(text));
+      } catch (err) {
+        reject(err);
+      }
+    });
+  });
 }
