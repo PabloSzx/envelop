@@ -9866,10 +9866,10 @@ ts-pnp@^1.1.6:
   resolved "https://registry.yarnpkg.com/ts-pnp/-/ts-pnp-1.2.0.tgz#a500ad084b0798f1c3071af391e65912c86bca92"
   integrity sha512-csd+vJOb/gkzvcCHgTGSChYpy5f1/XKNsmvBGO4JXS+z1v2HobugDz4s1IeFXM3wZB44uczs+eazB5Q/ccdhQw==
 
-tsc-node-build@^3.1.0:
-  version "3.1.0"
-  resolved "https://registry.yarnpkg.com/tsc-node-build/-/tsc-node-build-3.1.0.tgz#e6412272108a446e144fea537ad2cf674a6db22f"
-  integrity sha512-Trg69DYUy+jPTawHIzyf1D4F+7ebqTgKwV9r+I5eNdgpiyG26nS9vgjjvL4QUue9tMgBvGN+47+s8MOidOMdPg==
+tsc-node-build@^3.1.1:
+  version "3.1.1"
+  resolved "https://registry.yarnpkg.com/tsc-node-build/-/tsc-node-build-3.1.1.tgz#fcf836f4a522bfcb0d16f125b25cdfced1469603"
+  integrity sha512-1Y/PCY4vNftihhryoPv7A/BGs3r90ibGKg93HWSzpU0Dpj7/SWpqT6y5FCLRWFutLrHhl1OpQCb+UYXpZjk/PA==
   dependencies:
     commander "^7.2.0"
     concurrently "^6.0.2"
@@ -10071,14 +10071,7 @@ unc-path-regex@^0.1.2:
   resolved "https://registry.yarnpkg.com/unc-path-regex/-/unc-path-regex-0.1.2.tgz#e73dd3d7b0d7c5ed86fbac6b0ae7d8c6a69d50fa"
   integrity sha1-5z3T17DXxe2G+6xrCufYxqadUPo=
 
-undici-fetch@^0.2.0:
-  version "0.2.0"
-  resolved "https://registry.yarnpkg.com/undici-fetch/-/undici-fetch-0.2.0.tgz#956c0133398dfc577ad5861f992d1db2230c672d"
-  integrity sha512-7yVO/OhUgDmliJ4pJBU/VKbIA8BnQFR4Q604zwbs1/g2KiBavv6pKRkVGWaObjqq8uJHPnDDX/F7Nh/tkjnZcw==
-  dependencies:
-    undici "^3.0.0"
-
-undici@^3.0.0, undici@^3.3.6:
+undici@^3.3.6:
   version "3.3.6"
   resolved "https://registry.yarnpkg.com/undici/-/undici-3.3.6.tgz#06d3b97b7eeff46bce6f8a71079c09f64dd59dc1"
   integrity sha512-/j3YTZ5AobMB4ZrTY72mzM54uFUX32v0R/JRW9G2vOyF1uSKYAx+WT8dMsAcRS13TOFISv094TxIyWYk+WEPsA==
