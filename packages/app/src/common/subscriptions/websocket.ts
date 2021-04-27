@@ -260,13 +260,14 @@ export function handleGraphQLWS(
   getEnveloped: Envelop<unknown>,
   getContext: (contextArgs: BuildSubscriptionContextArgs) => Promise<unknown>
 ): void {
-  const { execute, subscribe, schema, parse, validate } = getEnveloped();
+  const { execute, subscribe, parse, validate } = getEnveloped();
   useGraphQLWSServer(
     {
       ...cleanObject(options),
       execute,
       subscribe,
       async onSubscribe({ connectionParams, extra: { request, socket } }, { payload: { operationName, query, variables } }) {
+        const { schema } = getEnveloped();
         const args: ExecutionArgs = {
           schema,
           operationName: operationName,
