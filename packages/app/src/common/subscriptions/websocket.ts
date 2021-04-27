@@ -3,7 +3,7 @@ import assert from 'assert';
 import { cleanObject } from '../utils/object.js';
 import { getPathname } from '../utils/url.js';
 
-import type { DefaultContext, Envelop } from '@envelop/types';
+import type { Envelop } from '@envelop/types';
 import type WebSocket from 'ws';
 import type { IncomingMessage, Server as HttpServer } from 'http';
 import type { Socket } from 'net';
@@ -236,7 +236,7 @@ export function handleSubscriptionsTransport(
   wsServer: WebSocket.Server,
   options: FilteredSubscriptionsTransportOptions | undefined,
   getEnveloped: Envelop<unknown>,
-  getContext: (contextArgs: BuildSubscriptionContextArgs) => Promise<DefaultContext>
+  getContext: (contextArgs: BuildSubscriptionContextArgs) => Promise<unknown>
 ): void {
   const { schema, execute, subscribe } = getEnveloped();
   subscriptionsTransportWs.create(
@@ -258,7 +258,7 @@ export function handleGraphQLWS(
   wsServer: WebSocket.Server,
   options: FilteredGraphQLWSOptions | undefined,
   getEnveloped: Envelop<unknown>,
-  getContext: (contextArgs: BuildSubscriptionContextArgs) => Promise<DefaultContext>
+  getContext: (contextArgs: BuildSubscriptionContextArgs) => Promise<unknown>
 ): void {
   const { execute, subscribe, schema, parse, validate } = getEnveloped();
   useGraphQLWSServer(
