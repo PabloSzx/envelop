@@ -21,17 +21,17 @@ export interface InternalEnvelopConfig {
   moduleName: 'express' | 'fastify' | 'nextjs' | 'http' | 'koa' | 'hapi';
 }
 
-export interface InternalAppBuildOptions<T> {
-  prepare?: () => void | Promise<void>;
-  adapterFactory: AdapterFactory<T>;
-}
-
 export interface BaseEnvelopBuilder {
   registerModule: (typeDefs: TypeDefs, options?: EnvelopModuleConfig) => Module;
   registerDataLoader: RegisterDataLoader;
   gql: typeof gql;
   modules: Module[];
   plugins: Plugin[];
+}
+
+export interface InternalAppBuildOptions<T> {
+  prepare?: (appBuilder: BaseEnvelopBuilder) => void | Promise<void>;
+  adapterFactory: AdapterFactory<T>;
 }
 
 export interface EnvelopAppFactoryType extends BaseEnvelopBuilder {
@@ -116,11 +116,11 @@ export function createEnvelopAppFactory<TContext>(
     adapterFactory,
     prepare,
   }: {
-    prepare?: () => Promise<void> | void;
+    prepare?: (appBuilder: BaseEnvelopBuilder) => Promise<void> | void;
     adapterFactory: AdapterFactory<T>;
   }): Promise<T> {
     try {
-      if (prepare) await prepare();
+      if (prepare) await prepare(baseAppBuilder);
 
       return getApp();
     } finally {
@@ -221,14 +221,15 @@ export function createEnvelopAppFactory<TContext>(
     }
   }
 
-  return {
+  const baseAppBuilder: BaseEnvelopBuilder = {
     registerModule,
     registerDataLoader,
-    appBuilder,
     gql,
     modules: factoryModules,
     plugins: factoryPlugins,
   };
+
+  return { ...baseAppBuilder, appBuilder };
 }
 
-export * from './request';
+export * from './request.js';
