@@ -44,7 +44,7 @@ export interface EnvelopAppOptions extends BaseEnvelopAppOptions<EnvelopContext>
 }
 
 export interface BuildAppOptions {
-  prepare?: () => void | Promise<void>;
+  prepare?: (appBuilder: BaseEnvelopBuilder) => void | Promise<void>;
 }
 
 export type AsyncRequestHandler = (req: IncomingMessage, res: ServerResponse) => Promise<void>;
