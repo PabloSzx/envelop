@@ -45,7 +45,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
   });
 
   function buildApp({ prepare }: BuildAppOptions): Plugin<{}> {
-    const { ide, path = '/graphql', buildContext } = config;
+    const { ide, path = '/graphql', buildContext, customHandleRequest } = config;
 
     const registerApp = appBuilder({
       prepare,
@@ -85,6 +85,8 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
             },
           });
 
+          const requestHandler = customHandleRequest || handleRequest;
+
           server.route({
             path,
             method: ['GET', 'POST'],
@@ -96,7 +98,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
                 query: req.query,
               };
 
-              return handleRequest<BuildContextArgs, Lifecycle.ReturnValueTypes>({
+              return requestHandler<BuildContextArgs, Lifecycle.ReturnValueTypes>({
                 request,
                 getEnveloped,
                 buildContext,

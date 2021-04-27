@@ -61,12 +61,20 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
 
   function buildApp({ prepare }: BuildAppOptions): AsyncRequestHandler {
     let app: AsyncRequestHandler | undefined;
-    const { buildContext, path = '/graphql', ide = { altair: true, graphiql: true }, handleNotFound = true } = config;
+    const {
+      buildContext,
+      path = '/graphql',
+      ide = { altair: true, graphiql: true },
+      handleNotFound = true,
+      customHandleRequest,
+    } = config;
 
     const appPromise = appBuilder({
       prepare,
       adapterFactory(getEnveloped): AsyncRequestHandler {
         const { altairOptions, graphiQLOptions, isAltairEnabled, isGraphiQLEnabled } = parseIDEConfig(ide, path);
+
+        const requestHandler = customHandleRequest || handleRequest;
 
         return async function (req, res) {
           const pathname = getPathname(req.url)!;
@@ -101,7 +109,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
               query: urlQuery ? querystring.parse(urlQuery) : {},
             };
 
-            return handleRequest({
+            return requestHandler({
               request,
               getEnveloped,
               buildContextArgs() {

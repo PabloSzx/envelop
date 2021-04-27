@@ -58,7 +58,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
   });
 
   async function buildApp({ router, prepare }: BuildAppOptions): Promise<void> {
-    const { path = '/graphql', buildContext, ide, bodyParserOptions = {} } = config;
+    const { path = '/graphql', buildContext, ide, bodyParserOptions = {}, customHandleRequest } = config;
 
     return appBuilder({
       prepare,
@@ -117,6 +117,8 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
           },
         });
 
+        const requestHandler = customHandleRequest || handleRequest;
+
         const main: KoaRouter.Middleware = ctx => {
           const request = {
             body: ctx.request.body,
@@ -125,7 +127,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
             query: ctx.request.query,
           };
 
-          return handleRequest({
+          return requestHandler({
             request,
             buildContext,
             buildContextArgs() {

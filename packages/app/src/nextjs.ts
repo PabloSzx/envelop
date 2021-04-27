@@ -36,11 +36,13 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
 
   function buildApp({ prepare }: BuildAppOptions = {}): NextApiHandler<unknown> {
     let app: NextApiHandler<unknown> | undefined;
-    const { buildContext } = config;
+    const { buildContext, customHandleRequest } = config;
 
     const appPromise = appBuilder({
       prepare,
       adapterFactory(getEnveloped): NextApiHandler<unknown> {
+        const requestHandler = customHandleRequest || handleRequest;
+
         return (req, res) => {
           const request = {
             body: req.body,
@@ -49,7 +51,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
             query: req.query,
           };
 
-          return handleRequest({
+          return requestHandler({
             request,
             getEnveloped,
             buildContext,
