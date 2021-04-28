@@ -1,5 +1,3 @@
-/* eslint-disable no-console */
-
 import getPort from 'get-port';
 import { request } from 'undici';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
@@ -69,9 +67,7 @@ function getJSONFromStream<T>(stream: import('stream').Readable): Promise<T> {
 
     stream.on('end', () => {
       try {
-        const text = Buffer.concat(chunks).toString('utf-8');
-
-        resolve(JSON.parse(text));
+        resolve(JSON.parse(Buffer.concat(chunks).toString('utf-8')));
       } catch (err) {
         reject(err);
       }
