@@ -1,4 +1,4 @@
-import { LazyPromise } from '../LazyPromise/lazyPromise.js';
+import { LazyPromise } from '../utils/lazyPromise.js';
 
 import type { RenderOptions } from 'altair-static';
 import type { IncomingMessage, ServerResponse } from 'http';

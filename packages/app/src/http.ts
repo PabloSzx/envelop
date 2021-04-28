@@ -206,4 +206,4 @@ export function AltairHandler(options: AltairHandlerOptions = {}): AsyncRequestH
 export { gql, getPathname };
 
 export * from './common/base.js';
-export * from './common/LazyPromise/lazyPromise.js';
+export * from './common/utils/lazyPromise.js';

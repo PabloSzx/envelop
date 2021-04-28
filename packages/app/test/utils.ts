@@ -31,7 +31,7 @@ export async function startExpressServer({
 > {
   const app = (await import('express')).default();
 
-  const { CreateApp } = require('../dist/cjs/express') as typeof import('../src/express');
+  const { CreateApp } = await import('../src/express');
 
   const appBuilder = CreateApp(options);
 
