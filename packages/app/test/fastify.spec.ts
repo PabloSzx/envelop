@@ -1,9 +1,9 @@
 import { gql } from 'graphql-modules';
 
 import { HelloDocument } from './generated/envelop.generated';
-import { startExpressServer } from './utils';
+import { startFastifyServer } from './utils';
 
-const queryPromise = startExpressServer({
+const queryPromise = startFastifyServer({
   options: {},
   buildOptions: {
     prepare({ registerModule }) {

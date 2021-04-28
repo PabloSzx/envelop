@@ -1,24 +1,29 @@
 // Based on `p-lazy`: https://github.com/sindresorhus/p-lazy/blob/main/index.js
 
-class PLazy<ValueType> extends Promise<ValueType> {
-  private _executor: any;
-  private _promise: any;
+export class PLazy<ValueType> extends Promise<ValueType> {
+  private _executor;
+  private _promise?: Promise<ValueType>;
 
-  constructor(executor: any) {
-    super((resolve: any) => resolve());
+  constructor(executor: (resolve: (value: ValueType) => void, reject: (err: unknown) => void) => void) {
+    super((resolve: (v?: any) => void) => resolve());
 
     this._executor = executor;
   }
 
-  then(onFulfilled: any, onRejected: any) {
+  then: Promise<ValueType>['then'] = (onFulfilled, onRejected) => {
     this._promise = this._promise || new Promise(this._executor);
     return this._promise.then(onFulfilled, onRejected);
-  }
+  };
 
-  catch(onRejected: any) {
+  catch: Promise<ValueType>['catch'] = onRejected => {
     this._promise = this._promise || new Promise(this._executor);
     return this._promise.catch(onRejected);
-  }
+  };
+
+  finally: Promise<ValueType>['finally'] = onFinally => {
+    this._promise = this._promise || new Promise(this._executor);
+    return this._promise.finally(onFinally);
+  };
 }
 
 export function LazyPromise<Value>(fn: () => Value | Promise<Value>): Promise<Value> {
