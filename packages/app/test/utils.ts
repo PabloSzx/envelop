@@ -31,7 +31,7 @@ export async function startExpressServer({
 > {
   const app = (await import('express')).default();
 
-  const { CreateApp } = require('../dist/cjs/express') as typeof import('../src/express');
+  const { CreateApp } = await import('../src/express');
 
   const appBuilder = CreateApp(options);
 
@@ -45,7 +45,7 @@ export async function startExpressServer({
     TearDownCallbacks.push(() => new Promise(resolve => server.close(resolve)));
   });
 
-  return async function<TData, TVariables>(document: TypedDocumentNode<TData, TVariables>, variables?: TVariables) {
+  return async function <TData, TVariables>(document: TypedDocumentNode<TData, TVariables>, variables?: TVariables) {
     const { body } = await request(`http://127.0.0.1:${port}/graphql`, {
       method: 'POST',
       headers: {

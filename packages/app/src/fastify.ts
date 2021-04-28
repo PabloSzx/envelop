@@ -183,4 +183,4 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
 export { gql };
 
 export * from './common/base.js';
-export * from './common/LazyPromise/lazyPromise.js';
+export * from './common/utils/lazyPromise.js';

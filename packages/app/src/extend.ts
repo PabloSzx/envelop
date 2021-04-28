@@ -13,7 +13,7 @@ export * from './common/types.js';
 export * from './common/utils/object.js';
 export * from './common/utils/url.js';
 export * from './common/subscriptions/websocket.js';
-export * from './common/LazyPromise/lazyPromise.js';
+export * from './common/utils/lazyPromise.js';
 export * from './common/ide/handle.js';
 export * from './common/ide/rawAltair.js';
 export * from './common/codegen/handle.js';

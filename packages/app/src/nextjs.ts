@@ -2,7 +2,7 @@ import { renderGraphiQL } from 'graphql-helix';
 import { gql } from 'graphql-modules';
 
 import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app.js';
-import { LazyPromise } from './common/LazyPromise/lazyPromise.js';
+import { LazyPromise } from './common/utils/lazyPromise.js';
 
 import type { RenderGraphiQLOptions } from 'graphql-helix/dist/types';
 import type { NextApiHandler, NextApiRequest, NextApiResponse } from 'next';
@@ -185,4 +185,4 @@ export function AltairHandler(options: AltairHandlerOptions = {}): NextApiHandle
 export { gql };
 
 export * from './common/base.js';
-export * from './common/LazyPromise/lazyPromise.js';
+export * from './common/utils/lazyPromise.js';
