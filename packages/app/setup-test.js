@@ -1,4 +1,4 @@
-const { resolve, join } = require('path');
+const { resolve } = require('path');
 const { makeExecutableSchema } = require('@graphql-tools/schema');
 
 module.exports = async () => {
@@ -23,7 +23,7 @@ module.exports = async () => {
       codegen: {
         preImportCode: `/* eslint-disable no-use-before-define */`,
         targetPath: resolve(__dirname, `./test/generated/envelop.generated.ts`),
-        documents: join(__dirname, './test/graphql/*.gql'),
+        documents: resolve(__dirname, './test/graphql/*.gql'),
         transformGenerated(code) {
           return code.replace(/@pablosz\/envelop-app\/extend/g, '../../src/common/types');
         },

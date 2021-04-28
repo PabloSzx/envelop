@@ -36,7 +36,7 @@ export interface BuildAppOptions {
 }
 
 export interface EnvelopAppBuilder extends BaseEnvelopBuilder {
-  buildApp(options: BuildAppOptions): Plugin<{}>;
+  buildApp(options?: BuildAppOptions): Plugin<{}>;
 }
 
 export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
@@ -44,7 +44,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
     moduleName: 'hapi',
   });
 
-  function buildApp({ prepare }: BuildAppOptions): Plugin<{}> {
+  function buildApp({ prepare }: BuildAppOptions = {}): Plugin<{}> {
     const { ide, path = '/graphql', buildContext, customHandleRequest } = config;
 
     const registerApp = appBuilder({
