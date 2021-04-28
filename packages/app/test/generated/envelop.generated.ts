@@ -145,6 +145,6 @@ export const HelloDocument: DocumentNode<HelloQuery, HelloQueryVariables> = {
   ],
 };
 
-declare module '@envelop/app/http' {
-  interface EnvelopResolvers extends Resolvers<import('@envelop/app/http').EnvelopContext> {}
+declare module '@envelop/app/extend' {
+  interface EnvelopResolvers extends Resolvers<import('@envelop/app/extend').EnvelopContext> {}
 }

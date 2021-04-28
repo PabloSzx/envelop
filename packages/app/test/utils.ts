@@ -1,5 +1,3 @@
-/* eslint-disable no-console */
-
 import getPort from 'get-port';
 import { request } from 'undici';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
@@ -45,7 +43,7 @@ export async function startExpressServer({
     TearDownCallbacks.push(() => new Promise(resolve => server.close(resolve)));
   });
 
-  return async function<TData, TVariables>(document: TypedDocumentNode<TData, TVariables>, variables?: TVariables) {
+  return async function <TData, TVariables>(document: TypedDocumentNode<TData, TVariables>, variables?: TVariables) {
     const { body } = await request(`http://127.0.0.1:${port}/graphql`, {
       method: 'POST',
       headers: {
@@ -69,9 +67,7 @@ function getJSONFromStream<T>(stream: import('stream').Readable): Promise<T> {
 
     stream.on('end', () => {
       try {
-        const text = Buffer.concat(chunks).toString('utf-8');
-
-        resolve(JSON.parse(text));
+        resolve(JSON.parse(Buffer.concat(chunks).toString('utf-8')));
       } catch (err) {
         reject(err);
       }

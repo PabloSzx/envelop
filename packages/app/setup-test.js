@@ -30,7 +30,7 @@ module.exports = async () => {
       },
     },
     {
-      moduleName: 'http',
+      moduleName: 'extend',
     }
   );
 };
