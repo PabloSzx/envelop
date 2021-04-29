@@ -5,10 +5,10 @@ import { createServer } from 'http';
 import { buildApp } from './app';
 
 const server = createServer((req, res) => {
-  app(req, res);
+  EnvelopApp.requestHandler(req, res);
 });
 
-const app = buildApp({
+const EnvelopApp = buildApp({
   async prepare() {
     await import('./modules');
   },

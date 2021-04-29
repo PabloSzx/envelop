@@ -6,6 +6,7 @@ import { RawAltairHandler } from './common/ide/rawAltair.js';
 
 import type { EnvelopContext, IDEOptions } from './common/types';
 import type { Request, ResponseToolkit, Plugin, Server, Lifecycle } from '@hapi/hapi';
+import type { Envelop } from '@envelop/types';
 
 export interface BuildContextArgs {
   request: Request;
@@ -35,8 +36,12 @@ export interface BuildAppOptions {
   prepare?: (appBuilder: BaseEnvelopBuilder) => void | Promise<void>;
 }
 
+export interface EnvelopApp {
+  plugin: Plugin<{}>;
+  envelop: Promise<Envelop<unknown>>;
+}
 export interface EnvelopAppBuilder extends BaseEnvelopBuilder {
-  buildApp(options?: BuildAppOptions): Plugin<{}>;
+  buildApp(options?: BuildAppOptions): EnvelopApp;
 }
 
 export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
@@ -44,7 +49,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
     moduleName: 'hapi',
   });
 
-  function buildApp({ prepare }: BuildAppOptions = {}): Plugin<{}> {
+  function buildApp({ prepare }: BuildAppOptions = {}): EnvelopApp {
     const { ide, path = '/graphql', buildContext, customHandleRequest } = config;
 
     const registerApp = appBuilder({
@@ -129,10 +134,13 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
     });
 
     return {
-      name: 'EnvelopApp',
-      async register(server) {
-        await (await registerApp)(server);
+      plugin: {
+        name: 'EnvelopApp',
+        async register(server) {
+          await (await registerApp).app(server);
+        },
       },
+      envelop: registerApp.then(v => v.envelop),
     };
   }
 
@@ -144,4 +152,3 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
 
 export { gql };
 export * from './common/base.js';
-export * from './common/utils/lazyPromise.js';

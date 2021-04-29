@@ -24,7 +24,7 @@ export async function startExpressServer({
 
   const { CreateApp } = await import('../src/express');
 
-  app.use(await CreateApp(options).buildApp({ app, ...buildOptions }));
+  app.use((await CreateApp(options).buildApp({ app, ...buildOptions })).router);
 
   const port = await getPort();
 
@@ -48,7 +48,7 @@ export async function startFastifyServer({
 
   const { CreateApp } = await import('../src/fastify');
 
-  app.register(CreateApp(options).buildApp(buildOptions));
+  app.register(CreateApp(options).buildApp(buildOptions).plugin);
 
   const port = await getPort();
 
@@ -75,7 +75,7 @@ export async function startHTTPServer({
   const app = CreateApp(options).buildApp(buildOptions);
 
   const server = (await import('http')).createServer((req, res) => {
-    app(req, res);
+    app.requestHandler(req, res);
   });
 
   const port = await getPort();
@@ -116,7 +116,7 @@ export async function startHapiServer({
 
   const app = CreateApp(options).buildApp(buildOptions);
 
-  await server.register(app);
+  await server.register(app.plugin);
 
   await server.start();
 

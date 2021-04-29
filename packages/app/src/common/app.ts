@@ -42,7 +42,12 @@ export interface InternalAppBuildOptions<T> {
 }
 
 export interface EnvelopAppFactoryType extends BaseEnvelopBuilder {
-  appBuilder<T>(opts: InternalAppBuildOptions<T>): Promise<T>;
+  appBuilder<T>(
+    opts: InternalAppBuildOptions<T>
+  ): Promise<{
+    app: T;
+    envelop: Envelop<unknown>;
+  }>;
 }
 
 export interface ExecutableSchemaDefinition<TContext = EnvelopContext>
@@ -134,7 +139,10 @@ export function createEnvelopAppFactory<TContext>(
   }: {
     prepare?: (appBuilder: BaseEnvelopBuilder) => Promise<void> | void;
     adapterFactory: AdapterFactory<T>;
-  }): Promise<T> {
+  }): Promise<{
+    app: T;
+    envelop: Envelop<unknown>;
+  }> {
     try {
       if (prepare) await prepare(baseAppBuilder);
 
@@ -237,7 +245,10 @@ export function createEnvelopAppFactory<TContext>(
           .catch(onCodegenError);
       }
 
-      return adapterFactory(getEnveloped, modulesApplication);
+      return {
+        app: adapterFactory(getEnveloped, modulesApplication),
+        envelop: getEnveloped,
+      };
     }
   }
 

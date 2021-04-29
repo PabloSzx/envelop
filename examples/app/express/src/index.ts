@@ -12,7 +12,7 @@ buildApp({
     await import('./modules');
   },
 }).then(EnvelopApp => {
-  app.use(EnvelopApp);
+  app.use(EnvelopApp.router);
 
   const port = process.env.PORT || 3000;
   app.listen(port, () => {

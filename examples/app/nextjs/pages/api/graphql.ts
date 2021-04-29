@@ -1,9 +1,9 @@
 import { buildApp } from '../../src/api/app';
 
-const app = buildApp({
+const EnvelopApp = buildApp({
   async prepare() {
     await import('../../src/api/modules');
   },
 });
 
-export default app;
+export default EnvelopApp.handler;
