@@ -2,12 +2,13 @@ import { renderGraphiQL } from 'graphql-helix';
 import { gql } from 'graphql-modules';
 
 import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app.js';
-import { LazyPromise } from './common/utils/lazyPromise.js';
+import { LazyPromise } from './common/utils/promise.js';
 
 import type { RenderGraphiQLOptions } from 'graphql-helix/dist/types';
 import type { NextApiHandler, NextApiRequest, NextApiResponse } from 'next';
 import type { EnvelopContext } from './common/types';
 import type { RenderOptions } from 'altair-static';
+import type { Envelop } from '@envelop/types';
 
 export interface BuildContextArgs {
   request: NextApiRequest;
@@ -25,8 +26,13 @@ export interface BuildAppOptions {
   prepare?: (appBuilder: BaseEnvelopBuilder) => void | Promise<void>;
 }
 
+export interface EnvelopApp {
+  handler: NextApiHandler<unknown>;
+  envelop: Promise<Envelop<unknown>>;
+}
+
 export interface EnvelopAppBuilder extends BaseEnvelopBuilder {
-  buildApp(options?: BuildAppOptions): NextApiHandler<unknown>;
+  buildApp(options?: BuildAppOptions): EnvelopApp;
 }
 
 export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
@@ -34,7 +40,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
     moduleName: 'nextjs',
   });
 
-  function buildApp({ prepare }: BuildAppOptions = {}): NextApiHandler<unknown> {
+  function buildApp({ prepare }: BuildAppOptions = {}): EnvelopApp {
     let app: NextApiHandler<unknown> | undefined;
     const { buildContext, customHandleRequest } = config;
 
@@ -76,11 +82,14 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
     });
 
     appPromise.then(handler => {
-      app = handler;
+      app = handler.app;
     });
 
-    return async function (req, res) {
-      await (app || (await appPromise))(req, res);
+    return {
+      async handler(req, res) {
+        await (app || (await appPromise).app)(req, res);
+      },
+      envelop: appPromise.then(v => v.envelop),
     };
   }
 
@@ -185,4 +194,3 @@ export function AltairHandler(options: AltairHandlerOptions = {}): NextApiHandle
 export { gql };
 
 export * from './common/base.js';
-export * from './common/utils/lazyPromise.js';

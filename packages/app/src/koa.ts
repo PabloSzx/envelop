@@ -8,6 +8,7 @@ import { RawAltairHandlerDeps } from './common/ide/rawAltair.js';
 import type * as KoaRouter from '@koa/router';
 import type { EnvelopContext, IDEOptions } from './common/types';
 import type { ParameterizedContext, Request, Response } from 'koa';
+import type { Envelop } from '@envelop/types';
 
 export interface BuildContextArgs {
   request: Request;
@@ -48,8 +49,12 @@ export interface BuildAppOptions {
   router: KoaRouter;
 }
 
+export interface EnvelopApp {
+  envelop: Envelop<unknown>;
+}
+
 export interface EnvelopAppBuilder extends BaseEnvelopBuilder {
-  buildApp(options: BuildAppOptions): Promise<void>;
+  buildApp(options: BuildAppOptions): Promise<EnvelopApp>;
 }
 
 export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
@@ -57,12 +62,12 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
     moduleName: 'koa',
   });
 
-  async function buildApp({ router, prepare }: BuildAppOptions): Promise<void> {
+  async function buildApp({ router, prepare }: BuildAppOptions): Promise<EnvelopApp> {
     const { path = '/graphql', buildContext, ide, bodyParserOptions = {}, customHandleRequest } = config;
 
-    return appBuilder({
+    const { envelop } = await appBuilder({
       prepare,
-      async adapterFactory(getEnveloped): Promise<void> {
+      async adapterFactory(getEnveloped) {
         if (bodyParserOptions) router.use(bodyParser(bodyParserOptions));
 
         await handleIDE(ide, path, {
@@ -153,6 +158,10 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
         router.get(path, main).post(path, main);
       },
     });
+
+    return {
+      envelop,
+    };
   }
 
   return {
@@ -164,4 +173,3 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
 export { gql };
 
 export * from './common/base.js';
-export * from './common/utils/lazyPromise.js';

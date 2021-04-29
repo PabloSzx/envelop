@@ -11,13 +11,13 @@ async function init() {
     host: 'localhost',
   });
 
-  const app = buildApp({
+  const EnvelopApp = buildApp({
     async prepare() {
       await import('./modules');
     },
   });
 
-  await server.register(app);
+  await server.register(EnvelopApp.plugin);
 
   await server.start();
 

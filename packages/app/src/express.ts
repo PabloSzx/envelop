@@ -51,8 +51,13 @@ export interface BuildAppOptions {
   prepare?: (appBuilder: BaseEnvelopBuilder) => void | Promise<void>;
 }
 
+export interface EnvelopApp {
+  router: Router;
+  envelop: Envelop<unknown>;
+}
+
 export interface EnvelopAppBuilder extends BaseEnvelopBuilder {
-  buildApp(options: BuildAppOptions): Promise<Router>;
+  buildApp(options: BuildAppOptions): Promise<EnvelopApp>;
 }
 
 export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
@@ -97,9 +102,9 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
     };
   }
 
-  async function buildApp({ prepare, app, server }: BuildAppOptions): Promise<Router> {
+  async function buildApp({ prepare, app, server }: BuildAppOptions): Promise<EnvelopApp> {
     const { buildContext, path = '/graphql', bodyParserJSONOptions: jsonOptions = {}, ide } = config;
-    return appBuilder({
+    const { app: router, envelop } = await appBuilder({
       prepare,
       async adapterFactory(getEnveloped) {
         const EnvelopApp = Router();
@@ -160,6 +165,11 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
         return EnvelopApp;
       },
     });
+
+    return {
+      router: await router,
+      envelop,
+    };
   }
 
   return {
@@ -171,4 +181,3 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
 export { gql };
 
 export * from './common/base.js';
-export * from './common/utils/lazyPromise.js';

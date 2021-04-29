@@ -11,6 +11,7 @@ import type { RenderGraphiQLOptions } from 'graphql-helix/dist/types';
 import type { EnvelopContext, IDEOptions } from './common/types';
 import type { RenderOptions } from 'altair-static';
 import type { IncomingMessage, ServerResponse } from 'http';
+import type { Envelop } from '@envelop/types';
 
 export interface BuildContextArgs {
   request: IncomingMessage;
@@ -50,8 +51,13 @@ export interface BuildAppOptions {
 export type AsyncRequestHandler = (req: IncomingMessage, res: ServerResponse) => Promise<void>;
 export type RequestHandler = (req: IncomingMessage, res: ServerResponse) => void;
 
+export interface EnvelopApp {
+  requestHandler: AsyncRequestHandler;
+  envelop: Promise<Envelop<unknown>>;
+}
+
 export interface EnvelopAppBuilder extends BaseEnvelopBuilder {
-  buildApp(options?: BuildAppOptions): AsyncRequestHandler;
+  buildApp(options?: BuildAppOptions): EnvelopApp;
 }
 
 export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
@@ -59,7 +65,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
     moduleName: 'http',
   });
 
-  function buildApp({ prepare }: BuildAppOptions): AsyncRequestHandler {
+  function buildApp({ prepare }: BuildAppOptions): EnvelopApp {
     let app: AsyncRequestHandler | undefined;
     const {
       buildContext,
@@ -145,23 +151,26 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
     });
 
     appPromise.then(handler => {
-      app = handler;
+      app = handler.app;
     });
 
-    return async function (req, res) {
-      try {
-        await (app || (await appPromise))(req, res);
-      } catch (err) {
-        res
-          .writeHead(500, {
-            'content-type': 'application/json',
-          })
-          .end(
-            JSON.stringify({
-              message: err.message,
+    return {
+      async requestHandler(req, res) {
+        try {
+          await (app || (await appPromise).app)(req, res);
+        } catch (err) {
+          res
+            .writeHead(500, {
+              'content-type': 'application/json',
             })
-          );
-      }
+            .end(
+              JSON.stringify({
+                message: err.message,
+              })
+            );
+        }
+      },
+      envelop: appPromise.then(v => v.envelop),
     };
   }
 
@@ -206,4 +215,3 @@ export function AltairHandler(options: AltairHandlerOptions = {}): AsyncRequestH
 export { gql, getPathname };
 
 export * from './common/base.js';
-export * from './common/utils/lazyPromise.js';

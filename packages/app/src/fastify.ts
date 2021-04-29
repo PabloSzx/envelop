@@ -49,8 +49,13 @@ export interface BuildAppOptions {
   prepare?: (appBuilder: BaseEnvelopBuilder) => void | Promise<void>;
 }
 
+export interface EnvelopApp {
+  plugin: EnvelopAppPlugin;
+  envelop: Promise<Envelop<unknown>>;
+}
+
 export interface EnvelopAppBuilder extends BaseEnvelopBuilder {
-  buildApp(options?: BuildAppOptions): EnvelopAppPlugin;
+  buildApp(options?: BuildAppOptions): EnvelopApp;
 }
 
 export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
@@ -97,9 +102,9 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
     };
   }
 
-  function buildApp({ prepare }: BuildAppOptions = {}): EnvelopAppPlugin {
+  function buildApp({ prepare }: BuildAppOptions = {}): EnvelopApp {
     const { buildContext, path = '/graphql', ide, routeOptions = {}, customHandleRequest } = config;
-    const app = appBuilder({
+    const appPromise = appBuilder({
       prepare,
       adapterFactory(getEnveloped) {
         return async function FastifyPlugin(instance: FastifyInstance) {
@@ -169,8 +174,11 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
       },
     });
 
-    return async function EnvelopPlugin(instance) {
-      await (await app)(instance);
+    return {
+      async plugin(instance) {
+        await (await appPromise).app(instance);
+      },
+      envelop: appPromise.then(v => v.envelop),
     };
   }
 
@@ -183,4 +191,3 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
 export { gql };
 
 export * from './common/base.js';
-export * from './common/utils/lazyPromise.js';
