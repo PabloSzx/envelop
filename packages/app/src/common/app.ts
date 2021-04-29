@@ -1,4 +1,4 @@
-import { isSchema } from 'graphql';
+import { extendSchema, isSchema } from 'graphql';
 import { Application, ApplicationConfig, createApplication, createModule, gql, Module, TypeDefs } from 'graphql-modules';
 
 import { Envelop, envelop, Plugin, useSchema } from '@envelop/core';
@@ -7,9 +7,9 @@ import { mergeSchemasAsync, MergeSchemasConfig } from '@graphql-tools/merge';
 import { IExecutableSchemaDefinition, makeExecutableSchema } from '@graphql-tools/schema';
 
 import { RegisterDataLoader, RegisterDataLoaderFactory } from './dataloader.js';
+import { createScalarsModule, ScalarsConfig, ScalarsModule } from './scalars.js';
 import { cleanObject } from './utils/object.js';
 
-import type { ScalarsConfig } from './scalars';
 import type { GraphQLSchema } from 'graphql';
 import type { EnvelopContext, EnvelopModuleConfig, EnvelopResolvers } from './types';
 import type { CodegenConfig } from './codegen/typescript';
@@ -28,6 +28,12 @@ export interface BaseEnvelopBuilder {
   gql: typeof gql;
   modules: Module[];
   plugins: Plugin[];
+  /**
+   * Created scalars module, you might only use this for GraphQL Modules testing purposes
+   *
+   * Further information {@link https://www.graphql-modules.com/docs/essentials/testing/}
+   */
+  scalarsModule: ScalarsModule | null;
 }
 
 export interface InternalAppBuildOptions<T> {
@@ -120,6 +126,8 @@ export function createEnvelopAppFactory<TContext>(
   }
   const registerDataLoader = RegisterDataLoaderFactory(factoryPlugins);
 
+  const scalarsModule = createScalarsModule(config.scalars);
+
   async function appBuilder<T>({
     adapterFactory,
     prepare,
@@ -149,7 +157,6 @@ export function createEnvelopAppFactory<TContext>(
         middlewares,
         providers,
         schemaBuilder,
-        scalars,
         codegen: {
           // eslint-disable-next-line no-console
           onError: onCodegenError = console.error,
@@ -158,13 +165,7 @@ export function createEnvelopAppFactory<TContext>(
         jit = false,
       } = config;
 
-      if (scalars) {
-        await import('./scalars.js').then(({ createScalarsModule }) => {
-          const scalarsModule = createScalarsModule(scalars);
-
-          if (scalarsModule) modules.push(scalarsModule);
-        });
-      }
+      if (scalarsModule?.module) modules.push(scalarsModule.module);
 
       const modulesApplication = createApplication({
         modules,
@@ -184,7 +185,18 @@ export function createEnvelopAppFactory<TContext>(
       const schemaPromise = manualSchema
         ? (async () => {
             const schemas = (Array.isArray(manualSchema) ? manualSchema : [manualSchema]).map(schemaValue =>
-              isSchema(schemaValue) ? schemaValue : makeExecutableSchema(schemaValue as IExecutableSchemaDefinition)
+              isSchema(schemaValue)
+                ? scalarsModule?.typeDefs
+                  ? extendSchema(schemaValue, scalarsModule.typeDefs)
+                  : schemaValue
+                : makeExecutableSchema({
+                    ...schemaValue,
+                    typeDefs: scalarsModule?.typeDefs
+                      ? Array.isArray(schemaValue.typeDefs)
+                        ? [...schemaValue.typeDefs, scalarsModule.typeDefs]
+                        : [schemaValue.typeDefs, scalarsModule.typeDefs]
+                      : schemaValue.typeDefs,
+                  })
             );
 
             if (schemas.length > 1) {
@@ -235,6 +247,7 @@ export function createEnvelopAppFactory<TContext>(
     gql,
     modules: factoryModules,
     plugins: factoryPlugins,
+    scalarsModule,
   };
 
   return { ...baseAppBuilder, appBuilder };
