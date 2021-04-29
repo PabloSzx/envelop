@@ -28,7 +28,7 @@ export function createScalarsModule(scalars?: ScalarsConfig): Module | void {
 
     return createModule({
       id: 'scalars',
-      typeDefs: gql(scalarNames),
+      typeDefs: gql(scalarNames.join('')),
       resolvers: Object.keys(scalars).reduce((acum, scalarName) => {
         const resolver = (scalarResolvers as Record<string, GraphQLScalarType>)[scalarName];
 
@@ -47,7 +47,7 @@ export function createScalarsModule(scalars?: ScalarsConfig): Module | void {
 
   return createModule({
     id: 'scalars',
-    typeDefs: gql(scalarNames),
+    typeDefs: gql(scalarNames.join('')),
     resolvers: Object.keys(scalars).reduce((acum, scalarName) => {
       const resolver = (scalarResolvers as Record<string, GraphQLScalarType>)[scalarName];
 
