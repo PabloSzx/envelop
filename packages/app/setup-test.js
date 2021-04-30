@@ -8,6 +8,9 @@ module.exports = async () => {
     silent: true,
   });
 
+  /**
+   * @type {import("./src/extend")}
+   */
   const { EnvelopCodegen, gql } = require('./dist/cjs/extend');
 
   await EnvelopCodegen(

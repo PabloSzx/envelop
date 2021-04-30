@@ -119,7 +119,7 @@
     "next": "^10.2.0",
     "tmp-promise": "^3.0.2",
     "ts-jest": "^26.5.5",
-    "tsc-node-build": "^3.1.1",
+    "tsc-node-build": "^3.1.2",
     "typescript": "^4.2.4",
     "undici": "^3.3.6"
   },
