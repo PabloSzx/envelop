@@ -239,7 +239,7 @@ importers:
       subscriptions-transport-ws: ^0.9.18
       tmp-promise: ^3.0.2
       ts-jest: ^26.5.5
-      tsc-node-build: ^3.1.1
+      tsc-node-build: ^3.1.2
       typescript: ^4.2.4
       undici: ^3.3.6
       ws: ^7.4.5
@@ -303,7 +303,7 @@ importers:
       next: 10.2.0_typescript@4.2.4
       tmp-promise: 3.0.2
       ts-jest: 26.5.5_jest@26.6.3+typescript@4.2.4
-      tsc-node-build: 3.1.1_typescript@4.2.4
+      tsc-node-build: 3.1.2_typescript@4.2.4
       typescript: 4.2.4
       undici: 3.3.6
 
@@ -8065,11 +8065,6 @@ packages:
       mixme: 0.5.1
     dev: false
 
-  /string-argv/0.1.2:
-    resolution: {integrity: sha512-mBqPGEOMNJKXRo7z0keX0wlAhbBAjilUdPW13nN0PecVryZxdHIeM7TqbsSUA7VYuS00HGC6mojP7DlQzfa9ZA==}
-    engines: {node: '>=0.6.19'}
-    dev: true
-
   /string-argv/0.3.1:
     resolution: {integrity: sha512-a1uQGz7IyVy9YwhqjZIZu1c8JO8dNIe20xBmSS6qu9kv++k3JGzCVmprbNN5Kn+BgzD5E7YYwg1CcjuJMRNsvg==}
     engines: {node: '>=0.6.19'}
@@ -8492,8 +8487,8 @@ packages:
     dependencies:
       typescript: 4.2.4
 
-  /tsc-node-build/3.1.1_typescript@4.2.4:
-    resolution: {integrity: sha512-1Y/PCY4vNftihhryoPv7A/BGs3r90ibGKg93HWSzpU0Dpj7/SWpqT6y5FCLRWFutLrHhl1OpQCb+UYXpZjk/PA==}
+  /tsc-node-build/3.1.2_typescript@4.2.4:
+    resolution: {integrity: sha512-q7B94Sa2HmS/HL3N9/TPwBQdHS2a5EN2aqMNJNUd9m8Q+VJBh1uXG29KQglIcgBhh/ZeXGHG89cAo1t1tdagBA==}
     hasBin: true
     peerDependencies:
       typescript: ^4.2.4
@@ -8513,22 +8508,6 @@ packages:
       string-argv: 0.3.1
       strip-ansi: 6.0.0
       tree-kill: 1.2.2
-      tsc-watch: 4.2.9_typescript@4.2.4
-      typescript: 4.2.4
-    dev: true
-
-  /tsc-watch/4.2.9_typescript@4.2.4:
-    resolution: {integrity: sha512-DlTaoDs74+KUpyWr7dCGhuscAUKCz6CiFduBN7R9RbLJSSN1moWdwoCLASE7+zLgGvV5AwXfYDiEMAsPGaO+Vw==}
-    engines: {node: '>=8.17.0'}
-    hasBin: true
-    peerDependencies:
-      typescript: '*'
-    dependencies:
-      cross-spawn: 7.0.3
-      node-cleanup: 2.1.2
-      ps-tree: 1.2.0
-      string-argv: 0.1.2
-      strip-ansi: 6.0.0
       typescript: 4.2.4
     dev: true
 
