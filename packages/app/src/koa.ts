@@ -50,7 +50,7 @@ export interface BuildAppOptions {
 }
 
 export interface EnvelopApp {
-  envelop: Envelop<unknown>;
+  getEnveloped: Envelop<unknown>;
 }
 
 export interface EnvelopAppBuilder extends BaseEnvelopBuilder {
@@ -65,7 +65,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
   async function buildApp({ router, prepare }: BuildAppOptions): Promise<EnvelopApp> {
     const { path = '/graphql', buildContext, ide, bodyParserOptions = {}, customHandleRequest } = config;
 
-    const { envelop } = await appBuilder({
+    const { getEnveloped } = await appBuilder({
       prepare,
       async adapterFactory(getEnveloped) {
         if (bodyParserOptions) router.use(bodyParser(bodyParserOptions));
@@ -160,7 +160,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
     });
 
     return {
-      envelop,
+      getEnveloped,
     };
   }
 

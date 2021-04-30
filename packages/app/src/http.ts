@@ -53,7 +53,7 @@ export type RequestHandler = (req: IncomingMessage, res: ServerResponse) => void
 
 export interface EnvelopApp {
   requestHandler: AsyncRequestHandler;
-  envelop: Promise<Envelop<unknown>>;
+  getEnveloped: Promise<Envelop<unknown>>;
 }
 
 export interface EnvelopAppBuilder extends BaseEnvelopBuilder {
@@ -170,7 +170,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
             );
         }
       },
-      envelop: appPromise.then(v => v.envelop),
+      getEnveloped: appPromise.then(v => v.getEnveloped),
     };
   }
 

@@ -51,7 +51,7 @@ export interface BuildAppOptions {
 
 export interface EnvelopApp {
   plugin: EnvelopAppPlugin;
-  envelop: Promise<Envelop<unknown>>;
+  getEnveloped: Promise<Envelop<unknown>>;
 }
 
 export interface EnvelopAppBuilder extends BaseEnvelopBuilder {
@@ -178,7 +178,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
       async plugin(instance) {
         await (await appPromise).app(instance);
       },
-      envelop: appPromise.then(v => v.envelop),
+      getEnveloped: appPromise.then(v => v.getEnveloped),
     };
   }
 

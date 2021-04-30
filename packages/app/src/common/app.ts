@@ -1,21 +1,21 @@
-import { extendSchema, isSchema } from 'graphql';
 import { Application, ApplicationConfig, createApplication, gql, Module } from 'graphql-modules';
 
-import { Envelop, envelop, Plugin, useSchema } from '@envelop/core';
+import { Envelop, envelop, Plugin } from '@envelop/core';
 import { useGraphQLModules } from '@envelop/graphql-modules';
-import { mergeSchemasAsync, MergeSchemasConfig } from '@graphql-tools/merge';
-import { IExecutableSchemaDefinition, makeExecutableSchema } from '@graphql-tools/schema';
 
 import { RegisterDataLoader, RegisterDataLoaderFactory } from './dataloader.js';
 import { RegisterModule, RegisterModuleFactory } from './modules.js';
 import { createScalarsModule, ScalarsConfig, ScalarsModule } from './scalars.js';
-import { cleanObject, uniqueArray, toPlural } from './utils/object.js';
+import { SchemaBuilderFactory } from './schema.js';
+import { uniqueArray } from './utils/object.js';
 
 import type { GraphQLSchema } from 'graphql';
 import type { EnvelopContext, EnvelopResolvers } from './types';
 import type { CodegenConfig } from './codegen/typescript';
 import type { useGraphQlJit } from '@envelop/graphql-jit';
 import type { handleRequest } from './request';
+import type { IExecutableSchemaDefinition } from '@graphql-tools/schema';
+import type { MergeSchemasConfig } from '@graphql-tools/merge';
 
 export type AdapterFactory<T> = (envelop: Envelop<unknown>, modulesApplication: Application) => T;
 
@@ -24,10 +24,25 @@ export interface InternalEnvelopConfig {
 }
 
 export interface BaseEnvelopBuilder {
+  /**
+   * Create and/or Register a GraphQL Module
+   */
   registerModule: RegisterModule;
+  /**
+   * Create and Register a DataLoader
+   */
   registerDataLoader: RegisterDataLoader;
+  /**
+   * GraphQL Tag Parser
+   */
   gql: typeof gql;
+  /**
+   * List of custom GraphQL Modules
+   */
   modules: Module[];
+  /**
+   * List of custom Envelop Plugins
+   */
   plugins: Plugin[];
   /**
    * Created scalars module, you might only use this for GraphQL Modules testing purposes
@@ -42,19 +57,21 @@ export interface InternalAppBuildOptions<T> {
   adapterFactory: AdapterFactory<T>;
 }
 
+export interface BuiltApp<T> {
+  app: T;
+  getEnveloped: Envelop<unknown>;
+}
+
 export interface EnvelopAppFactoryType extends BaseEnvelopBuilder {
-  appBuilder<T>(
-    opts: InternalAppBuildOptions<T>
-  ): Promise<{
-    app: T;
-    envelop: Envelop<unknown>;
-  }>;
+  appBuilder<T>(opts: InternalAppBuildOptions<T>): Promise<BuiltApp<T>>;
 }
 
 export interface ExecutableSchemaDefinition<TContext = EnvelopContext>
   extends Omit<IExecutableSchemaDefinition<TContext>, 'resolvers'> {
   resolvers?: EnvelopResolvers<TContext> | EnvelopResolvers<TContext>[];
 }
+
+export type FilteredMergeSchemasConfig = Omit<MergeSchemasConfig, 'schemas'>;
 
 export interface BaseEnvelopAppOptions<TContext> extends Partial<ApplicationConfig> {
   plugins?: Plugin[];
@@ -66,7 +83,7 @@ export interface BaseEnvelopAppOptions<TContext> extends Partial<ApplicationConf
   /**
    * Customize configuration of schema merging
    */
-  mergeSchemasConfig?: Omit<MergeSchemasConfig, 'schemas'>;
+  mergeSchemasConfig?: FilteredMergeSchemasConfig;
 
   /**
    * Enable code generation, by default it's enabled if `NODE_ENV` is not `production` nor `test`
@@ -114,6 +131,7 @@ export function createEnvelopAppFactory<TContext>(
   config: BaseEnvelopAppOptions<TContext>,
   internalConfig: InternalEnvelopConfig
 ): EnvelopAppFactoryType {
+  const { mergeSchemasConfig } = config;
   const factoryModules = uniqueArray(config.modules);
   const factoryPlugins = uniqueArray(config.plugins);
 
@@ -123,16 +141,18 @@ export function createEnvelopAppFactory<TContext>(
 
   const scalarsModule = createScalarsModule(config.scalars);
 
+  const prepareSchema = SchemaBuilderFactory({
+    scalarsModule,
+    mergeSchemasConfig,
+  });
+
   async function appBuilder<T>({
     adapterFactory,
     prepare,
   }: {
     prepare?: (appBuilder: BaseEnvelopBuilder) => Promise<void> | void;
     adapterFactory: AdapterFactory<T>;
-  }): Promise<{
-    app: T;
-    envelop: Envelop<unknown>;
-  }> {
+  }): Promise<BuiltApp<T>> {
     try {
       if (prepare) await prepare(baseAppBuilder);
 
@@ -151,7 +171,7 @@ export function createEnvelopAppFactory<TContext>(
 
       const {
         enableCodegen = process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test',
-        schema: manualSchema,
+        schema,
         middlewares,
         providers,
         schemaBuilder,
@@ -160,7 +180,6 @@ export function createEnvelopAppFactory<TContext>(
           onError: onCodegenError = console.error,
           onFinish,
         } = {},
-        mergeSchemasConfig,
         jit = false,
       } = config;
 
@@ -181,44 +200,13 @@ export function createEnvelopAppFactory<TContext>(
           })
         : null;
 
-      const schemaPromise = manualSchema
-        ? (async () => {
-            const schemas = (Array.isArray(manualSchema) ? manualSchema : [manualSchema]).map(schemaValue =>
-              isSchema(schemaValue)
-                ? scalarsModule?.typeDefs
-                  ? extendSchema(schemaValue, scalarsModule.typeDefs)
-                  : schemaValue
-                : makeExecutableSchema({
-                    ...schemaValue,
-                    typeDefs: scalarsModule ? [...toPlural(schemaValue.typeDefs), scalarsModule.typeDefs] : schemaValue.typeDefs,
-                    resolvers: scalarsModule
-                      ? [...toPlural(schemaValue.resolvers || []), scalarsModule.resolvers]
-                      : schemaValue.resolvers,
-                  })
-            );
-
-            if (schemas.length > 1) {
-              appPlugins.push(
-                useSchema(
-                  await mergeSchemasAsync({
-                    ...cleanObject(mergeSchemasConfig),
-                    schemas: [...(appModules.length ? [modulesApplication.schema] : []), ...schemas],
-                  })
-                )
-              );
-            } else if (schemas[0]) {
-              appPlugins.push(
-                useSchema(
-                  appModules.length
-                    ? await mergeSchemasAsync({
-                        ...cleanObject(mergeSchemasConfig),
-                        schemas: [modulesApplication.schema, schemas[0]],
-                      })
-                    : schemas[0]
-                )
-              );
-            }
-          })()
+      const schemaPromise = schema
+        ? prepareSchema({
+            appModules,
+            appPlugins,
+            schema,
+            modulesApplication,
+          })
         : null;
 
       await Promise.all([jitPromise, schemaPromise]);
@@ -239,7 +227,7 @@ export function createEnvelopAppFactory<TContext>(
 
       return {
         app: adapterFactory(getEnveloped, modulesApplication),
-        envelop: getEnveloped,
+        getEnveloped,
       };
     }
   }

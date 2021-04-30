@@ -11,6 +11,7 @@ export * from './common/dataloader.js';
 export * from './common/scalars.js';
 export * from './common/types.js';
 export * from './common/modules.js';
+export * from './common/schema.js';
 export * from './common/utils/object.js';
 export * from './common/utils/url.js';
 export * from './common/subscriptions/websocket.js';

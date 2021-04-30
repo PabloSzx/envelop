@@ -28,7 +28,7 @@ export interface BuildAppOptions {
 
 export interface EnvelopApp {
   handler: NextApiHandler<unknown>;
-  envelop: Promise<Envelop<unknown>>;
+  getEnveloped: Promise<Envelop<unknown>>;
 }
 
 export interface EnvelopAppBuilder extends BaseEnvelopBuilder {
@@ -89,7 +89,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
       async handler(req, res) {
         await (app || (await appPromise).app)(req, res);
       },
-      envelop: appPromise.then(v => v.envelop),
+      getEnveloped: appPromise.then(v => v.getEnveloped),
     };
   }
 
