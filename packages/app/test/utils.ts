@@ -1,10 +1,16 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 
+import tmp from 'tmp-promise';
+import DataLoader from 'dataloader';
 import getPort from 'get-port';
-import { Pool } from 'undici';
 import { ExecutionResult, print } from 'graphql';
 import { Readable } from 'stream';
-import { LazyPromise, PLazy } from '@envelop/app/extend';
+import { Pool } from 'undici';
+import { RequestOptions } from 'undici/types/client';
+import merge from 'lodash/merge';
+
+import { BaseEnvelopBuilder, CodegenConfig, createDeferredPromise, gql, LazyPromise, PLazy } from '@envelop/app/extend';
+
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
 const TearDownPromises: Promise<unknown>[] = [];
@@ -13,8 +19,51 @@ afterAll(async () => {
   await Promise.all(TearDownPromises);
 });
 
+declare module '../src/extend' {
+  interface EnvelopContext extends Record<'usersDataLoader', DataLoader<number, number>> {}
+}
+
+export function commonImplementation({ registerDataLoader, registerModule }: BaseEnvelopBuilder) {
+  registerDataLoader('usersDataLoader', DataLoader => {
+    return new DataLoader(async (keys: readonly number[]) => {
+      return keys.map(k => k * 100);
+    });
+  });
+
+  registerModule(
+    gql`
+      type Query {
+        hello: String!
+        users: [User!]!
+      }
+      type User {
+        id: Int!
+      }
+    `,
+    {
+      resolvers: {
+        Query: {
+          hello(_root, _args, _ctx) {
+            return 'Hello World!';
+          },
+          async users(_root, _args, _ctx) {
+            return [...Array(10).keys()].map(id => ({
+              id,
+            }));
+          },
+        },
+        User: {
+          async id(root, _args, ctx) {
+            return ctx.usersDataLoader.load(root.id);
+          },
+        },
+      },
+    }
+  );
+}
+
 export async function startExpressServer({
-  options,
+  options = {},
   buildOptions = {},
 }: {
   options?: import('../src/express').EnvelopAppOptions;
@@ -23,6 +72,35 @@ export async function startExpressServer({
   const app = (await import('express')).default();
 
   const { CreateApp } = await import('../src/express');
+
+  const tmpSchema = await tmp.file({
+    postfix: '.gql',
+  });
+
+  TearDownPromises.push(LazyPromise(() => tmpSchema.cleanup()));
+
+  const codegenPromise = createDeferredPromise();
+
+  merge(options, {
+    outputSchema: tmpSchema.path,
+    codegen: {
+      onFinish: codegenPromise.resolve,
+      onError: codegenPromise.reject,
+    },
+  } as typeof options);
+
+  let tmpPath: string | undefined;
+  if (options.enableCodegen) {
+    const tmpFile = await tmp.file({
+      postfix: '.ts',
+    });
+    TearDownPromises.push(LazyPromise(() => tmpFile.cleanup()));
+    tmpPath = tmpFile.path;
+
+    merge((options.codegen ||= {}), {
+      targetPath: tmpFile.path,
+    } as CodegenConfig);
+  }
 
   app.use((await CreateApp(options).buildApp({ app, ...buildOptions })).router);
 
@@ -34,11 +112,11 @@ export async function startExpressServer({
     TearDownPromises.push(new PLazy(resolve => server.close(resolve)));
   });
 
-  return getRequestPool(port);
+  return { ...getRequestPool(port), tmpPath, tmpSchemaPath: tmpSchema.path, codegenPromise: codegenPromise.promise };
 }
 
 export async function startFastifyServer({
-  options,
+  options = {},
   buildOptions,
 }: {
   options?: import('../src/fastify').EnvelopAppOptions;
@@ -47,6 +125,34 @@ export async function startFastifyServer({
   const app = (await import('fastify')).default();
 
   const { CreateApp } = await import('../src/fastify');
+
+  const tmpSchema = await tmp.file({
+    postfix: '.json',
+  });
+
+  TearDownPromises.push(LazyPromise(() => tmpSchema.cleanup()));
+
+  const codegenPromise = createDeferredPromise();
+
+  merge(options, {
+    outputSchema: tmpSchema.path,
+    codegen: {
+      onFinish: codegenPromise.resolve,
+      onError: codegenPromise.reject,
+    },
+  } as typeof options);
+
+  let tmpPath: string | undefined;
+  if (options.enableCodegen) {
+    const tmpFile = await tmp.file({
+      postfix: '.ts',
+    });
+    TearDownPromises.push(LazyPromise(() => tmpFile.cleanup()));
+    tmpPath = tmpFile.path;
+    merge((options.codegen ||= {}), {
+      targetPath: tmpFile.path,
+    } as CodegenConfig);
+  }
 
   app.register(CreateApp(options).buildApp(buildOptions).plugin);
 
@@ -60,17 +166,45 @@ export async function startFastifyServer({
     );
   });
 
-  return getRequestPool(port);
+  return { ...getRequestPool(port), tmpPath, tmpSchemaPath: tmpSchema.path, codegenPromise: codegenPromise.promise };
 }
 
 export async function startHTTPServer({
-  options,
+  options = {},
   buildOptions,
 }: {
   options?: import('../src/http').EnvelopAppOptions;
   buildOptions?: Partial<import('../src/http').BuildAppOptions>;
 }) {
   const { CreateApp } = await import('../src/http');
+
+  const tmpSchema = await tmp.file({
+    postfix: '.json',
+  });
+
+  TearDownPromises.push(LazyPromise(() => tmpSchema.cleanup()));
+
+  const codegenPromise = createDeferredPromise();
+
+  merge(options, {
+    outputSchema: tmpSchema.path,
+    codegen: {
+      onFinish: codegenPromise.resolve,
+      onError: codegenPromise.reject,
+    },
+  } as typeof options);
+
+  let tmpPath: string | undefined;
+  if (options.enableCodegen) {
+    const tmpFile = await tmp.file({
+      postfix: '.ts',
+    });
+    TearDownPromises.push(LazyPromise(() => tmpFile.cleanup()));
+    tmpPath = tmpFile.path;
+    merge((options.codegen ||= {}), {
+      targetPath: tmpFile.path,
+    } as CodegenConfig);
+  }
 
   const app = CreateApp(options).buildApp(buildOptions);
 
@@ -95,11 +229,11 @@ export async function startHTTPServer({
     );
   });
 
-  return getRequestPool(port);
+  return { ...getRequestPool(port), tmpPath, tmpSchemaPath: tmpSchema.path, codegenPromise: codegenPromise.promise };
 }
 
 export async function startHapiServer({
-  options,
+  options = {},
   buildOptions,
 }: {
   options?: import('../src/hapi').EnvelopAppOptions;
@@ -114,6 +248,34 @@ export async function startHapiServer({
     host: 'localhost',
   });
 
+  const tmpSchema = await tmp.file({
+    postfix: '.gql',
+  });
+
+  TearDownPromises.push(LazyPromise(() => tmpSchema.cleanup()));
+
+  const codegenPromise = createDeferredPromise();
+
+  merge(options, {
+    outputSchema: tmpSchema.path,
+    codegen: {
+      onFinish: codegenPromise.resolve,
+      onError: codegenPromise.reject,
+    },
+  } as typeof options);
+
+  let tmpPath: string | undefined;
+  if (options.enableCodegen) {
+    const tmpFile = await tmp.file({
+      postfix: '.ts',
+    });
+    TearDownPromises.push(LazyPromise(() => tmpFile.cleanup()));
+    tmpPath = tmpFile.path;
+    merge((options.codegen ||= {}), {
+      targetPath: tmpFile.path,
+    } as CodegenConfig);
+  }
+
   const app = CreateApp(options).buildApp(buildOptions);
 
   await server.register(app.plugin);
@@ -126,7 +288,7 @@ export async function startHapiServer({
     })
   );
 
-  return getRequestPool(port);
+  return { ...getRequestPool(port), tmpPath, tmpSchemaPath: tmpSchema.path, codegenPromise: codegenPromise.promise };
 }
 
 function getRequestPool(port: number) {
@@ -136,23 +298,48 @@ function getRequestPool(port: number) {
 
   TearDownPromises.push(LazyPromise(async () => requestPool.close()));
 
-  return async function <TData, TVariables>(
-    document: TypedDocumentNode<TData, TVariables>,
-    variables?: TVariables
-  ): Promise<ExecutionResult<TData>> {
-    const { body } = await requestPool.request({
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-      },
-      body: Readable.from(JSON.stringify({ query: print(document), variables }), {
-        objectMode: false,
-      }),
-      path: '/graphql',
+  return {
+    async request(options: RequestOptions) {
+      const { body } = await requestPool.request(options);
+
+      return getStringFromStream(body);
+    },
+    async query<TData, TVariables>(
+      document: TypedDocumentNode<TData, TVariables>,
+      variables?: TVariables
+    ): Promise<ExecutionResult<TData>> {
+      const { body } = await requestPool.request({
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: Readable.from(JSON.stringify({ query: print(document), variables }), {
+          objectMode: false,
+        }),
+        path: '/graphql',
+      });
+
+      return getJSONFromStream(body);
+    },
+  };
+}
+
+function getStringFromStream(stream: import('stream').Readable): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const chunks: Uint8Array[] = [];
+
+    stream.on('data', chunk => {
+      chunks.push(chunk);
     });
 
-    return getJSONFromStream(body);
-  };
+    stream.on('end', () => {
+      try {
+        resolve(Buffer.concat(chunks).toString('utf-8'));
+      } catch (err) {
+        reject(err);
+      }
+    });
+  });
 }
 
 function getJSONFromStream<T>(stream: import('stream').Readable): Promise<T> {

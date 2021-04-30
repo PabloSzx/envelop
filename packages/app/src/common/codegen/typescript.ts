@@ -67,6 +67,11 @@ export interface CodegenConfig extends TypeScriptPluginConfig, TypeScriptResolve
   onError?: (err: unknown) => void;
 
   /**
+   * Custom Code Generation finish callback
+   */
+  onFinish?: () => void;
+
+  /**
    * GraphQL Codegen plugin context
    */
   pluginContext?: Record<string, any>;

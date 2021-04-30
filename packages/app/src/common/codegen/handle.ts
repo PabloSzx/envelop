@@ -11,6 +11,7 @@ export function handleCodegen(
     codegen: {
       // eslint-disable-next-line no-console
       onError: onCodegenError = console.error,
+      onFinish,
     } = {},
     outputSchema,
   } = config;
@@ -18,12 +19,12 @@ export function handleCodegen(
   Promise.all([
     outputSchema
       ? import('./outputSchema.js').then(({ writeOutputSchema }) => {
-          writeOutputSchema(schema, outputSchema).catch(onCodegenError);
+          return writeOutputSchema(schema, outputSchema).catch(onCodegenError);
         })
       : null,
 
     import('./typescript.js').then(({ EnvelopCodegen }) => {
-      EnvelopCodegen(schema, config, internalConfig).catch(onCodegenError);
+      return EnvelopCodegen(schema, config, internalConfig).catch(onCodegenError);
     }),
-  ]).catch(onCodegenError);
+  ]).then(onFinish, onCodegenError);
 }
