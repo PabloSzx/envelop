@@ -26,6 +26,12 @@ export interface EnvelopResolvers<TContext = EnvelopContext> extends IResolvers<
 export type EnvelopModuleConfig<TContext = EnvelopContext> = Omit<ModuleConfig, 'typeDefs' | 'id' | 'resolvers'> & {
   id?: string;
   resolvers?: EnvelopResolvers<TContext>;
+  /**
+   * Automatically add the create module in the built envelop app
+   *
+   * @default true
+   */
+  autoAdd?: boolean;
 };
 
 type PromiseType<T> = T extends PromiseLike<infer U> ? U : T;
