@@ -51,6 +51,8 @@ export interface DeferredPromise<T> {
 export function createDeferredPromise<T = void>(): DeferredPromise<T> {
   let resolve!: (value: T) => void;
   let reject!: (reason: unknown) => void;
+
+  // eslint-disable-next-line promise/param-names
   const promise = new Promise<T>((resolveFn, rejectFn) => {
     resolve = resolveFn;
     reject = rejectFn;
