@@ -168,6 +168,7 @@ export function createEnvelopAppFactory<TContext>(
         codegen: {
           // eslint-disable-next-line no-console
           onError: onCodegenError = console.error,
+          onFinish,
         } = {},
         mergeSchemasConfig,
         jit = false,
@@ -243,6 +244,8 @@ export function createEnvelopAppFactory<TContext>(
             handleCodegen(getEnveloped, config, internalConfig);
           })
           .catch(onCodegenError);
+      } else if (onFinish) {
+        onFinish();
       }
 
       return {

@@ -150,7 +150,9 @@ test('resulting schema', async () => {
 });
 
 test('codegen result', async () => {
-  const { tmpPath } = await serverReady;
+  const { tmpPath, codegenPromise } = await serverReady;
+
+  await codegenPromise;
 
   expect(tmpPath).toBeTruthy();
 
@@ -322,7 +324,9 @@ test('codegen result', async () => {
 });
 
 test('outputSchema result', async () => {
-  const { tmpSchemaPath } = await serverReady;
+  const { tmpSchemaPath, codegenPromise } = await serverReady;
+
+  await codegenPromise;
 
   expect(
     await promises.readFile(tmpSchemaPath, {

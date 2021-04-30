@@ -7,10 +7,12 @@ import { ExecutionResult, print } from 'graphql';
 import { Readable } from 'stream';
 import { Pool } from 'undici';
 import { RequestOptions } from 'undici/types/client';
+import merge from 'lodash/merge';
 
-import { BaseEnvelopBuilder, CodegenConfig, gql, LazyPromise, PLazy } from '@envelop/app/extend';
+import { BaseEnvelopBuilder, CodegenConfig, createDeferredPromise, gql, LazyPromise, PLazy } from '@envelop/app/extend';
 
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
+
 const TearDownPromises: Promise<unknown>[] = [];
 
 afterAll(async () => {
@@ -61,7 +63,7 @@ export function commonImplementation({ registerDataLoader, registerModule }: Bas
 }
 
 export async function startExpressServer({
-  options,
+  options = {},
   buildOptions = {},
 }: {
   options?: import('../src/express').EnvelopAppOptions;
@@ -77,24 +79,25 @@ export async function startExpressServer({
 
   TearDownPromises.push(LazyPromise(() => tmpSchema.cleanup()));
 
-  if (options == null) {
-    options = {
-      outputSchema: tmpSchema.path,
-    };
-  } else {
-    Object.assign(options, {
-      outputSchema: tmpSchema.path,
-    });
-  }
+  const codegenPromise = createDeferredPromise();
+
+  merge(options, {
+    outputSchema: tmpSchema.path,
+    codegen: {
+      onFinish: codegenPromise.resolve,
+      onError: codegenPromise.reject,
+    },
+  } as typeof options);
 
   let tmpPath: string | undefined;
   if (options.enableCodegen) {
     const tmpFile = await tmp.file({
       postfix: '.ts',
     });
-    tmpPath = tmpFile.path;
     TearDownPromises.push(LazyPromise(() => tmpFile.cleanup()));
-    Object.assign((options.codegen ||= {}), {
+    tmpPath = tmpFile.path;
+
+    merge((options.codegen ||= {}), {
       targetPath: tmpFile.path,
     } as CodegenConfig);
   }
@@ -109,11 +112,11 @@ export async function startExpressServer({
     TearDownPromises.push(new PLazy(resolve => server.close(resolve)));
   });
 
-  return { ...getRequestPool(port), tmpPath, tmpSchemaPath: tmpSchema.path };
+  return { ...getRequestPool(port), tmpPath, tmpSchemaPath: tmpSchema.path, codegenPromise: codegenPromise.promise };
 }
 
 export async function startFastifyServer({
-  options,
+  options = {},
   buildOptions,
 }: {
   options?: import('../src/fastify').EnvelopAppOptions;
@@ -129,24 +132,24 @@ export async function startFastifyServer({
 
   TearDownPromises.push(LazyPromise(() => tmpSchema.cleanup()));
 
-  if (options == null) {
-    options = {
-      outputSchema: tmpSchema.path,
-    };
-  } else {
-    Object.assign(options, {
-      outputSchema: tmpSchema.path,
-    });
-  }
+  const codegenPromise = createDeferredPromise();
+
+  merge(options, {
+    outputSchema: tmpSchema.path,
+    codegen: {
+      onFinish: codegenPromise.resolve,
+      onError: codegenPromise.reject,
+    },
+  } as typeof options);
 
   let tmpPath: string | undefined;
   if (options.enableCodegen) {
     const tmpFile = await tmp.file({
       postfix: '.ts',
     });
-    tmpPath = tmpFile.path;
     TearDownPromises.push(LazyPromise(() => tmpFile.cleanup()));
-    Object.assign((options.codegen ||= {}), {
+    tmpPath = tmpFile.path;
+    merge((options.codegen ||= {}), {
       targetPath: tmpFile.path,
     } as CodegenConfig);
   }
@@ -163,17 +166,45 @@ export async function startFastifyServer({
     );
   });
 
-  return { ...getRequestPool(port), tmpPath, tmpSchemaPath: tmpSchema.path };
+  return { ...getRequestPool(port), tmpPath, tmpSchemaPath: tmpSchema.path, codegenPromise: codegenPromise.promise };
 }
 
 export async function startHTTPServer({
-  options,
+  options = {},
   buildOptions,
 }: {
   options?: import('../src/http').EnvelopAppOptions;
   buildOptions?: Partial<import('../src/http').BuildAppOptions>;
 }) {
   const { CreateApp } = await import('../src/http');
+
+  const tmpSchema = await tmp.file({
+    postfix: '.json',
+  });
+
+  TearDownPromises.push(LazyPromise(() => tmpSchema.cleanup()));
+
+  const codegenPromise = createDeferredPromise();
+
+  merge(options, {
+    outputSchema: tmpSchema.path,
+    codegen: {
+      onFinish: codegenPromise.resolve,
+      onError: codegenPromise.reject,
+    },
+  } as typeof options);
+
+  let tmpPath: string | undefined;
+  if (options.enableCodegen) {
+    const tmpFile = await tmp.file({
+      postfix: '.ts',
+    });
+    TearDownPromises.push(LazyPromise(() => tmpFile.cleanup()));
+    tmpPath = tmpFile.path;
+    merge((options.codegen ||= {}), {
+      targetPath: tmpFile.path,
+    } as CodegenConfig);
+  }
 
   const app = CreateApp(options).buildApp(buildOptions);
 
@@ -198,11 +229,11 @@ export async function startHTTPServer({
     );
   });
 
-  return getRequestPool(port);
+  return { ...getRequestPool(port), tmpPath, tmpSchemaPath: tmpSchema.path, codegenPromise: codegenPromise.promise };
 }
 
 export async function startHapiServer({
-  options,
+  options = {},
   buildOptions,
 }: {
   options?: import('../src/hapi').EnvelopAppOptions;
@@ -223,24 +254,24 @@ export async function startHapiServer({
 
   TearDownPromises.push(LazyPromise(() => tmpSchema.cleanup()));
 
-  if (options == null) {
-    options = {
-      outputSchema: tmpSchema.path,
-    };
-  } else {
-    Object.assign(options, {
-      outputSchema: tmpSchema.path,
-    });
-  }
+  const codegenPromise = createDeferredPromise();
+
+  merge(options, {
+    outputSchema: tmpSchema.path,
+    codegen: {
+      onFinish: codegenPromise.resolve,
+      onError: codegenPromise.reject,
+    },
+  } as typeof options);
 
   let tmpPath: string | undefined;
   if (options.enableCodegen) {
     const tmpFile = await tmp.file({
       postfix: '.ts',
     });
-    tmpPath = tmpFile.path;
     TearDownPromises.push(LazyPromise(() => tmpFile.cleanup()));
-    Object.assign((options.codegen ||= {}), {
+    tmpPath = tmpFile.path;
+    merge((options.codegen ||= {}), {
       targetPath: tmpFile.path,
     } as CodegenConfig);
   }
@@ -257,7 +288,7 @@ export async function startHapiServer({
     })
   );
 
-  return { ...getRequestPool(port), tmpPath, tmpSchemaPath: tmpSchema.path };
+  return { ...getRequestPool(port), tmpPath, tmpSchemaPath: tmpSchema.path, codegenPromise: codegenPromise.promise };
 }
 
 function getRequestPool(port: number) {
