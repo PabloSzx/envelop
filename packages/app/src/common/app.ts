@@ -1,5 +1,5 @@
 import { extendSchema, isSchema } from 'graphql';
-import { Application, ApplicationConfig, createApplication, createModule, gql, Module, TypeDefs } from 'graphql-modules';
+import { Application, ApplicationConfig, createApplication, gql, Module } from 'graphql-modules';
 
 import { Envelop, envelop, Plugin, useSchema } from '@envelop/core';
 import { useGraphQLModules } from '@envelop/graphql-modules';
@@ -7,11 +7,12 @@ import { mergeSchemasAsync, MergeSchemasConfig } from '@graphql-tools/merge';
 import { IExecutableSchemaDefinition, makeExecutableSchema } from '@graphql-tools/schema';
 
 import { RegisterDataLoader, RegisterDataLoaderFactory } from './dataloader.js';
+import { RegisterModule, RegisterModuleFactory } from './modules.js';
 import { createScalarsModule, ScalarsConfig, ScalarsModule } from './scalars.js';
-import { cleanObject } from './utils/object.js';
+import { cleanObject, uniqueArray, toPlural } from './utils/object.js';
 
 import type { GraphQLSchema } from 'graphql';
-import type { EnvelopContext, EnvelopModuleConfig, EnvelopResolvers } from './types';
+import type { EnvelopContext, EnvelopResolvers } from './types';
 import type { CodegenConfig } from './codegen/typescript';
 import type { useGraphQlJit } from '@envelop/graphql-jit';
 import type { handleRequest } from './request';
@@ -23,7 +24,7 @@ export interface InternalEnvelopConfig {
 }
 
 export interface BaseEnvelopBuilder {
-  registerModule: (typeDefs: TypeDefs, options?: EnvelopModuleConfig) => Module;
+  registerModule: RegisterModule;
   registerDataLoader: RegisterDataLoader;
   gql: typeof gql;
   modules: Module[];
@@ -113,22 +114,11 @@ export function createEnvelopAppFactory<TContext>(
   config: BaseEnvelopAppOptions<TContext>,
   internalConfig: InternalEnvelopConfig
 ): EnvelopAppFactoryType {
-  const factoryModules = config.modules ? [...config.modules] : [];
-  const factoryPlugins = config.plugins ? [...config.plugins] : [];
+  const factoryModules = uniqueArray(config.modules);
+  const factoryPlugins = uniqueArray(config.plugins);
 
-  let acumId = 0;
-  function registerModule(typeDefs: TypeDefs, { id, ...options }: EnvelopModuleConfig = {}) {
-    id ||= `module${++acumId}`;
-    const module = createModule({
-      typeDefs,
-      id,
-      ...options,
-    });
+  const { registerModuleState, registerModule } = RegisterModuleFactory(factoryModules);
 
-    factoryModules.push(module);
-
-    return module;
-  }
   const registerDataLoader = RegisterDataLoaderFactory(factoryPlugins);
 
   const scalarsModule = createScalarsModule(config.scalars);
@@ -152,12 +142,12 @@ export function createEnvelopAppFactory<TContext>(
       factoryPlugins.length = 0;
       if (config.modules) factoryModules.push(...config.modules);
       if (config.plugins) factoryPlugins.push(...config.plugins);
-      acumId = 0;
+      registerModuleState.acumId = 0;
     }
 
     async function getApp() {
-      const modules = [...factoryModules];
-      const plugins = [...factoryPlugins];
+      const appModules = uniqueArray(factoryModules);
+      const appPlugins = uniqueArray(factoryPlugins);
 
       const {
         enableCodegen = process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test',
@@ -174,20 +164,20 @@ export function createEnvelopAppFactory<TContext>(
         jit = false,
       } = config;
 
-      if (scalarsModule?.module) modules.push(scalarsModule.module);
+      if (scalarsModule?.module && appModules.length) appModules.push(scalarsModule.module);
 
       const modulesApplication = createApplication({
-        modules,
+        modules: uniqueArray(appModules),
         middlewares,
         providers,
         schemaBuilder,
       });
 
-      if (modules.length) plugins.push(useGraphQLModules(modulesApplication));
+      if (appModules.length) appPlugins.push(useGraphQLModules(modulesApplication));
 
       const jitPromise = jit
         ? import('@envelop/graphql-jit').then(({ useGraphQlJit }) => {
-            plugins.push(typeof jit === 'object' ? useGraphQlJit(...jit) : useGraphQlJit());
+            appPlugins.push(typeof jit === 'object' ? useGraphQlJit(...jit) : useGraphQlJit());
           })
         : null;
 
@@ -200,27 +190,26 @@ export function createEnvelopAppFactory<TContext>(
                   : schemaValue
                 : makeExecutableSchema({
                     ...schemaValue,
-                    typeDefs: scalarsModule?.typeDefs
-                      ? Array.isArray(schemaValue.typeDefs)
-                        ? [...schemaValue.typeDefs, scalarsModule.typeDefs]
-                        : [schemaValue.typeDefs, scalarsModule.typeDefs]
-                      : schemaValue.typeDefs,
+                    typeDefs: scalarsModule ? [...toPlural(schemaValue.typeDefs), scalarsModule.typeDefs] : schemaValue.typeDefs,
+                    resolvers: scalarsModule
+                      ? [...toPlural(schemaValue.resolvers || []), scalarsModule.resolvers]
+                      : schemaValue.resolvers,
                   })
             );
 
             if (schemas.length > 1) {
-              plugins.push(
+              appPlugins.push(
                 useSchema(
                   await mergeSchemasAsync({
                     ...cleanObject(mergeSchemasConfig),
-                    schemas: [...(modules.length ? [modulesApplication.schema] : []), ...schemas],
+                    schemas: [...(appModules.length ? [modulesApplication.schema] : []), ...schemas],
                   })
                 )
               );
             } else if (schemas[0]) {
-              plugins.push(
+              appPlugins.push(
                 useSchema(
-                  modules.length
+                  appModules.length
                     ? await mergeSchemasAsync({
                         ...cleanObject(mergeSchemasConfig),
                         schemas: [modulesApplication.schema, schemas[0]],
@@ -235,7 +224,7 @@ export function createEnvelopAppFactory<TContext>(
       await Promise.all([jitPromise, schemaPromise]);
 
       const getEnveloped = envelop({
-        plugins,
+        plugins: uniqueArray(appPlugins),
       });
 
       if (enableCodegen) {

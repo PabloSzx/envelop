@@ -9,3 +9,11 @@ export function cleanObject<T extends object>(obj: Partial<T> = {}): Partial<T> 
   for (const key in clean) clean[key] === undefined && delete clean[key];
   return clean;
 }
+
+export function uniqueArray<T>(array?: T[]): T[] {
+  return array?.filter((value, index) => array.indexOf(value) === index) || [];
+}
+
+export function toPlural<T>(value: T | T[]): T[] {
+  return Array.isArray(value) ? value : [value];
+}
