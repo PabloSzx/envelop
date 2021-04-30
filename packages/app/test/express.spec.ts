@@ -328,8 +328,10 @@ test('outputSchema result', async () => {
 
   await codegenPromise;
 
+  expect(tmpSchemaPath).toBeTruthy();
+
   expect(
-    await promises.readFile(tmpSchemaPath, {
+    await promises.readFile(tmpSchemaPath!, {
       encoding: 'utf-8',
     })
   ).toMatchInlineSnapshot(`
