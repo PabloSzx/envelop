@@ -15,6 +15,10 @@ module.exports = async () => {
       typeDefs: gql`
         type Query {
           hello: String!
+          users: [User!]!
+        }
+        type User {
+          id: Int!
         }
       `,
     }),

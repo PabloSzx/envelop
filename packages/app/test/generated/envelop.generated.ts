@@ -17,6 +17,12 @@ export type Scalars = {
 export type Query = {
   __typename?: 'Query';
   hello: Scalars['String'];
+  users: Array<User>;
+};
+
+export type User = {
+  __typename?: 'User';
+  id: Scalars['Int'];
 };
 
 export type ResolverTypeWrapper<T> = Promise<T> | T;
@@ -102,6 +108,8 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 export type ResolversTypes = {
   Query: ResolverTypeWrapper<{}>;
   String: ResolverTypeWrapper<Scalars['String']>;
+  User: ResolverTypeWrapper<User>;
+  Int: ResolverTypeWrapper<Scalars['Int']>;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']>;
 };
 
@@ -109,6 +117,8 @@ export type ResolversTypes = {
 export type ResolversParentTypes = {
   Query: {};
   String: Scalars['String'];
+  User: User;
+  Int: Scalars['Int'];
   Boolean: Scalars['Boolean'];
 };
 
@@ -117,10 +127,17 @@ export type QueryResolvers<
   ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']
 > = {
   hello?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  users?: Resolver<Array<ResolversTypes['User']>, ParentType, ContextType>;
+};
+
+export type UserResolvers<ContextType = any, ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']> = {
+  id?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type Resolvers<ContextType = any> = {
   Query?: QueryResolvers<ContextType>;
+  User?: UserResolvers<ContextType>;
 };
 
 /**
@@ -133,6 +150,10 @@ export type HelloQueryVariables = Exact<{ [key: string]: never }>;
 
 export type HelloQuery = { __typename?: 'Query' } & Pick<Query, 'hello'>;
 
+export type UsersQueryVariables = Exact<{ [key: string]: never }>;
+
+export type UsersQuery = { __typename?: 'Query' } & { users: Array<{ __typename?: 'User' } & Pick<User, 'id'>> };
+
 export const HelloDocument: DocumentNode<HelloQuery, HelloQueryVariables> = {
   kind: 'Document',
   definitions: [
@@ -141,6 +162,26 @@ export const HelloDocument: DocumentNode<HelloQuery, HelloQueryVariables> = {
       operation: 'query',
       name: { kind: 'Name', value: 'Hello' },
       selectionSet: { kind: 'SelectionSet', selections: [{ kind: 'Field', name: { kind: 'Name', value: 'hello' } }] },
+    },
+  ],
+};
+export const UsersDocument: DocumentNode<UsersQuery, UsersQueryVariables> = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'Users' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'users' },
+            selectionSet: { kind: 'SelectionSet', selections: [{ kind: 'Field', name: { kind: 'Name', value: 'id' } }] },
+          },
+        ],
+      },
     },
   ],
 };

@@ -1,3 +1,9 @@
 query Hello {
   hello
 }
+
+query Users {
+  users {
+    id
+  }
+}

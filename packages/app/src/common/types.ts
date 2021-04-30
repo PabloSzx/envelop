@@ -23,9 +23,9 @@ export interface EnvelopContext extends GraphQLModules.ModuleContext, ExecutionC
 
 export interface EnvelopResolvers<TContext = EnvelopContext> extends IResolvers<any, TContext> {}
 
-export type EnvelopModuleConfig = Omit<ModuleConfig, 'typeDefs' | 'id' | 'resolvers'> & {
+export type EnvelopModuleConfig<TContext = EnvelopContext> = Omit<ModuleConfig, 'typeDefs' | 'id' | 'resolvers'> & {
   id?: string;
-  resolvers?: EnvelopResolvers;
+  resolvers?: EnvelopResolvers<TContext>;
 };
 
 type PromiseType<T> = T extends PromiseLike<infer U> ? U : T;
