@@ -1,4 +1,4 @@
-import { promises } from 'fs';
+import { readFile } from 'fs/promises';
 import { buildClientSchema, getIntrospectionQuery, IntrospectionQuery, printSchema } from 'graphql';
 
 import { gql } from '@envelop/app/extend';
@@ -157,7 +157,7 @@ test('codegen result', async () => {
   expect(tmpPath).toBeTruthy();
 
   expect(
-    await promises.readFile(tmpPath!, {
+    await readFile(tmpPath!, {
       encoding: 'utf-8',
     })
   ).toMatchInlineSnapshot(`
@@ -331,7 +331,7 @@ test('outputSchema result', async () => {
   expect(tmpSchemaPath).toBeTruthy();
 
   expect(
-    await promises.readFile(tmpSchemaPath!, {
+    await readFile(tmpSchemaPath!, {
       encoding: 'utf-8',
     })
   ).toMatchInlineSnapshot(`

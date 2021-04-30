@@ -1,4 +1,4 @@
-import { promises } from 'fs';
+import { readFile } from 'fs/promises';
 
 import { HelloDocument, UsersDocument } from './generated/envelop.generated';
 import { commonImplementation, startHTTPServer } from './utils';
@@ -123,7 +123,7 @@ test('outputSchema result', async () => {
   expect(tmpSchemaPath).toBeTruthy();
 
   expect(
-    await promises.readFile(tmpSchemaPath!, {
+    await readFile(tmpSchemaPath!, {
       encoding: 'utf-8',
     })
   ).toMatchInlineSnapshot(`
