@@ -1,16 +1,16 @@
-import { extendSchema, GraphQLSchema, isSchema } from 'graphql';
+import { GraphQLSchema, isSchema } from 'graphql';
 
 import { useSchema } from '@envelop/core';
 import { mergeSchemasAsync } from '@graphql-tools/merge';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 
 import { cleanObject, toPlural } from './utils/object.js';
+import { LazyPromise } from './utils/promise.js';
 
 import type { Plugin } from '@envelop/types';
 import type { Application, Module } from 'graphql-modules';
 import type { ExecutableSchemaDefinition, FilteredMergeSchemasConfig } from './app';
 import type { ScalarsModule } from './scalars';
-
 export interface SchemaBuilderFactoryOptions {
   scalarsModule?: ScalarsModule | null;
   mergeSchemasConfig?: FilteredMergeSchemasConfig;
@@ -28,19 +28,34 @@ export function SchemaBuilderFactory({
   mergeSchemasConfig,
 }: SchemaBuilderFactoryOptions): (options: PrepareSchemaOptions) => Promise<void> {
   return async function PrepareSchema({ schema, appModules, modulesApplication, appPlugins }: PrepareSchemaOptions) {
-    const schemas = toPlural(schema).map(schemaValue => {
-      if (isSchema(schemaValue)) {
-        if (!scalarsModule) return schemaValue;
-
-        return extendSchema(schemaValue, scalarsModule.typeDefs);
-      }
-
-      return makeExecutableSchema({
-        ...schemaValue,
-        typeDefs: scalarsModule ? [...toPlural(schemaValue.typeDefs), scalarsModule.typeDefs] : schemaValue.typeDefs,
-        resolvers: scalarsModule ? [...toPlural(schemaValue.resolvers || []), scalarsModule.resolvers] : schemaValue.resolvers,
+    const scalarsModuleSchema =
+      scalarsModule &&
+      LazyPromise(() => {
+        return makeExecutableSchema({
+          ...cleanObject(mergeSchemasConfig),
+          typeDefs: scalarsModule.typeDefs,
+          resolvers: scalarsModule.resolvers,
+        });
       });
-    });
+
+    const schemas = await Promise.all(
+      toPlural(schema).map(async schemaValue => {
+        if (isSchema(schemaValue)) {
+          if (!scalarsModuleSchema) return schemaValue;
+
+          return mergeSchemasAsync({
+            ...cleanObject(mergeSchemasConfig),
+            schemas: [await scalarsModuleSchema, schemaValue],
+          });
+        }
+
+        return makeExecutableSchema({
+          ...schemaValue,
+          typeDefs: scalarsModule ? [...toPlural(schemaValue.typeDefs), scalarsModule.typeDefs] : schemaValue.typeDefs,
+          resolvers: scalarsModule ? [...toPlural(schemaValue.resolvers || []), scalarsModule.resolvers] : schemaValue.resolvers,
+        });
+      })
+    );
 
     let mergedSchema: GraphQLSchema;
 
