@@ -252,6 +252,37 @@ export async function startHapiServer({
   return { ...getRequestPool(port), tmpPath, tmpSchemaPath, codegenPromise };
 }
 
+export async function startKoaServer({
+  options = {},
+  buildOptions = {},
+  testCodegenOptions,
+}: StartTestServerOptions<import('../src/koa').EnvelopAppOptions, import('../src/koa').BuildAppOptions>) {
+  const Koa = (await import('koa')).default;
+  const KoaRouter = (await import('@koa/router')).default;
+
+  const app = new Koa();
+
+  const router = new KoaRouter();
+
+  const { CreateApp } = await import('../src/koa');
+
+  const { tmpPath, tmpSchemaPath, codegenPromise } = await Codegen(options, testCodegenOptions);
+
+  await CreateApp(options).buildApp({ router, ...buildOptions });
+
+  app.use(router.routes()).use(router.allowedMethods());
+
+  const port = await getPort();
+
+  await new Promise<void>(resolve => {
+    const server = app.listen(port, resolve);
+
+    TearDownPromises.push(new PLazy(resolve => server.close(resolve)));
+  });
+
+  return { ...getRequestPool(port), tmpPath, tmpSchemaPath, codegenPromise };
+}
+
 function getRequestPool(port: number) {
   const requestPool = new Pool(`http://127.0.0.1:${port}`, {
     connections: 5,
