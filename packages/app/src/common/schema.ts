@@ -32,7 +32,6 @@ export function SchemaBuilderFactory({
       scalarsModule &&
       LazyPromise(() => {
         return makeExecutableSchema({
-          ...cleanObject(mergeSchemasConfig),
           typeDefs: scalarsModule.typeDefs,
           resolvers: scalarsModule.resolvers,
         });
