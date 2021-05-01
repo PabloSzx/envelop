@@ -9,15 +9,16 @@ import { LazyPromise } from './utils/promise.js';
 
 import type { Plugin } from '@envelop/types';
 import type { Application, Module } from 'graphql-modules';
-import type { ExecutableSchemaDefinition, FilteredMergeSchemasConfig } from './app';
+import type { FilteredMergeSchemasConfig, SchemaDefinition } from './app';
 import type { ScalarsModule } from './scalars';
+
 export interface SchemaBuilderFactoryOptions {
   scalarsModule?: ScalarsModule | null;
   mergeSchemasConfig?: FilteredMergeSchemasConfig;
 }
 
 export interface PrepareSchemaOptions {
-  schema: GraphQLSchema | ExecutableSchemaDefinition<never> | (GraphQLSchema | ExecutableSchemaDefinition<never>)[];
+  schema: SchemaDefinition<never> | SchemaDefinition<never>[];
   appPlugins: Plugin[];
   appModules: Module[];
   modulesApplication?: Application;
@@ -38,7 +39,8 @@ export function SchemaBuilderFactory({
       });
 
     const schemas = await Promise.all(
-      toPlural(schema).map(async schemaValue => {
+      toPlural(schema).map(async schemaValuePromise => {
+        const schemaValue = await schemaValuePromise;
         if (isSchema(schemaValue)) {
           if (!scalarsModuleSchema) return schemaValue;
 

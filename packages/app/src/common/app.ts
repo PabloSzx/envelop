@@ -73,12 +73,18 @@ export interface ExecutableSchemaDefinition<TContext = EnvelopContext>
 
 export type FilteredMergeSchemasConfig = Omit<MergeSchemasConfig, 'schemas'>;
 
+export type SchemaDefinition<TContext = EnvelopContext> =
+  | GraphQLSchema
+  | Promise<GraphQLSchema>
+  | ExecutableSchemaDefinition<TContext>
+  | Promise<ExecutableSchemaDefinition<TContext>>;
+
 export interface BaseEnvelopAppOptions<TContext> extends Partial<ApplicationConfig> {
   plugins?: Plugin[];
   /**
-   * Pre-built schema
+   * Pre-built schemas
    */
-  schema?: GraphQLSchema | ExecutableSchemaDefinition<TContext> | Array<GraphQLSchema | ExecutableSchemaDefinition<TContext>>;
+  schema?: SchemaDefinition<TContext> | SchemaDefinition<TContext>[];
 
   /**
    * Customize configuration of schema merging
