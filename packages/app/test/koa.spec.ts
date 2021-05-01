@@ -4,11 +4,10 @@ import { buildClientSchema, getIntrospectionQuery, IntrospectionQuery, printSche
 import { gql } from '@envelop/app/extend';
 
 import { HelloDocument, UsersDocument } from './generated/envelop.generated';
-import { commonImplementation, startExpressServer } from './utils';
+import { commonImplementation, startKoaServer } from './utils';
 
-const serverReady = startExpressServer({
+const serverReady = startKoaServer({
   options: {
-    scalars: ['DateTime'],
     enableCodegen: true,
   },
   buildOptions: {
@@ -83,7 +82,7 @@ test('altair', async () => {
   expect(
     (
       await request({
-        path: '/altair/',
+        path: '/altair',
         method: 'GET',
       })
     ).slice(0, 300)
@@ -94,14 +93,14 @@ test('altair', async () => {
     <head>
       <meta charset=\\"utf-8\\">
       <title>Altair</title>
-      <base href=\\"./\\">
+      <base href=\\"/altair/\\">
       <meta name=\\"viewport\\" content=\\"width=device-width,initial-scale=1\\">
       <link rel=\\"icon\\" type=\\"image/x-icon\\" href=\\"favicon.ico\\">
       <link href=\\"styles.css\\" rel=\\"stylesheet\\" />
     </head>
 
     <body>
-      <app-roo"
+      <a"
   `);
 
   expect(
@@ -155,11 +154,6 @@ test('resulting schema', async () => {
     type User {
       id: Int!
     }
-
-    \\"\\"\\"
-    A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the \`date-time\` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
-    \\"\\"\\"
-    scalar DateTime
     "
   `);
 });
@@ -176,7 +170,7 @@ test('codegen result', async () => {
       encoding: 'utf-8',
     })
   ).toMatchInlineSnapshot(`
-    "import type { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
+    "import type { GraphQLResolveInfo } from 'graphql';
     export type Maybe<T> = T | null;
     export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
     export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
@@ -188,8 +182,6 @@ test('codegen result', async () => {
       Boolean: boolean;
       Int: number;
       Float: number;
-      /** A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the \`date-time\` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar. */
-      DateTime: any;
     };
 
     export type Query = {
@@ -288,7 +280,6 @@ test('codegen result', async () => {
       String: ResolverTypeWrapper<Scalars['String']>;
       User: ResolverTypeWrapper<User>;
       Int: ResolverTypeWrapper<Scalars['Int']>;
-      DateTime: ResolverTypeWrapper<Scalars['DateTime']>;
       Boolean: ResolverTypeWrapper<Scalars['Boolean']>;
     };
 
@@ -298,7 +289,6 @@ test('codegen result', async () => {
       String: Scalars['String'];
       User: User;
       Int: Scalars['Int'];
-      DateTime: Scalars['DateTime'];
       Boolean: Scalars['Boolean'];
     };
 
@@ -315,14 +305,9 @@ test('codegen result', async () => {
       __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
     };
 
-    export interface DateTimeScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['DateTime'], any> {
-      name: 'DateTime';
-    }
-
     export type Resolvers<ContextType = any> = {
       Query?: QueryResolvers<ContextType>;
       User?: UserResolvers<ContextType>;
-      DateTime?: GraphQLScalarType;
     };
 
     /**
@@ -331,8 +316,8 @@ test('codegen result', async () => {
      */
     export type IResolvers<ContextType = any> = Resolvers<ContextType>;
 
-    declare module '@envelop/app/express' {
-      interface EnvelopResolvers extends Resolvers<import('@envelop/app/express').EnvelopContext> {}
+    declare module '@envelop/app/koa' {
+      interface EnvelopResolvers extends Resolvers<import('@envelop/app/koa').EnvelopContext> {}
     }
     "
   `);
@@ -362,11 +347,6 @@ test('outputSchema result', async () => {
     type User {
       id: Int!
     }
-
-    \\"\\"\\"
-    A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the \`date-time\` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
-    \\"\\"\\"
-    scalar DateTime
     "
   `);
 });
