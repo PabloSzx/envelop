@@ -237,7 +237,7 @@ importers:
       mkdirp: ^1.0.4
       next: ^10.2.0
       prettier: ^2.2.1
-      subscriptions-transport-ws: ^0.9.18
+      subscriptions-transport-ws-envelop: ^0.1.0
       tmp-promise: ^3.0.2
       ts-jest: ^26.5.5
       tsc-node-build: ^3.1.2
@@ -277,7 +277,7 @@ importers:
       mime-types: 2.1.30
       mkdirp: 1.0.4
       prettier: 2.2.1
-      subscriptions-transport-ws: 0.9.18_graphql@15.5.0
+      subscriptions-transport-ws-envelop: 0.1.0_graphql@15.5.0
       ws: 7.4.5
     devDependencies:
       '@hapi/hapi': 20.1.2
@@ -8194,8 +8194,8 @@ packages:
   /stylis/3.5.4:
     resolution: {integrity: sha512-8/3pSmthWM7lsPBKv7NXkzn2Uc9W7NotcwGNpJaa3k7WMM1XDCA4MgT5k/8BIexd5ydZdboXtU90XH9Ec4Bv/Q==}
 
-  /subscriptions-transport-ws/0.9.18_graphql@15.5.0:
-    resolution: {integrity: sha512-tztzcBTNoEbuErsVQpTN2xUNN/efAZXyCyL5m3x4t6SKrEiTL2N8SaKWBFWM4u56pL79ULif3zjyeq+oV+nOaA==}
+  /subscriptions-transport-ws-envelop/0.1.0_graphql@15.5.0:
+    resolution: {integrity: sha512-BZ8SIOL4vIS+slX60TKKhszAsB52dwY8Nr5Lu0qzdH1W0sCq46B3anBoYC3WkVzypo5ZrOlKdYXYcZNJpDEXVA==}
     peerDependencies:
       graphql: '>=0.10.0'
     dependencies:
