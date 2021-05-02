@@ -92,7 +92,7 @@
     "mime-types": "^2.1.30",
     "mkdirp": "^1.0.4",
     "prettier": "^2.2.1",
-    "subscriptions-transport-ws": "^0.9.18",
+    "subscriptions-transport-ws-envelop": "^0.1.0",
     "ws": "^7.4.5"
   },
   "devDependencies": {
