@@ -7,7 +7,7 @@ import type { Envelop } from '@envelop/types';
 import type WebSocket from 'ws';
 import type { IncomingMessage, Server as HttpServer } from 'http';
 import type { Socket } from 'net';
-import type { ServerOptions as SubscriptionsTransportOptions } from 'subscriptions-transport-ws/dist/server';
+import type { ServerOptions as SubscriptionsTransportOptions } from 'subscriptions-transport-ws-envelop/dist/server';
 import type { ServerOptions as GraphQLWSOptions } from 'graphql-ws';
 import type { ExecutionArgs } from 'graphql';
 
@@ -76,7 +76,7 @@ function handleUpgrade(httpServer: HttpServer, path: string, wsTuple: CommonSubs
 
 export type FilteredSubscriptionsTransportOptions = Omit<
   SubscriptionsTransportOptions,
-  'schema' | 'execute' | 'subscribe' | 'onConnect'
+  'schema' | 'execute' | 'subscribe' | 'onConnect' | 'validate' | 'parse'
 >;
 
 export type FilteredGraphQLWSOptions = Omit<
@@ -138,7 +138,7 @@ export const CreateSubscriptionsServer = async (
 
   const [ws, subscriptionsTransportWs, useGraphQLWSServer] = await Promise.all([
     import('ws').then(v => v.default),
-    enableOldTransport ? import('subscriptions-transport-ws/dist/server.js').then(v => v.SubscriptionServer) : null,
+    enableOldTransport ? import('subscriptions-transport-ws-envelop/dist/server.js').then(v => v.SubscriptionServer) : null,
     enableGraphQLWS ? import('graphql-ws/lib/use/ws').then(v => v.useServer) : null,
   ]);
 
@@ -232,19 +232,21 @@ export const CreateSubscriptionsServer = async (
 };
 
 export function handleSubscriptionsTransport(
-  subscriptionsTransportWs: typeof import('subscriptions-transport-ws/dist/server.js').SubscriptionServer,
+  subscriptionsTransportWs: typeof import('subscriptions-transport-ws-envelop/dist/server.js').SubscriptionServer,
   wsServer: WebSocket.Server,
   options: FilteredSubscriptionsTransportOptions | undefined,
   getEnveloped: Envelop<unknown>,
   getContext: (contextArgs: BuildSubscriptionContextArgs) => Promise<unknown>
 ): void {
-  const { schema, execute, subscribe } = getEnveloped();
+  const { schema, execute, subscribe, validate, parse } = getEnveloped();
   subscriptionsTransportWs.create(
     {
       ...cleanObject(options),
       schema,
       execute,
       subscribe,
+      validate,
+      parse,
       onConnect(...[connectionParams, socket, { request }]: SubscriptionsTransportOnConnectArgs) {
         return getContext({ connectionParams, request, socket });
       },
