@@ -1,5 +1,5 @@
 /* eslint-disable no-use-before-define */
-import type { GraphQLResolveInfo } from 'graphql';
+import type { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
 import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
 export type Maybe<T> = T | null;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
@@ -12,12 +12,20 @@ export type Scalars = {
   Boolean: boolean;
   Int: number;
   Float: number;
+  JSONObject: any;
 };
 
 export type Query = {
   __typename?: 'Query';
   hello: Scalars['String'];
   users: Array<User>;
+  getContext: Scalars['JSONObject'];
+  stream: Array<Scalars['String']>;
+};
+
+export type Subscription = {
+  __typename?: 'Subscription';
+  ping: Scalars['String'];
 };
 
 export type User = {
@@ -108,8 +116,10 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 export type ResolversTypes = {
   Query: ResolverTypeWrapper<{}>;
   String: ResolverTypeWrapper<Scalars['String']>;
+  Subscription: ResolverTypeWrapper<{}>;
   User: ResolverTypeWrapper<User>;
   Int: ResolverTypeWrapper<Scalars['Int']>;
+  JSONObject: ResolverTypeWrapper<Scalars['JSONObject']>;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']>;
 };
 
@@ -117,8 +127,10 @@ export type ResolversTypes = {
 export type ResolversParentTypes = {
   Query: {};
   String: Scalars['String'];
+  Subscription: {};
   User: User;
   Int: Scalars['Int'];
+  JSONObject: Scalars['JSONObject'];
   Boolean: Scalars['Boolean'];
 };
 
@@ -128,6 +140,15 @@ export type QueryResolvers<
 > = {
   hello?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   users?: Resolver<Array<ResolversTypes['User']>, ParentType, ContextType>;
+  getContext?: Resolver<ResolversTypes['JSONObject'], ParentType, ContextType>;
+  stream?: Resolver<Array<ResolversTypes['String']>, ParentType, ContextType>;
+};
+
+export type SubscriptionResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes['Subscription'] = ResolversParentTypes['Subscription']
+> = {
+  ping?: SubscriptionResolver<ResolversTypes['String'], 'ping', ParentType, ContextType>;
 };
 
 export type UserResolvers<ContextType = any, ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']> = {
@@ -135,9 +156,15 @@ export type UserResolvers<ContextType = any, ParentType extends ResolversParentT
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export interface JsonObjectScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['JSONObject'], any> {
+  name: 'JSONObject';
+}
+
 export type Resolvers<ContextType = any> = {
   Query?: QueryResolvers<ContextType>;
+  Subscription?: SubscriptionResolvers<ContextType>;
   User?: UserResolvers<ContextType>;
+  JSONObject?: GraphQLScalarType;
 };
 
 /**
@@ -153,6 +180,10 @@ export type HelloQuery = { __typename?: 'Query' } & Pick<Query, 'hello'>;
 export type UsersQueryVariables = Exact<{ [key: string]: never }>;
 
 export type UsersQuery = { __typename?: 'Query' } & { users: Array<{ __typename?: 'User' } & Pick<User, 'id'>> };
+
+export type GetContextQueryVariables = Exact<{ [key: string]: never }>;
+
+export type GetContextQuery = { __typename?: 'Query' } & Pick<Query, 'getContext'>;
 
 export const HelloDocument: DocumentNode<HelloQuery, HelloQueryVariables> = {
   kind: 'Document',
@@ -182,6 +213,17 @@ export const UsersDocument: DocumentNode<UsersQuery, UsersQueryVariables> = {
           },
         ],
       },
+    },
+  ],
+};
+export const GetContextDocument: DocumentNode<GetContextQuery, GetContextQueryVariables> = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GetContext' },
+      selectionSet: { kind: 'SelectionSet', selections: [{ kind: 'Field', name: { kind: 'Name', value: 'getContext' } }] },
     },
   ],
 };

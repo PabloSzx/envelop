@@ -243,6 +243,7 @@ export function handleSubscriptionsTransport(
     {
       ...cleanObject(options),
       schema,
+      // @ts-expect-error Incompatibilities due to experimental versions of GraphQL
       execute,
       subscribe,
       validate,

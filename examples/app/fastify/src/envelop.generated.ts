@@ -116,6 +116,7 @@ export type ResolversTypes = {
   Subscription: ResolverTypeWrapper<{}>;
   DateTime: ResolverTypeWrapper<import('@pablosz/envelop-app/fastify').DeepPartial<Scalars['DateTime']>>;
   Boolean: ResolverTypeWrapper<import('@pablosz/envelop-app/fastify').DeepPartial<Scalars['Boolean']>>;
+  Int: ResolverTypeWrapper<import('@pablosz/envelop-app/fastify').DeepPartial<Scalars['Int']>>;
 };
 
 /** Mapping between all available schema types and the resolvers parents */
@@ -125,6 +126,7 @@ export type ResolversParentTypes = {
   Subscription: {};
   DateTime: import('@pablosz/envelop-app/fastify').DeepPartial<Scalars['DateTime']>;
   Boolean: import('@pablosz/envelop-app/fastify').DeepPartial<Scalars['Boolean']>;
+  Int: import('@pablosz/envelop-app/fastify').DeepPartial<Scalars['Int']>;
 };
 
 export type QueryResolvers<

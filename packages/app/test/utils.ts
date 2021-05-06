@@ -33,6 +33,8 @@ declare module '../src/extend' {
   interface EnvelopContext extends Record<'numberMultiplier', DataLoader<number, number>> {}
 }
 
+export const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 export function commonImplementation({ registerDataLoader, registerModule }: BaseEnvelopBuilder) {
   registerDataLoader('numberMultiplier', DataLoader => {
     return new DataLoader(async (keys: readonly number[]) => {
@@ -45,6 +47,10 @@ export function commonImplementation({ registerDataLoader, registerModule }: Bas
       type Query {
         hello: String!
         users: [User!]!
+        stream: [String!]!
+      }
+      type Subscription {
+        ping: String!
       }
       type User {
         id: Int!
@@ -61,10 +67,33 @@ export function commonImplementation({ registerDataLoader, registerModule }: Bas
               id,
             }));
           },
+          stream: {
+            // @ts-expect-error codegen incompatibility with stream/defer directives
+            resolve: async function* () {
+              yield 'A';
+              await sleep(100);
+              yield 'B';
+              await sleep(100);
+              yield 'C';
+            },
+          },
         },
         User: {
           async id(root, _args, ctx) {
             return ctx.numberMultiplier.load(root.id);
+          },
+        },
+        Subscription: {
+          ping: {
+            async *subscribe() {
+              for (let i = 1; i <= 5; ++i) {
+                await sleep(100);
+
+                yield {
+                  ping: 'pong',
+                };
+              }
+            },
           },
         },
       },
@@ -284,20 +313,22 @@ export async function startKoaServer({
 }
 
 function getRequestPool(port: number) {
-  const requestPool = new Pool(`http://127.0.0.1:${port}`, {
+  const address = `http://127.0.0.1:${port}`;
+  const requestPool = new Pool(address, {
     connections: 5,
   });
 
   TearDownPromises.push(LazyPromise(async () => requestPool.close()));
 
   return {
+    address,
     async request(options: RequestOptions) {
       const { body } = await requestPool.request(options);
 
       return getStringFromStream(body);
     },
     async query<TData, TVariables>(
-      document: TypedDocumentNode<TData, TVariables>,
+      document: TypedDocumentNode<TData, TVariables> | string,
       variables?: TVariables
     ): Promise<ExecutionResult<TData>> {
       const { body } = await requestPool.request({
@@ -305,7 +336,7 @@ function getRequestPool(port: number) {
         headers: {
           'content-type': 'application/json',
         },
-        body: Readable.from(JSON.stringify({ query: print(document), variables }), {
+        body: Readable.from(JSON.stringify({ query: typeof document === 'string' ? document : print(document), variables }), {
           objectMode: false,
         }),
         path: '/graphql',
