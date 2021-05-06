@@ -19,10 +19,16 @@ module.exports = async () => {
         type Query {
           hello: String!
           users: [User!]!
+          getContext: JSONObject!
+          stream: [String!]!
+        }
+        type Subscription {
+          ping: String!
         }
         type User {
           id: Int!
         }
+        scalar JSONObject
       `,
     }),
     {

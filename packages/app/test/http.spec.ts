@@ -133,7 +133,9 @@ test('outputSchema result', async () => {
           \\"name\\": \\"Query\\"
         },
         \\"mutationType\\": null,
-        \\"subscriptionType\\": null,
+        \\"subscriptionType\\": {
+          \\"name\\": \\"Subscription\\"
+        },
         \\"types\\": [
           {
             \\"kind\\": \\"OBJECT\\",
@@ -179,6 +181,30 @@ test('outputSchema result', async () => {
                 },
                 \\"isDeprecated\\": false,
                 \\"deprecationReason\\": null
+              },
+              {
+                \\"name\\": \\"stream\\",
+                \\"description\\": null,
+                \\"args\\": [],
+                \\"type\\": {
+                  \\"kind\\": \\"NON_NULL\\",
+                  \\"name\\": null,
+                  \\"ofType\\": {
+                    \\"kind\\": \\"LIST\\",
+                    \\"name\\": null,
+                    \\"ofType\\": {
+                      \\"kind\\": \\"NON_NULL\\",
+                      \\"name\\": null,
+                      \\"ofType\\": {
+                        \\"kind\\": \\"SCALAR\\",
+                        \\"name\\": \\"String\\",
+                        \\"ofType\\": null
+                      }
+                    }
+                  }
+                },
+                \\"isDeprecated\\": false,
+                \\"deprecationReason\\": null
               }
             ],
             \\"inputFields\\": null,
@@ -193,6 +219,33 @@ test('outputSchema result', async () => {
             \\"fields\\": null,
             \\"inputFields\\": null,
             \\"interfaces\\": null,
+            \\"enumValues\\": null,
+            \\"possibleTypes\\": null
+          },
+          {
+            \\"kind\\": \\"OBJECT\\",
+            \\"name\\": \\"Subscription\\",
+            \\"description\\": null,
+            \\"fields\\": [
+              {
+                \\"name\\": \\"ping\\",
+                \\"description\\": null,
+                \\"args\\": [],
+                \\"type\\": {
+                  \\"kind\\": \\"NON_NULL\\",
+                  \\"name\\": null,
+                  \\"ofType\\": {
+                    \\"kind\\": \\"SCALAR\\",
+                    \\"name\\": \\"String\\",
+                    \\"ofType\\": null
+                  }
+                },
+                \\"isDeprecated\\": false,
+                \\"deprecationReason\\": null
+              }
+            ],
+            \\"inputFields\\": null,
+            \\"interfaces\\": [],
             \\"enumValues\\": null,
             \\"possibleTypes\\": null
           },
@@ -1174,6 +1227,79 @@ test('outputSchema result', async () => {
                   \\"ofType\\": {
                     \\"kind\\": \\"SCALAR\\",
                     \\"name\\": \\"Boolean\\",
+                    \\"ofType\\": null
+                  }
+                },
+                \\"defaultValue\\": null
+              }
+            ]
+          },
+          {
+            \\"name\\": \\"defer\\",
+            \\"description\\": \\"Directs the executor to defer this fragment when the \`if\` argument is true or undefined.\\",
+            \\"locations\\": [
+              \\"FRAGMENT_SPREAD\\",
+              \\"INLINE_FRAGMENT\\"
+            ],
+            \\"args\\": [
+              {
+                \\"name\\": \\"if\\",
+                \\"description\\": \\"Deferred when true or undefined.\\",
+                \\"type\\": {
+                  \\"kind\\": \\"SCALAR\\",
+                  \\"name\\": \\"Boolean\\",
+                  \\"ofType\\": null
+                },
+                \\"defaultValue\\": null
+              },
+              {
+                \\"name\\": \\"label\\",
+                \\"description\\": \\"Unique name\\",
+                \\"type\\": {
+                  \\"kind\\": \\"SCALAR\\",
+                  \\"name\\": \\"String\\",
+                  \\"ofType\\": null
+                },
+                \\"defaultValue\\": null
+              }
+            ]
+          },
+          {
+            \\"name\\": \\"stream\\",
+            \\"description\\": \\"Directs the executor to stream plural fields when the \`if\` argument is true or undefined.\\",
+            \\"locations\\": [
+              \\"FIELD\\"
+            ],
+            \\"args\\": [
+              {
+                \\"name\\": \\"if\\",
+                \\"description\\": \\"Stream when true or undefined.\\",
+                \\"type\\": {
+                  \\"kind\\": \\"SCALAR\\",
+                  \\"name\\": \\"Boolean\\",
+                  \\"ofType\\": null
+                },
+                \\"defaultValue\\": null
+              },
+              {
+                \\"name\\": \\"label\\",
+                \\"description\\": \\"Unique name\\",
+                \\"type\\": {
+                  \\"kind\\": \\"SCALAR\\",
+                  \\"name\\": \\"String\\",
+                  \\"ofType\\": null
+                },
+                \\"defaultValue\\": null
+              },
+              {
+                \\"name\\": \\"initialCount\\",
+                \\"description\\": \\"Number of items to return immediately\\",
+                \\"type\\": {
+                  \\"kind\\": \\"NON_NULL\\",
+                  \\"name\\": null,
+                  \\"ofType\\": {
+                    \\"kind\\": \\"SCALAR\\",
+                    \\"name\\": \\"Int\\",
                     \\"ofType\\": null
                   }
                 },

@@ -88,11 +88,17 @@ test('outputSchema result', async () => {
   ).toMatchInlineSnapshot(`
     "schema {
       query: Query
+      subscription: Subscription
     }
 
     type Query {
       hello: String!
       users: [User!]!
+      stream: [String!]!
+    }
+
+    type Subscription {
+      ping: String!
     }
 
     type User {

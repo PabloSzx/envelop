@@ -7,3 +7,7 @@ query Users {
     id
   }
 }
+
+query GetContext {
+  getContext
+}

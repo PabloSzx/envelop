@@ -1,21 +1,44 @@
 import { readFile } from 'fs/promises';
 import { buildClientSchema, getIntrospectionQuery, IntrospectionQuery, printSchema } from 'graphql';
-
+import got from 'got';
 import { gql } from '@envelop/app/extend';
+import EventSource from 'eventsource';
 
-import { HelloDocument, UsersDocument } from './generated/envelop.generated';
+import { HelloDocument, UsersDocument, GetContextDocument } from './generated/envelop.generated';
 import { commonImplementation, startFastifyServer } from './utils';
 
 const serverReady = startFastifyServer({
   options: {
     scalars: {
       DateTime: 1,
+      JSONObject: 1,
     },
     enableCodegen: true,
+    buildContext() {
+      return {
+        foo: 'bar',
+      };
+    },
   },
   buildOptions: {
     prepare(tools) {
       commonImplementation(tools);
+      tools.registerModule(
+        gql`
+          extend type Query {
+            getContext: JSONObject!
+          }
+        `,
+        {
+          resolvers: {
+            Query: {
+              getContext(_root, _args, ctx) {
+                return ctx;
+              },
+            },
+          },
+        }
+      );
     },
   },
   testCodegenOptions: {
@@ -35,6 +58,49 @@ test('works', async () => {
       }
     `);
   });
+});
+
+test('custom context', async () => {
+  const { query } = await serverReady;
+
+  await query(GetContextDocument).then(v => {
+    expect(v.data?.getContext.foo).toBe('bar');
+  });
+});
+
+test('query with @stream', async () => {
+  const { address } = await serverReady;
+  const stream = got.stream.post(`${address}/graphql`, {
+    json: {
+      query: `
+      query {
+        stream @stream(initialCount: 1)
+      }
+      `,
+    },
+  });
+
+  const chunks: string[] = [];
+  for await (const chunk of stream) {
+    chunks.push(chunk.toString());
+  }
+  expect(chunks).toHaveLength(3);
+  expect(chunks[0]).toContain(`{"data":{"stream":["A"]},"hasNext":true}`);
+  expect(chunks[1]).toContain(`{"data":"B","path":["stream",1],"hasNext":true}`);
+  expect(chunks[2]).toContain(`{"data":"C","path":["stream",2],"hasNext":true}`);
+});
+
+test('SSE subscription', async () => {
+  const { address } = await serverReady;
+  const eventSource = new EventSource(`${address}/graphql?query=subscription{ping}`);
+
+  const payload = await new Promise<string>(resolve => {
+    eventSource.addEventListener('message', (event: any) => {
+      resolve(event.data);
+      eventSource.close();
+    });
+  });
+  expect(payload).toMatchInlineSnapshot(`"{\\"data\\":{\\"ping\\":\\"pong\\"}}"`);
 });
 
 test('dataloaders', async () => {
@@ -155,6 +221,12 @@ test('resulting schema', async () => {
     "type Query {
       hello: String!
       users: [User!]!
+      stream: [String!]!
+      getContext: JSONObject!
+    }
+
+    type Subscription {
+      ping: String!
     }
 
     type User {
@@ -165,6 +237,11 @@ test('resulting schema', async () => {
     A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the \`date-time\` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
     \\"\\"\\"
     scalar DateTime
+
+    \\"\\"\\"
+    The \`JSONObject\` scalar type represents JSON objects as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+    \\"\\"\\"
+    scalar JSONObject
     "
   `);
 });
@@ -195,12 +272,21 @@ test('codegen result', async () => {
       Float: number;
       /** A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the \`date-time\` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar. */
       DateTime: any;
+      /** The \`JSONObject\` scalar type represents JSON objects as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf). */
+      JSONObject: any;
     };
 
     export type Query = {
       __typename?: 'Query';
       hello: Scalars['String'];
       users: Array<User>;
+      stream: Array<Scalars['String']>;
+      getContext: Scalars['JSONObject'];
+    };
+
+    export type Subscription = {
+      __typename?: 'Subscription';
+      ping: Scalars['String'];
     };
 
     export type User = {
@@ -291,9 +377,11 @@ test('codegen result', async () => {
     export type ResolversTypes = {
       Query: ResolverTypeWrapper<{}>;
       String: ResolverTypeWrapper<Scalars['String']>;
+      Subscription: ResolverTypeWrapper<{}>;
       User: ResolverTypeWrapper<User>;
       Int: ResolverTypeWrapper<Scalars['Int']>;
       DateTime: ResolverTypeWrapper<Scalars['DateTime']>;
+      JSONObject: ResolverTypeWrapper<Scalars['JSONObject']>;
       Boolean: ResolverTypeWrapper<Scalars['Boolean']>;
     };
 
@@ -301,9 +389,11 @@ test('codegen result', async () => {
     export type ResolversParentTypes = {
       Query: {};
       String: Scalars['String'];
+      Subscription: {};
       User: User;
       Int: Scalars['Int'];
       DateTime: Scalars['DateTime'];
+      JSONObject: Scalars['JSONObject'];
       Boolean: Scalars['Boolean'];
     };
 
@@ -313,6 +403,15 @@ test('codegen result', async () => {
     > = {
       hello?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
       users?: Resolver<Array<ResolversTypes['User']>, ParentType, ContextType>;
+      stream?: Resolver<Array<ResolversTypes['String']>, ParentType, ContextType>;
+      getContext?: Resolver<ResolversTypes['JSONObject'], ParentType, ContextType>;
+    };
+
+    export type SubscriptionResolvers<
+      ContextType = any,
+      ParentType extends ResolversParentTypes['Subscription'] = ResolversParentTypes['Subscription']
+    > = {
+      ping?: SubscriptionResolver<ResolversTypes['String'], 'ping', ParentType, ContextType>;
     };
 
     export type UserResolvers<ContextType = any, ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']> = {
@@ -324,10 +423,16 @@ test('codegen result', async () => {
       name: 'DateTime';
     }
 
+    export interface JsonObjectScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['JSONObject'], any> {
+      name: 'JSONObject';
+    }
+
     export type Resolvers<ContextType = any> = {
       Query?: QueryResolvers<ContextType>;
+      Subscription?: SubscriptionResolvers<ContextType>;
       User?: UserResolvers<ContextType>;
       DateTime?: GraphQLScalarType;
+      JSONObject?: GraphQLScalarType;
     };
 
     /**
@@ -361,7 +466,9 @@ test('outputSchema result', async () => {
           \\"name\\": \\"Query\\"
         },
         \\"mutationType\\": null,
-        \\"subscriptionType\\": null,
+        \\"subscriptionType\\": {
+          \\"name\\": \\"Subscription\\"
+        },
         \\"types\\": [
           {
             \\"kind\\": \\"OBJECT\\",
@@ -407,6 +514,46 @@ test('outputSchema result', async () => {
                 },
                 \\"isDeprecated\\": false,
                 \\"deprecationReason\\": null
+              },
+              {
+                \\"name\\": \\"stream\\",
+                \\"description\\": null,
+                \\"args\\": [],
+                \\"type\\": {
+                  \\"kind\\": \\"NON_NULL\\",
+                  \\"name\\": null,
+                  \\"ofType\\": {
+                    \\"kind\\": \\"LIST\\",
+                    \\"name\\": null,
+                    \\"ofType\\": {
+                      \\"kind\\": \\"NON_NULL\\",
+                      \\"name\\": null,
+                      \\"ofType\\": {
+                        \\"kind\\": \\"SCALAR\\",
+                        \\"name\\": \\"String\\",
+                        \\"ofType\\": null
+                      }
+                    }
+                  }
+                },
+                \\"isDeprecated\\": false,
+                \\"deprecationReason\\": null
+              },
+              {
+                \\"name\\": \\"getContext\\",
+                \\"description\\": null,
+                \\"args\\": [],
+                \\"type\\": {
+                  \\"kind\\": \\"NON_NULL\\",
+                  \\"name\\": null,
+                  \\"ofType\\": {
+                    \\"kind\\": \\"SCALAR\\",
+                    \\"name\\": \\"JSONObject\\",
+                    \\"ofType\\": null
+                  }
+                },
+                \\"isDeprecated\\": false,
+                \\"deprecationReason\\": null
               }
             ],
             \\"inputFields\\": null,
@@ -421,6 +568,33 @@ test('outputSchema result', async () => {
             \\"fields\\": null,
             \\"inputFields\\": null,
             \\"interfaces\\": null,
+            \\"enumValues\\": null,
+            \\"possibleTypes\\": null
+          },
+          {
+            \\"kind\\": \\"OBJECT\\",
+            \\"name\\": \\"Subscription\\",
+            \\"description\\": null,
+            \\"fields\\": [
+              {
+                \\"name\\": \\"ping\\",
+                \\"description\\": null,
+                \\"args\\": [],
+                \\"type\\": {
+                  \\"kind\\": \\"NON_NULL\\",
+                  \\"name\\": null,
+                  \\"ofType\\": {
+                    \\"kind\\": \\"SCALAR\\",
+                    \\"name\\": \\"String\\",
+                    \\"ofType\\": null
+                  }
+                },
+                \\"isDeprecated\\": false,
+                \\"deprecationReason\\": null
+              }
+            ],
+            \\"inputFields\\": null,
+            \\"interfaces\\": [],
             \\"enumValues\\": null,
             \\"possibleTypes\\": null
           },
@@ -465,6 +639,16 @@ test('outputSchema result', async () => {
             \\"kind\\": \\"SCALAR\\",
             \\"name\\": \\"DateTime\\",
             \\"description\\": \\"A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the \`date-time\` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.\\",
+            \\"fields\\": null,
+            \\"inputFields\\": null,
+            \\"interfaces\\": null,
+            \\"enumValues\\": null,
+            \\"possibleTypes\\": null
+          },
+          {
+            \\"kind\\": \\"SCALAR\\",
+            \\"name\\": \\"JSONObject\\",
+            \\"description\\": \\"The \`JSONObject\` scalar type represents JSON objects as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).\\",
             \\"fields\\": null,
             \\"inputFields\\": null,
             \\"interfaces\\": null,
@@ -1412,6 +1596,79 @@ test('outputSchema result', async () => {
                   \\"ofType\\": {
                     \\"kind\\": \\"SCALAR\\",
                     \\"name\\": \\"Boolean\\",
+                    \\"ofType\\": null
+                  }
+                },
+                \\"defaultValue\\": null
+              }
+            ]
+          },
+          {
+            \\"name\\": \\"defer\\",
+            \\"description\\": \\"Directs the executor to defer this fragment when the \`if\` argument is true or undefined.\\",
+            \\"locations\\": [
+              \\"FRAGMENT_SPREAD\\",
+              \\"INLINE_FRAGMENT\\"
+            ],
+            \\"args\\": [
+              {
+                \\"name\\": \\"if\\",
+                \\"description\\": \\"Deferred when true or undefined.\\",
+                \\"type\\": {
+                  \\"kind\\": \\"SCALAR\\",
+                  \\"name\\": \\"Boolean\\",
+                  \\"ofType\\": null
+                },
+                \\"defaultValue\\": null
+              },
+              {
+                \\"name\\": \\"label\\",
+                \\"description\\": \\"Unique name\\",
+                \\"type\\": {
+                  \\"kind\\": \\"SCALAR\\",
+                  \\"name\\": \\"String\\",
+                  \\"ofType\\": null
+                },
+                \\"defaultValue\\": null
+              }
+            ]
+          },
+          {
+            \\"name\\": \\"stream\\",
+            \\"description\\": \\"Directs the executor to stream plural fields when the \`if\` argument is true or undefined.\\",
+            \\"locations\\": [
+              \\"FIELD\\"
+            ],
+            \\"args\\": [
+              {
+                \\"name\\": \\"if\\",
+                \\"description\\": \\"Stream when true or undefined.\\",
+                \\"type\\": {
+                  \\"kind\\": \\"SCALAR\\",
+                  \\"name\\": \\"Boolean\\",
+                  \\"ofType\\": null
+                },
+                \\"defaultValue\\": null
+              },
+              {
+                \\"name\\": \\"label\\",
+                \\"description\\": \\"Unique name\\",
+                \\"type\\": {
+                  \\"kind\\": \\"SCALAR\\",
+                  \\"name\\": \\"String\\",
+                  \\"ofType\\": null
+                },
+                \\"defaultValue\\": null
+              },
+              {
+                \\"name\\": \\"initialCount\\",
+                \\"description\\": \\"Number of items to return immediately\\",
+                \\"type\\": {
+                  \\"kind\\": \\"NON_NULL\\",
+                  \\"name\\": null,
+                  \\"ofType\\": {
+                    \\"kind\\": \\"SCALAR\\",
+                    \\"name\\": \\"Int\\",
                     \\"ofType\\": null
                   }
                 },

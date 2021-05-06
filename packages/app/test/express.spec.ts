@@ -150,6 +150,11 @@ test('resulting schema', async () => {
     "type Query {
       hello: String!
       users: [User!]!
+      stream: [String!]!
+    }
+
+    type Subscription {
+      ping: String!
     }
 
     type User {
@@ -196,6 +201,12 @@ test('codegen result', async () => {
       __typename?: 'Query';
       hello: Scalars['String'];
       users: Array<User>;
+      stream: Array<Scalars['String']>;
+    };
+
+    export type Subscription = {
+      __typename?: 'Subscription';
+      ping: Scalars['String'];
     };
 
     export type User = {
@@ -286,6 +297,7 @@ test('codegen result', async () => {
     export type ResolversTypes = {
       Query: ResolverTypeWrapper<{}>;
       String: ResolverTypeWrapper<Scalars['String']>;
+      Subscription: ResolverTypeWrapper<{}>;
       User: ResolverTypeWrapper<User>;
       Int: ResolverTypeWrapper<Scalars['Int']>;
       DateTime: ResolverTypeWrapper<Scalars['DateTime']>;
@@ -296,6 +308,7 @@ test('codegen result', async () => {
     export type ResolversParentTypes = {
       Query: {};
       String: Scalars['String'];
+      Subscription: {};
       User: User;
       Int: Scalars['Int'];
       DateTime: Scalars['DateTime'];
@@ -308,6 +321,14 @@ test('codegen result', async () => {
     > = {
       hello?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
       users?: Resolver<Array<ResolversTypes['User']>, ParentType, ContextType>;
+      stream?: Resolver<Array<ResolversTypes['String']>, ParentType, ContextType>;
+    };
+
+    export type SubscriptionResolvers<
+      ContextType = any,
+      ParentType extends ResolversParentTypes['Subscription'] = ResolversParentTypes['Subscription']
+    > = {
+      ping?: SubscriptionResolver<ResolversTypes['String'], 'ping', ParentType, ContextType>;
     };
 
     export type UserResolvers<ContextType = any, ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']> = {
@@ -321,6 +342,7 @@ test('codegen result', async () => {
 
     export type Resolvers<ContextType = any> = {
       Query?: QueryResolvers<ContextType>;
+      Subscription?: SubscriptionResolvers<ContextType>;
       User?: UserResolvers<ContextType>;
       DateTime?: GraphQLScalarType;
     };
@@ -352,11 +374,17 @@ test('outputSchema result', async () => {
   ).toMatchInlineSnapshot(`
     "schema {
       query: Query
+      subscription: Subscription
     }
 
     type Query {
       hello: String!
       users: [User!]!
+      stream: [String!]!
+    }
+
+    type Subscription {
+      ping: String!
     }
 
     type User {
