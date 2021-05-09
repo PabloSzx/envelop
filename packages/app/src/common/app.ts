@@ -3,6 +3,7 @@ import { Application, ApplicationConfig, createApplication, gql, Module } from '
 import { Envelop, envelop, Plugin } from '@envelop/core';
 import { useGraphQLModules } from '@envelop/graphql-modules';
 
+import { CachePlugins, CacheOptions } from './cache.js';
 import { RegisterDataLoader, RegisterDataLoaderFactory } from './dataloader.js';
 import { RegisterModule, RegisterModuleFactory } from './modules.js';
 import { createScalarsModule, ScalarsConfig, ScalarsModule } from './scalars.js';
@@ -126,6 +127,17 @@ export interface BaseEnvelopAppOptions<TContext> extends Partial<ApplicationConf
   jit?: boolean | Parameters<typeof useGraphQlJit>;
 
   /**
+   * Enable/Disable/Customize in-memory cache that improves performance
+   *
+   * `cache === true` => Enable both parse & validation cache
+   *
+   * `cache === false` => Disable caching
+   *
+   * @default true
+   */
+  cache?: CacheOptions;
+
+  /**
    * **Advanced usage only**
    *
    * Override `handleRequest` logic
@@ -187,6 +199,7 @@ export function createEnvelopAppFactory<TContext>(
           onFinish,
         } = {},
         jit = false,
+        cache = true,
       } = config;
 
       if (scalarsModule?.module && appModules.length) appModules.push(scalarsModule.module);
@@ -199,6 +212,8 @@ export function createEnvelopAppFactory<TContext>(
       });
 
       if (appModules.length) appPlugins.push(useGraphQLModules(modulesApplication));
+
+      const cachePromise = CachePlugins(cache, appPlugins);
 
       const jitPromise = jit
         ? import('@envelop/graphql-jit').then(({ useGraphQlJit }) => {
@@ -215,7 +230,7 @@ export function createEnvelopAppFactory<TContext>(
           })
         : null;
 
-      await Promise.all([jitPromise, schemaPromise]);
+      await Promise.all([jitPromise, schemaPromise, cachePromise]);
 
       const getEnveloped = envelop({
         plugins: uniqueArray(appPlugins),

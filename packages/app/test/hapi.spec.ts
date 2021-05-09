@@ -7,6 +7,10 @@ const serverReady = startHapiServer({
   options: {
     scalars: '*',
     enableCodegen: true,
+    cache: {
+      parse: false,
+      validation: false,
+    },
   },
   buildOptions: {
     prepare(tools) {
