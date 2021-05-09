@@ -140,7 +140,9 @@ export async function EnvelopCodegen(
 
   const config: TypeScriptPluginConfig & TypeScriptResolversPluginConfig = {
     useTypeImports: true,
-    defaultMapper: deepPartialResolvers ? `import("${moduleName}").DeepPartial<{T}>` : undefined,
+    customResolverFn: deepPartialResolvers
+      ? `(parent: TParent, args: TArgs, context: TContext, info: GraphQLResolveInfo) => Promise<import("${moduleName}").DeepPartial<TResult>> | import("${moduleName}").DeepPartial<TResult>`
+      : undefined,
     // TODO: Add default recommended types
     scalars,
     ...codegenOptions,
