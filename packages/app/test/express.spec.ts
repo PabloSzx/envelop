@@ -10,6 +10,7 @@ const serverReady = startExpressServer({
   options: {
     scalars: ['DateTime'],
     enableCodegen: true,
+    cache: false,
   },
   buildOptions: {
     prepare(tools) {

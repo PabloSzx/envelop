@@ -9,6 +9,10 @@ import { commonImplementation, startKoaServer } from './utils';
 const serverReady = startKoaServer({
   options: {
     enableCodegen: true,
+    cache: {
+      parse: {},
+      validation: {},
+    },
   },
   buildOptions: {
     prepare(tools) {
