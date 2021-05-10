@@ -343,6 +343,7 @@ export function envelop(options: { plugins: Plugin[]; extends?: Envelop[]; initi
 
     for (const afterCb of afterCalls) {
       afterCb({
+        // @ts-expect-error Type-Error with experimental version of GraphQL
         result,
         setResult: newResult => {
           result = newResult;
