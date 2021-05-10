@@ -1,6 +1,6 @@
 {
   "name": "@pablosz/envelop-app",
-  "version": "0.1.16",
+  "version": "0.1.17",
   "private": false,
   "license": "MIT",
   "author": "PabloSz <pablosaez1995@gmail.com>",
@@ -60,12 +60,9 @@
     "prepare": "tsc-node-build --clean"
   },
   "dependencies": {
-    "@envelop/core": "^0.1.4",
     "@envelop/dataloader": "^0.1.0",
-    "@envelop/graphql-jit": "^0.1.0",
     "@envelop/graphql-modules": "^0.1.0",
     "@envelop/parser-cache": "^0.1.0",
-    "@envelop/types": "^0.1.4",
     "@envelop/validation-cache": "^0.1.0",
     "@graphql-codegen/core": "^1.17.9",
     "@graphql-codegen/plugin-helpers": "^1.18.5",
@@ -97,6 +94,9 @@
     "ws": "^7.4.5"
   },
   "devDependencies": {
+    "@envelop/core": "^0.1.4",
+    "@envelop/graphql-jit": "^0.1.0",
+    "@envelop/types": "^0.1.4",
     "@hapi/hapi": "^20.1.2",
     "@koa/router": "^10.0.0",
     "@types/concurrently": "^6.0.1",
@@ -132,6 +132,9 @@
     "undici": "^3.3.6"
   },
   "peerDependencies": {
+    "@envelop/core": "^0.1.4",
+    "@envelop/graphql-jit": "^0.1.0",
+    "@envelop/types": "^0.1.4",
     "@hapi/hapi": "^20.1.2",
     "@koa/router": "^10.0.0",
     "@types/express": "^4.17.11",
