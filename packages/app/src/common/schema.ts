@@ -6,7 +6,7 @@ import { makeExecutableSchema } from '@graphql-tools/schema';
 import { cleanObject, toPlural } from './utils/object.js';
 import { LazyPromise } from './utils/promise.js';
 
-import type { Plugin } from '@envelop/types';
+import type { Plugin } from '@envelop/core';
 import type { Application, Module } from 'graphql-modules';
 import type { FilteredMergeSchemasConfig, SchemaDefinition } from './app';
 import type { ScalarsModule } from './scalars';

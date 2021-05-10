@@ -6,7 +6,7 @@ import { RawAltairHandler } from './common/ide/rawAltair.js';
 
 import type { EnvelopContext, IDEOptions } from './common/types';
 import type { Request, ResponseToolkit, Plugin, Server, Lifecycle } from '@hapi/hapi';
-import type { Envelop } from '@envelop/types';
+import type { Envelop } from '@envelop/core';
 
 export interface BuildContextArgs {
   request: Request;

@@ -11,7 +11,7 @@ import type { RenderGraphiQLOptions } from 'graphql-helix/dist/types';
 import type { EnvelopContext, IDEOptions } from './common/types';
 import type { RenderOptions } from 'altair-static';
 import type { IncomingMessage, ServerResponse } from 'http';
-import type { Envelop } from '@envelop/types';
+import type { Envelop } from '@envelop/core';
 
 export interface BuildContextArgs {
   request: IncomingMessage;

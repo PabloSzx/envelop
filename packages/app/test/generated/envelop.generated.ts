@@ -134,15 +134,13 @@ export type ResolversParentTypes = {
   Boolean: Scalars['Boolean'];
 };
 
-export type QueryResolvers<
-  ContextType = any,
-  ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']
-> = {
-  hello?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  users?: Resolver<Array<ResolversTypes['User']>, ParentType, ContextType>;
-  getContext?: Resolver<ResolversTypes['JSONObject'], ParentType, ContextType>;
-  stream?: Resolver<Array<ResolversTypes['String']>, ParentType, ContextType>;
-};
+export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> =
+  {
+    hello?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+    users?: Resolver<Array<ResolversTypes['User']>, ParentType, ContextType>;
+    getContext?: Resolver<ResolversTypes['JSONObject'], ParentType, ContextType>;
+    stream?: Resolver<Array<ResolversTypes['String']>, ParentType, ContextType>;
+  };
 
 export type SubscriptionResolvers<
   ContextType = any,

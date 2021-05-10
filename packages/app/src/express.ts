@@ -7,7 +7,7 @@ import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory, han
 import { handleIDE, IDEOptions } from './common/ide/handle.js';
 import { CreateSubscriptionsServer, WebSocketSubscriptionsOptions } from './common/subscriptions/websocket.js';
 
-import type { Envelop } from '@envelop/types';
+import type { Envelop } from '@envelop/core';
 import type { EnvelopContext } from './common/types';
 import type { OptionsJson as BodyParserOptions } from 'body-parser';
 

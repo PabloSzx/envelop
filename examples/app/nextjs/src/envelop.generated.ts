@@ -111,6 +111,7 @@ export type ResolversTypes = {
   String: ResolverTypeWrapper<Scalars['String']>;
   Subscription: ResolverTypeWrapper<{}>;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']>;
+  Int: ResolverTypeWrapper<Scalars['Int']>;
 };
 
 /** Mapping between all available schema types and the resolvers parents */
@@ -119,15 +120,14 @@ export type ResolversParentTypes = {
   String: Scalars['String'];
   Subscription: {};
   Boolean: Scalars['Boolean'];
+  Int: Scalars['Int'];
 };
 
-export type QueryResolvers<
-  ContextType = any,
-  ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']
-> = {
-  hello?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  hello2?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-};
+export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> =
+  {
+    hello?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+    hello2?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  };
 
 export type SubscriptionResolvers<
   ContextType = any,

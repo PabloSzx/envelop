@@ -3,7 +3,7 @@ import assert from 'assert';
 import { cleanObject } from '../utils/object.js';
 import { getPathname } from '../utils/url.js';
 
-import type { Envelop } from '@envelop/types';
+import type { Envelop } from '@envelop/core';
 import type WebSocket from 'ws';
 import type { IncomingMessage, Server as HttpServer } from 'http';
 import type { Socket } from 'net';

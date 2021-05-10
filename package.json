@@ -5,7 +5,8 @@
   "workspaces": [
     "./packages/*",
     "./packages/plugins/*",
-    "./examples/*"
+    "./examples/*",
+    "./examples/app/*"
   ],
   "scripts": {
     "benchmark": "NODE_ENV=production ts-node --project tsconfig.benchmark.json benchmark/execute.case.ts",
@@ -50,7 +51,8 @@
     "ts-jest-resolver": "^1.0.0"
   },
   "resolutions": {
-    "@changesets/git": "1.1.1"
+    "@changesets/git": "1.1.1",
+    "graphql": "15.4.0-experimental-stream-defer.1"
   },
   "lint-staged": {
     "packages/**/src/**/*.{ts,tsx}": [

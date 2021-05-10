@@ -5,7 +5,7 @@ import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory, han
 import { handleIDE, IDEOptions } from './common/ide/handle.js';
 import { CreateSubscriptionsServer, WebSocketSubscriptionsOptions } from './common/subscriptions/websocket.js';
 
-import type { Envelop } from '@envelop/types';
+import type { Envelop } from '@envelop/core';
 import type { FastifyInstance, FastifyPluginCallback, FastifyReply, FastifyRequest, RouteOptions } from 'fastify';
 import type { Server } from 'http';
 import type { EnvelopContext } from './common/types';

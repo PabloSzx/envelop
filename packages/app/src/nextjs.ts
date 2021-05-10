@@ -8,7 +8,7 @@ import type { RenderGraphiQLOptions } from 'graphql-helix/dist/types';
 import type { NextApiHandler, NextApiRequest, NextApiResponse } from 'next';
 import type { EnvelopContext } from './common/types';
 import type { RenderOptions } from 'altair-static';
-import type { Envelop } from '@envelop/types';
+import type { Envelop } from '@envelop/core';
 
 export interface BuildContextArgs {
   request: NextApiRequest;

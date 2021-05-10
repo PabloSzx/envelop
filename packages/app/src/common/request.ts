@@ -8,7 +8,7 @@ import {
   Response,
 } from 'graphql-helix';
 
-import type { Envelop } from '@envelop/types';
+import type { Envelop } from '@envelop/core';
 import type { IncomingMessage, ServerResponse } from 'http';
 
 export async function handleRequest<BuildContextArgs, TReturn = unknown>({

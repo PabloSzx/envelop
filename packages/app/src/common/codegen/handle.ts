@@ -1,4 +1,4 @@
-import type { Envelop } from '@envelop/types';
+import type { Envelop } from '@envelop/core';
 import type { BaseEnvelopAppOptions, InternalEnvelopConfig } from '../app';
 
 export function handleCodegen(

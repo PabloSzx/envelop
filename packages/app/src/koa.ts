@@ -8,7 +8,7 @@ import { RawAltairHandlerDeps } from './common/ide/rawAltair.js';
 import type * as KoaRouter from '@koa/router';
 import type { EnvelopContext, IDEOptions } from './common/types';
 import type { ParameterizedContext, Request, Response } from 'koa';
-import type { Envelop } from '@envelop/types';
+import type { Envelop } from '@envelop/core';
 
 export interface BuildContextArgs {
   request: Request;

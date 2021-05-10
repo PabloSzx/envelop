@@ -2,7 +2,7 @@ import DataLoader from 'dataloader';
 
 import { useDataLoader } from '@envelop/dataloader';
 
-import type { DefaultContext, Plugin } from '@envelop/types';
+import type { DefaultContext, Plugin } from '@envelop/core';
 
 export type DataLoaderFn<K, V, C = K> = (DataLoaderClass: typeof DataLoader, context: DefaultContext) => DataLoader<K, V, C>;
 
