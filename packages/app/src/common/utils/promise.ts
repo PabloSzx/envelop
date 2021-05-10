@@ -1,5 +1,3 @@
-// Based on `p-lazy`: https://github.com/sindresorhus/p-lazy/blob/main/index.js
-
 export class PLazy<ValueType> extends Promise<ValueType> {
   private _executor;
   private _promise?: Promise<ValueType>;
@@ -10,20 +8,12 @@ export class PLazy<ValueType> extends Promise<ValueType> {
     this._executor = executor;
   }
 
-  then: Promise<ValueType>['then'] = (onFulfilled, onRejected) => {
-    this._promise = this._promise || new Promise(this._executor);
-    return this._promise.then(onFulfilled, onRejected);
-  };
+  then: Promise<ValueType>['then'] = (onFulfilled, onRejected) =>
+    (this._promise ||= new Promise(this._executor)).then(onFulfilled, onRejected);
 
-  catch: Promise<ValueType>['catch'] = onRejected => {
-    this._promise = this._promise || new Promise(this._executor);
-    return this._promise.catch(onRejected);
-  };
+  catch: Promise<ValueType>['catch'] = onRejected => (this._promise ||= new Promise(this._executor)).catch(onRejected);
 
-  finally: Promise<ValueType>['finally'] = onFinally => {
-    this._promise = this._promise || new Promise(this._executor);
-    return this._promise.finally(onFinally);
-  };
+  finally: Promise<ValueType>['finally'] = onFinally => (this._promise ||= new Promise(this._executor)).finally(onFinally);
 }
 
 export function LazyPromise<Value>(fn: () => Value | Promise<Value>): Promise<Value> {

@@ -1,6 +1,9 @@
 import { existsSync, promises } from 'fs';
-import mkdirp from 'mkdirp';
 import { dirname } from 'path';
+
+import { LazyPromise } from '../utils/promise.js';
+
+const mkdirp = LazyPromise(() => import('mkdirp').then(v => v.default));
 
 /**
  * Write the target file only if the content changed
@@ -16,7 +19,7 @@ export async function writeFileIfChanged(targetPath: string, content: string): P
     if (existingContent === content) return;
   }
 
-  await mkdirp(dirname(targetPath));
+  await (await mkdirp)(dirname(targetPath));
 
   await promises.writeFile(targetPath, content, {
     encoding: 'utf-8',

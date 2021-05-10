@@ -1,7 +1,6 @@
 import { GraphQLSchema, isSchema } from 'graphql';
 
 import { useSchema } from '@envelop/core';
-import { mergeSchemasAsync } from '@graphql-tools/merge';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 
 import { cleanObject, toPlural } from './utils/object.js';
@@ -24,6 +23,10 @@ export interface PrepareSchemaOptions {
   modulesApplication?: Application;
 }
 
+const Merge = LazyPromise(() => {
+  return import('@graphql-tools/merge');
+});
+
 export function SchemaBuilderFactory({
   scalarsModule,
   mergeSchemasConfig,
@@ -44,7 +47,7 @@ export function SchemaBuilderFactory({
         if (isSchema(schemaValue)) {
           if (!scalarsModuleSchema) return schemaValue;
 
-          return mergeSchemasAsync({
+          return (await Merge).mergeSchemasAsync({
             ...cleanObject(mergeSchemasConfig),
             schemas: [await scalarsModuleSchema, schemaValue],
           });
@@ -63,13 +66,13 @@ export function SchemaBuilderFactory({
     const modulesSchemaList = appModules.length && modulesApplication ? [modulesApplication.schema] : [];
 
     if (schemas.length > 1) {
-      mergedSchema = await mergeSchemasAsync({
+      mergedSchema = await (await Merge).mergeSchemasAsync({
         ...cleanObject(mergeSchemasConfig),
         schemas: [...modulesSchemaList, ...schemas],
       });
     } else if (schemas[0]) {
       mergedSchema = modulesSchemaList[0]
-        ? await mergeSchemasAsync({
+        ? await (await Merge).mergeSchemasAsync({
             ...cleanObject(mergeSchemasConfig),
             schemas: [...modulesSchemaList, schemas[0]],
           })
