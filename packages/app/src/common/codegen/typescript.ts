@@ -1,13 +1,10 @@
 import { GraphQLSchema, parse } from 'graphql';
 import { resolve } from 'path';
 
-import { codegen } from '@graphql-codegen/core';
-import * as typescriptPlugin from '@graphql-codegen/typescript';
-import * as typescriptOperationsPlugin from '@graphql-codegen/typescript-operations';
-import * as typescriptResolversPlugin from '@graphql-codegen/typescript-resolvers';
 import { printSchemaWithDirectives } from '@graphql-tools/utils';
 
 import { cleanObject } from '../utils/object.js';
+import { LazyPromise } from '../utils/promise.js';
 import { formatPrettier } from './prettier.js';
 import { writeFileIfChanged } from './write.js';
 
@@ -110,6 +107,22 @@ export interface CodegenConfig extends TypeScriptPluginConfig, TypeScriptResolve
   transformGenerated?: (code: string) => string | Promise<string>;
 }
 
+const CodegenDeps = LazyPromise(async () => {
+  const [{ codegen }, typescriptPlugin, typescriptOperationsPlugin, typescriptResolversPlugin] = await Promise.all([
+    import('@graphql-codegen/core'),
+    import('@graphql-codegen/typescript'),
+    import('@graphql-codegen/typescript-operations'),
+    import('@graphql-codegen/typescript-resolvers'),
+  ]);
+
+  return {
+    codegen,
+    typescriptPlugin,
+    typescriptOperationsPlugin,
+    typescriptResolversPlugin,
+  };
+});
+
 export async function EnvelopCodegen(
   executableSchema: GraphQLSchema,
   options: BaseEnvelopAppOptions<never>,
@@ -147,6 +160,8 @@ export async function EnvelopCodegen(
     scalars,
     ...codegenOptions,
   };
+
+  const { codegen, typescriptPlugin, typescriptResolversPlugin, typescriptOperationsPlugin } = await CodegenDeps;
 
   const pluginMap: Record<string, CodegenPlugin<any>> = {
     typescript: typescriptPlugin,
