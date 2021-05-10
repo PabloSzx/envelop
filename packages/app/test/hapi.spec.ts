@@ -1,7 +1,5 @@
-import { readFile } from 'fs/promises';
-
 import { HelloDocument, UsersDocument } from './generated/envelop.generated';
-import { commonImplementation, startHapiServer } from './utils';
+import { commonImplementation, readFile, startHapiServer } from './utils';
 
 const serverReady = startHapiServer({
   options: {

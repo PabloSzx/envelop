@@ -1,7 +1,5 @@
-import { readFile } from 'fs/promises';
-
 import { HelloDocument, UsersDocument } from './generated/envelop.generated';
-import { commonImplementation, startHTTPServer } from './utils';
+import { commonImplementation, readFile, startHTTPServer } from './utils';
 
 const serverReady = startHTTPServer({
   options: {

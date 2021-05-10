@@ -1,11 +1,11 @@
-import { readFile } from 'fs/promises';
-import { buildClientSchema, getIntrospectionQuery, IntrospectionQuery, printSchema } from 'graphql';
-import got from 'got';
-import { gql } from '@envelop/app/extend';
 import EventSource from 'eventsource';
+import got from 'got';
+import { buildClientSchema, getIntrospectionQuery, IntrospectionQuery, printSchema } from 'graphql';
 
-import { HelloDocument, UsersDocument, GetContextDocument } from './generated/envelop.generated';
-import { commonImplementation, startFastifyServer } from './utils';
+import { gql } from '@envelop/app/extend';
+
+import { GetContextDocument, HelloDocument, UsersDocument } from './generated/envelop.generated';
+import { commonImplementation, readFile, startFastifyServer } from './utils';
 
 const serverReady = startFastifyServer({
   options: {

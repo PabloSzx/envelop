@@ -1,13 +1,14 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 
-import tmp from 'tmp-promise';
 import DataLoader from 'dataloader';
+import { promises } from 'fs';
 import getPort from 'get-port';
 import { ExecutionResult, print } from 'graphql';
+import merge from 'lodash/merge';
 import { Readable } from 'stream';
+import tmp from 'tmp-promise';
 import { Pool } from 'undici';
 import { RequestOptions } from 'undici/types/client';
-import merge from 'lodash/merge';
 
 import {
   BaseEnvelopAppOptions,
@@ -22,6 +23,8 @@ import {
 } from '@envelop/app/extend';
 
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
+
+export const { readFile } = promises;
 
 const TearDownPromises: Promise<unknown>[] = [];
 
@@ -207,9 +210,7 @@ export async function startFastifyServer({
   await new Promise((resolve, reject) => {
     app.listen(port).then(resolve, reject);
 
-    TearDownPromises.push(
-      new PLazy<void>(resolve => app.close(resolve))
-    );
+    TearDownPromises.push(new PLazy<void>(resolve => app.close(resolve)));
   });
 
   return { ...getRequestPool(port), tmpPath, tmpSchemaPath, codegenPromise };

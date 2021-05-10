@@ -1,10 +1,9 @@
-import { readFile } from 'fs/promises';
 import { buildClientSchema, getIntrospectionQuery, IntrospectionQuery, printSchema } from 'graphql';
 
 import { gql } from '@envelop/app/extend';
 
 import { HelloDocument, UsersDocument } from './generated/envelop.generated';
-import { commonImplementation, startKoaServer } from './utils';
+import { commonImplementation, readFile, startKoaServer } from './utils';
 
 const serverReady = startKoaServer({
   options: {
