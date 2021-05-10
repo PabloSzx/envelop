@@ -5,6 +5,14 @@ export type Maybe<T> = T | null;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
+export type ResolverFn<TResult, TParent, TContext, TArgs> = (
+  parent: TParent,
+  args: TArgs,
+  context: TContext,
+  info: GraphQLResolveInfo
+) =>
+  | Promise<import('@pablosz/envelop-app/express').DeepPartial<TResult>>
+  | import('@pablosz/envelop-app/express').DeepPartial<TResult>;
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
   ID: string;
@@ -45,13 +53,6 @@ export type StitchingResolver<TResult, TParent, TContext, TArgs> =
 export type Resolver<TResult, TParent = {}, TContext = {}, TArgs = {}> =
   | ResolverFn<TResult, TParent, TContext, TArgs>
   | StitchingResolver<TResult, TParent, TContext, TArgs>;
-
-export type ResolverFn<TResult, TParent, TContext, TArgs> = (
-  parent: TParent,
-  args: TArgs,
-  context: TContext,
-  info: GraphQLResolveInfo
-) => Promise<TResult> | TResult;
 
 export type SubscriptionSubscribeFn<TResult, TParent, TContext, TArgs> = (
   parent: TParent,
@@ -110,21 +111,21 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
   Query: ResolverTypeWrapper<{}>;
-  String: ResolverTypeWrapper<import('@pablosz/envelop-app/express').DeepPartial<Scalars['String']>>;
+  String: ResolverTypeWrapper<Scalars['String']>;
   Subscription: ResolverTypeWrapper<{}>;
-  DateTime: ResolverTypeWrapper<import('@pablosz/envelop-app/express').DeepPartial<Scalars['DateTime']>>;
-  Boolean: ResolverTypeWrapper<import('@pablosz/envelop-app/express').DeepPartial<Scalars['Boolean']>>;
-  Int: ResolverTypeWrapper<import('@pablosz/envelop-app/express').DeepPartial<Scalars['Int']>>;
+  DateTime: ResolverTypeWrapper<Scalars['DateTime']>;
+  Boolean: ResolverTypeWrapper<Scalars['Boolean']>;
+  Int: ResolverTypeWrapper<Scalars['Int']>;
 };
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
   Query: {};
-  String: import('@pablosz/envelop-app/express').DeepPartial<Scalars['String']>;
+  String: Scalars['String'];
   Subscription: {};
-  DateTime: import('@pablosz/envelop-app/express').DeepPartial<Scalars['DateTime']>;
-  Boolean: import('@pablosz/envelop-app/express').DeepPartial<Scalars['Boolean']>;
-  Int: import('@pablosz/envelop-app/express').DeepPartial<Scalars['Int']>;
+  DateTime: Scalars['DateTime'];
+  Boolean: Scalars['Boolean'];
+  Int: Scalars['Int'];
 };
 
 export type QueryResolvers<
