@@ -69,7 +69,7 @@ export interface EnvelopAppFactoryType extends BaseEnvelopBuilder {
 
 export interface ExecutableSchemaDefinition<TContext = EnvelopContext>
   extends Omit<IExecutableSchemaDefinition<TContext>, 'resolvers'> {
-  resolvers?: EnvelopResolvers<TContext> | EnvelopResolvers<TContext>[];
+  resolvers?: EnvelopResolvers | EnvelopResolvers[];
 }
 
 export type FilteredMergeSchemasConfig = Omit<MergeSchemasConfig, 'schemas'>;

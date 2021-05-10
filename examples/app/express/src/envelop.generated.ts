@@ -1,6 +1,7 @@
 /* eslint-disable no-use-before-define */
 
 import type { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
+import type { EnvelopContext } from '@pablosz/envelop-app/express';
 export type Maybe<T> = T | null;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
@@ -129,7 +130,7 @@ export type ResolversParentTypes = {
 };
 
 export type QueryResolvers<
-  ContextType = any,
+  ContextType = EnvelopContext,
   ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']
 > = {
   hello?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -137,7 +138,7 @@ export type QueryResolvers<
 };
 
 export type SubscriptionResolvers<
-  ContextType = any,
+  ContextType = EnvelopContext,
   ParentType extends ResolversParentTypes['Subscription'] = ResolversParentTypes['Subscription']
 > = {
   hello?: SubscriptionResolver<ResolversTypes['String'], 'hello', ParentType, ContextType>;
@@ -147,7 +148,7 @@ export interface DateTimeScalarConfig extends GraphQLScalarTypeConfig<ResolversT
   name: 'DateTime';
 }
 
-export type Resolvers<ContextType = any> = {
+export type Resolvers<ContextType = EnvelopContext> = {
   Query?: QueryResolvers<ContextType>;
   Subscription?: SubscriptionResolvers<ContextType>;
   DateTime?: GraphQLScalarType;
@@ -157,7 +158,7 @@ export type Resolvers<ContextType = any> = {
  * @deprecated
  * Use "Resolvers" root object instead. If you wish to get "IResolvers", add "typesPrefix: I" to your config.
  */
-export type IResolvers<ContextType = any> = Resolvers<ContextType>;
+export type IResolvers<ContextType = EnvelopContext> = Resolvers<ContextType>;
 
 declare module '@pablosz/envelop-app/express' {
   interface EnvelopResolvers extends Resolvers<import('@pablosz/envelop-app/express').EnvelopContext> {}

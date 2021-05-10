@@ -1,6 +1,5 @@
 import type { ModuleConfig } from 'graphql-modules';
 import type { ExecutionContext } from 'graphql-helix/dist/types';
-import type { IResolvers } from '@graphql-tools/utils';
 
 type PossiblePromise<T> = T | Promise<T>;
 
@@ -21,11 +20,11 @@ type DeepPartialObject<T> = {
 
 export interface EnvelopContext extends GraphQLModules.ModuleContext, ExecutionContext {}
 
-export interface EnvelopResolvers<TContext = EnvelopContext> extends IResolvers<any, TContext> {}
+export interface EnvelopResolvers extends Record<string, any> {}
 
-export type EnvelopModuleConfig<TContext = EnvelopContext> = Omit<ModuleConfig, 'typeDefs' | 'id' | 'resolvers'> & {
+export type EnvelopModuleConfig = Omit<ModuleConfig, 'typeDefs' | 'id' | 'resolvers'> & {
   id?: string;
-  resolvers?: EnvelopResolvers<TContext>;
+  resolvers?: EnvelopResolvers;
   /**
    * Automatically add the create module in the built envelop app
    *

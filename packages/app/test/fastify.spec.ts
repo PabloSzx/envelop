@@ -259,6 +259,7 @@ test('codegen result', async () => {
     })
   ).toMatchInlineSnapshot(`
     "import type { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
+    import type { EnvelopContext } from '@pablosz/envelop-app/fastify';
     export type Maybe<T> = T | null;
     export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
     export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
@@ -398,7 +399,7 @@ test('codegen result', async () => {
     };
 
     export type QueryResolvers<
-      ContextType = any,
+      ContextType = EnvelopContext,
       ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']
     > = {
       hello?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -408,13 +409,16 @@ test('codegen result', async () => {
     };
 
     export type SubscriptionResolvers<
-      ContextType = any,
+      ContextType = EnvelopContext,
       ParentType extends ResolversParentTypes['Subscription'] = ResolversParentTypes['Subscription']
     > = {
       ping?: SubscriptionResolver<ResolversTypes['String'], 'ping', ParentType, ContextType>;
     };
 
-    export type UserResolvers<ContextType = any, ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']> = {
+    export type UserResolvers<
+      ContextType = EnvelopContext,
+      ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']
+    > = {
       id?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
       __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
     };
@@ -427,7 +431,7 @@ test('codegen result', async () => {
       name: 'JSONObject';
     }
 
-    export type Resolvers<ContextType = any> = {
+    export type Resolvers<ContextType = EnvelopContext> = {
       Query?: QueryResolvers<ContextType>;
       Subscription?: SubscriptionResolvers<ContextType>;
       User?: UserResolvers<ContextType>;
@@ -439,7 +443,7 @@ test('codegen result', async () => {
      * @deprecated
      * Use \\"Resolvers\\" root object instead. If you wish to get \\"IResolvers\\", add \\"typesPrefix: I\\" to your config.
      */
-    export type IResolvers<ContextType = any> = Resolvers<ContextType>;
+    export type IResolvers<ContextType = EnvelopContext> = Resolvers<ContextType>;
 
     declare module '@pablosz/envelop-app/fastify' {
       interface EnvelopResolvers extends Resolvers<import('@pablosz/envelop-app/fastify').EnvelopContext> {}

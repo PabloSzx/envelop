@@ -158,6 +158,7 @@ export async function EnvelopCodegen(
       : undefined,
     // TODO: Add default recommended types
     scalars,
+    contextType: `${moduleName}#EnvelopContext`,
     ...codegenOptions,
   };
 
