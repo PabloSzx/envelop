@@ -13,7 +13,7 @@ import type { Source } from '@graphql-tools/utils';
 import type { LoadTypedefsOptions, UnnormalizedTypeDefPointer } from '@graphql-tools/load';
 import type { TypeScriptPluginConfig } from '@graphql-codegen/typescript';
 import type { TypeScriptResolversPluginConfig } from '@graphql-codegen/typescript-resolvers/config';
-import type { BaseEnvelopAppOptions, InternalEnvelopConfig } from '../app';
+import type { BaseEnvelopAppOptionsWithUpload, InternalEnvelopConfig } from '../app';
 
 export interface CodegenDocumentsConfig {
   /**
@@ -125,7 +125,7 @@ const CodegenDeps = LazyPromise(async () => {
 
 export async function EnvelopCodegen(
   executableSchema: GraphQLSchema,
-  options: BaseEnvelopAppOptions<never>,
+  options: BaseEnvelopAppOptionsWithUpload<never>,
   internalConfig: InternalEnvelopConfig
 ): Promise<void> {
   const moduleName = `@pablosz/envelop-app/${internalConfig.moduleName}`;
@@ -136,7 +136,7 @@ export async function EnvelopCodegen(
       targetPath,
       deepPartialResolvers,
       preImportCode = '',
-      scalars,
+      scalars: customScalars,
       onError,
       pluginContext,
       skipDocumentsValidation,
@@ -150,6 +150,18 @@ export async function EnvelopCodegen(
   } = options;
 
   const { useTypedDocumentNode = true, loadDocuments: loadDocumentsConfig } = documentsConfig;
+
+  const scalars =
+    typeof customScalars === 'string'
+      ? customScalars
+      : {
+          ...(customScalars || {}),
+          ...(options.GraphQLUpload
+            ? {
+                Upload: 'Promise<import("graphql-upload").FileUpload>',
+              }
+            : {}),
+        };
 
   const config: TypeScriptPluginConfig & TypeScriptResolversPluginConfig = {
     useTypeImports: true,

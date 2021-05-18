@@ -11,7 +11,7 @@ import { SchemaBuilderFactory } from './schema.js';
 import { uniqueArray } from './utils/object.js';
 
 import type { GraphQLSchema } from 'graphql';
-import type { EnvelopContext, EnvelopResolvers } from './types';
+import type { EnvelopContext, EnvelopResolvers, GraphQLUploadConfig } from './types';
 import type { CodegenConfig } from './codegen/typescript';
 import type { useGraphQlJit } from '@envelop/graphql-jit';
 import type { handleRequest } from './request';
@@ -50,7 +50,7 @@ export interface BaseEnvelopBuilder {
    *
    * Further information {@link https://www.graphql-modules.com/docs/essentials/testing/}
    */
-  scalarsModule: ScalarsModule | null;
+  scalarsModulePromise: Promise<ScalarsModule | null>;
 }
 
 export interface InternalAppBuildOptions<T> {
@@ -154,6 +154,19 @@ export interface BaseEnvelopAppOptions<TContext> extends Partial<ApplicationConf
   allowBatchedQueries?: boolean | number;
 }
 
+export interface BaseEnvelopAppOptionsWithUpload<TContext> extends BaseEnvelopAppOptions<TContext> {
+  /**
+   * Enable __GraphQL Upload__ support
+   *
+   * @see [https://github.com/jaydenseric/graphql-upload](https://github.com/jaydenseric/graphql-upload)
+   *
+   * When enabled, please make sure to install in your project: `graphql-upload` and `@types/graphql-upload`
+   *
+   * @default false
+   */
+  GraphQLUpload?: GraphQLUploadConfig;
+}
+
 export function createEnvelopAppFactory<TContext>(
   config: BaseEnvelopAppOptions<TContext>,
   internalConfig: InternalEnvelopConfig
@@ -166,10 +179,10 @@ export function createEnvelopAppFactory<TContext>(
 
   const registerDataLoader = RegisterDataLoaderFactory(factoryPlugins);
 
-  const scalarsModule = createScalarsModule(config.scalars);
+  const scalarsModulePromise = createScalarsModule(config.scalars, config);
 
   const prepareSchema = SchemaBuilderFactory({
-    scalarsModule,
+    scalarsModulePromise,
     mergeSchemasConfig,
   });
 
@@ -210,6 +223,8 @@ export function createEnvelopAppFactory<TContext>(
         jit = false,
         cache = true,
       } = config;
+
+      const scalarsModule = await scalarsModulePromise;
 
       if (scalarsModule?.module && appModules.length) appModules.push(scalarsModule.module);
 
@@ -268,7 +283,7 @@ export function createEnvelopAppFactory<TContext>(
     gql,
     modules: factoryModules,
     plugins: factoryPlugins,
-    scalarsModule,
+    scalarsModulePromise,
   };
 
   return { ...baseAppBuilder, appBuilder };

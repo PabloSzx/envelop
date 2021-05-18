@@ -1,7 +1,7 @@
 import assert from 'assert';
 import { gql } from 'graphql-modules';
 
-import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app.js';
+import { BaseEnvelopAppOptionsWithUpload, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app.js';
 import { handleIDE, IDEOptions } from './common/ide/handle.js';
 import { CreateSubscriptionsServer, WebSocketSubscriptionsOptions } from './common/subscriptions/websocket.js';
 
@@ -10,7 +10,6 @@ import type { FastifyInstance, FastifyPluginCallback, FastifyReply, FastifyReque
 import type { Server } from 'http';
 import type { EnvelopContext } from './common/types';
 import type { AltairFastifyPluginOptions } from 'altair-fastify-plugin';
-import type { UploadOptions } from 'graphql-upload';
 
 export type EnvelopAppPlugin = FastifyPluginCallback<{}, Server>;
 
@@ -19,7 +18,7 @@ export interface BuildContextArgs {
   response: FastifyReply;
 }
 
-export interface EnvelopAppOptions extends BaseEnvelopAppOptions<EnvelopContext> {
+export interface EnvelopAppOptions extends BaseEnvelopAppOptionsWithUpload<EnvelopContext> {
   /**
    * @default "/graphql"
    */
@@ -44,13 +43,6 @@ export interface EnvelopAppOptions extends BaseEnvelopAppOptions<EnvelopContext>
    * Custom Fastify Route options
    */
   routeOptions?: Omit<RouteOptions, 'method' | 'url' | 'handler'>;
-
-  /**
-   * Enable GraphQL Upload
-   *
-   * @default false
-   */
-  GraphQLUpload?: boolean | UploadOptions;
 }
 
 declare module 'fastify' {

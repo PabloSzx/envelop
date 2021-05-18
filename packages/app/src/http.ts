@@ -103,39 +103,41 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
             payload += chunk.toString('utf-8');
           });
 
-          req.on('end', () => {
-            const body = JSON.parse(payload || '{}');
+          req.on('end', async () => {
+            try {
+              const body = JSON.parse(payload || '{}');
 
-            const urlQuery = req.url?.split('?')[1];
+              const urlQuery = req.url?.split('?')[1];
 
-            const request = {
-              body,
-              headers: req.headers,
-              method: req.method!,
-              query: urlQuery ? querystring.parse(urlQuery) : {},
-            };
+              const request = {
+                body,
+                headers: req.headers,
+                method: req.method!,
+                query: urlQuery ? querystring.parse(urlQuery) : {},
+              };
 
-            return requestHandler({
-              request,
-              getEnveloped,
-              baseOptions: config,
-              buildContextArgs() {
-                return {
-                  request: req,
-                  response: res,
-                };
-              },
-              buildContext,
-              onResponse(result, defaultHandle) {
-                return defaultHandle(req, res, result);
-              },
-              onMultiPartResponse(result, defaultHandle) {
-                return defaultHandle(req, res, result);
-              },
-              onPushResponse(result, defaultHandle) {
-                return defaultHandle(req, res, result);
-              },
-            }).catch(err => {
+              await requestHandler({
+                request,
+                getEnveloped,
+                baseOptions: config,
+                buildContextArgs() {
+                  return {
+                    request: req,
+                    response: res,
+                  };
+                },
+                buildContext,
+                onResponse(result, defaultHandle) {
+                  return defaultHandle(req, res, result);
+                },
+                onMultiPartResponse(result, defaultHandle) {
+                  return defaultHandle(req, res, result);
+                },
+                onPushResponse(result, defaultHandle) {
+                  return defaultHandle(req, res, result);
+                },
+              });
+            } catch (err) {
               res
                 .writeHead(500, {
                   'Content-Type': 'application/json',
@@ -145,7 +147,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
                     message: err.message,
                   })
                 );
-            });
+            }
           });
         };
       },

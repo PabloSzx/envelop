@@ -1,7 +1,10 @@
 import type { ModuleConfig } from 'graphql-modules';
 import type { ExecutionContext } from 'graphql-helix/dist/types';
+import type { UploadOptions } from 'graphql-upload';
 
 type PossiblePromise<T> = T | Promise<T>;
+
+export type GraphQLUploadConfig = boolean | UploadOptions;
 
 export type DeepPartial<T> = T extends Function
   ? T

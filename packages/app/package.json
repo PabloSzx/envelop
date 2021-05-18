@@ -78,7 +78,6 @@
     "@graphql-tools/schema": "^7.1.5",
     "@graphql-tools/utils": "^7.10.0",
     "@graphql-typed-document-node/core": "^3.1.0",
-    "@types/graphql-upload": "^8.0.4",
     "@types/ws": "^7.4.4",
     "altair-express-middleware": "^4.0.4",
     "altair-fastify-plugin": "^4.0.4",
@@ -103,6 +102,7 @@
     "@types/concurrently": "^6.0.1",
     "@types/eventsource": "^1.1.5",
     "@types/express": "^4.17.11",
+    "@types/graphql-upload": "^8.0.4",
     "@types/hapi__hapi": "^20.0.8",
     "@types/jest": "^26.0.23",
     "@types/koa": "^2.13.1",
@@ -118,6 +118,7 @@
     "eventsource": "^1.1.0",
     "express": "^4.17.1",
     "fastify": "^3.15.1",
+    "form-data": "^4.0.0",
     "get-port": "^5.1.1",
     "got": "^11.8.2",
     "graphql": "experimental-stream-defer",
@@ -140,6 +141,7 @@
     "@hapi/hapi": "^20.1.2",
     "@koa/router": "^10.0.0",
     "@types/express": "^4.17.11",
+    "@types/graphql-upload": "^8.0.4",
     "@types/hapi__hapi": "^20.0.7",
     "@types/koa-bodyparser": "^4.3.0",
     "@types/koa__router": "^8.0.4",
@@ -161,6 +163,9 @@
     "@types/express": {
       "optional": true
     },
+    "@types/graphql-upload": {
+      "optional": true
+    },
     "@types/hapi__hapi": {
       "optional": true
     },
@@ -180,6 +185,9 @@
       "optional": true
     },
     "graphql": {
+      "optional": true
+    },
+    "graphql-upload": {
       "optional": true
     },
     "koa-bodyparser": {

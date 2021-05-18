@@ -1,4 +1,11 @@
-import { BuildContextArgs, CreateApp, gql, InferDataLoader, InferFunctionReturn } from '@pablosz/envelop-app/fastify';
+import {
+  BuildContextArgs,
+  CreateApp,
+  gql,
+  InferDataLoader,
+  InferFunctionReturn,
+  readStreamToBuffer,
+} from '@pablosz/envelop-app/fastify';
 
 function buildContext({ request }: BuildContextArgs) {
   return {
@@ -51,11 +58,21 @@ export const { registerModule, buildApp, registerDataLoader, modules, plugins } 
       type Query {
         hello3: String!
       }
+      type Mutation {
+        uploadFileToBase64(file: Upload!): String!
+      }
     `,
     resolvers: {
       Query: {
         hello3(_root, _args, ctx) {
           return ctx.stringRepeater.load('123');
+        },
+      },
+      Mutation: {
+        async uploadFileToBase64(_root, { file }) {
+          const fileBuffer = await readStreamToBuffer(file);
+
+          return Buffer.from(fileBuffer).toString('base64');
         },
       },
     },

@@ -12,7 +12,7 @@ import type { FilteredMergeSchemasConfig, SchemaDefinition } from './app';
 import type { ScalarsModule } from './scalars';
 
 export interface SchemaBuilderFactoryOptions {
-  scalarsModule?: ScalarsModule | null;
+  scalarsModulePromise?: Promise<ScalarsModule | null>;
   mergeSchemasConfig?: FilteredMergeSchemasConfig;
 }
 
@@ -28,10 +28,12 @@ const Merge = LazyPromise(() => {
 });
 
 export function SchemaBuilderFactory({
-  scalarsModule,
+  scalarsModulePromise,
   mergeSchemasConfig,
 }: SchemaBuilderFactoryOptions): (options: PrepareSchemaOptions) => Promise<void> {
   return async function PrepareSchema({ schema, appModules, modulesApplication, appPlugins }: PrepareSchemaOptions) {
+    const scalarsModule = await scalarsModulePromise;
+
     const scalarsModuleSchema =
       scalarsModule &&
       LazyPromise(() => {
@@ -66,13 +68,17 @@ export function SchemaBuilderFactory({
     const modulesSchemaList = appModules.length && modulesApplication ? [modulesApplication.schema] : [];
 
     if (schemas.length > 1) {
-      mergedSchema = await (await Merge).mergeSchemasAsync({
+      mergedSchema = await (
+        await Merge
+      ).mergeSchemasAsync({
         ...cleanObject(mergeSchemasConfig),
         schemas: [...modulesSchemaList, ...schemas],
       });
     } else if (schemas[0]) {
       mergedSchema = modulesSchemaList[0]
-        ? await (await Merge).mergeSchemasAsync({
+        ? await (
+            await Merge
+          ).mergeSchemasAsync({
             ...cleanObject(mergeSchemasConfig),
             schemas: [...modulesSchemaList, schemas[0]],
           })
