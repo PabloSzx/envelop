@@ -1,7 +1,7 @@
 import { gql } from 'graphql-modules';
 import bodyParser from 'koa-bodyparser';
 
-import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app.js';
+import { BaseEnvelopAppOptionsWithUpload, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app.js';
 import { handleIDE } from './common/ide/handle.js';
 import { RawAltairHandlerDeps } from './common/ide/rawAltair.js';
 
@@ -15,7 +15,7 @@ export interface BuildContextArgs {
   response: Response;
 }
 
-export interface EnvelopAppOptions extends BaseEnvelopAppOptions<EnvelopContext> {
+export interface EnvelopAppOptions extends BaseEnvelopAppOptionsWithUpload<EnvelopContext> {
   /**
    * Build Context
    */
@@ -156,7 +156,18 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
             },
           });
         };
-        router.get(path, main).post(path, main);
+
+        if (config.GraphQLUpload) {
+          const GraphQLUploadMiddleware: typeof import('graphql-upload').graphqlUploadKoa = (
+            await import('graphql-upload/public/graphqlUploadKoa.js')
+          ).default;
+
+          const middleware = GraphQLUploadMiddleware(typeof config.GraphQLUpload === 'object' ? config.GraphQLUpload : undefined);
+
+          router.get(path, main).post(path, middleware, main);
+        } else {
+          router.get(path, main).post(path, main);
+        }
       },
     });
 

@@ -1,4 +1,4 @@
-import { CreateApp, BuildContextArgs, InferFunctionReturn } from '@pablosz/envelop-app/express';
+import { CreateApp, BuildContextArgs, InferFunctionReturn, gql, readStreamToBuffer } from '@pablosz/envelop-app/express';
 
 function buildContext({ request }: BuildContextArgs) {
   return {
@@ -11,7 +11,8 @@ declare module '@pablosz/envelop-app/express' {
   interface EnvelopContext extends InferFunctionReturn<typeof buildContext> {}
 }
 
-export const { registerModule, buildApp, gql } = CreateApp({
+export const { registerModule, buildApp } = CreateApp({
+  GraphQLUpload: true,
   codegen: {
     federation: true,
     deepPartialResolvers: true,
@@ -21,6 +22,22 @@ export const { registerModule, buildApp, gql } = CreateApp({
     `,
     scalars: {
       DateTime: 'string',
+    },
+  },
+  schema: {
+    typeDefs: gql`
+      type Mutation {
+        uploadFileToBase64(file: Upload!): String!
+      }
+    `,
+    resolvers: {
+      Mutation: {
+        async uploadFileToBase64(_root, { file }) {
+          const fileBuffer = await readStreamToBuffer(file);
+
+          return fileBuffer.toString('base64');
+        },
+      },
     },
   },
   outputSchema: './schema.gql',
@@ -39,3 +56,5 @@ export const { registerModule, buildApp, gql } = CreateApp({
     },
   },
 });
+
+export { gql };

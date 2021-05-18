@@ -13,6 +13,7 @@ export type ResolverFn<TResult, TParent, TContext, TArgs> = (
   context: TContext,
   info: GraphQLResolveInfo
 ) => Promise<import('@pablosz/envelop-app/koa').DeepPartial<TResult>> | import('@pablosz/envelop-app/koa').DeepPartial<TResult>;
+export type RequireFields<T, K extends keyof T> = { [X in Exclude<keyof T, K>]?: T[X] } & { [P in K]-?: NonNullable<T[P]> };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
   ID: string;
@@ -22,6 +23,8 @@ export type Scalars = {
   Float: number;
   /** A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar. */
   DateTime: string;
+  /** The `Upload` scalar type represents a file upload. */
+  Upload: Promise<import('graphql-upload').FileUpload>;
   _FieldSet: any;
 };
 
@@ -35,6 +38,15 @@ export type Query = {
 export type Subscription = {
   __typename?: 'Subscription';
   hello: Scalars['String'];
+};
+
+export type Mutation = {
+  __typename?: 'Mutation';
+  uploadFileToBase64: Scalars['String'];
+};
+
+export type MutationUploadFileToBase64Args = {
+  file: Scalars['Upload'];
 };
 
 export type ResolverTypeWrapper<T> = Promise<T> | T;
@@ -115,6 +127,8 @@ export type ResolversTypes = {
   String: ResolverTypeWrapper<Scalars['String']>;
   Subscription: ResolverTypeWrapper<{}>;
   DateTime: ResolverTypeWrapper<Scalars['DateTime']>;
+  Upload: ResolverTypeWrapper<Scalars['Upload']>;
+  Mutation: ResolverTypeWrapper<{}>;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']>;
   Int: ResolverTypeWrapper<Scalars['Int']>;
 };
@@ -125,6 +139,8 @@ export type ResolversParentTypes = {
   String: Scalars['String'];
   Subscription: {};
   DateTime: Scalars['DateTime'];
+  Upload: Scalars['Upload'];
+  Mutation: {};
   Boolean: Scalars['Boolean'];
   Int: Scalars['Int'];
 };
@@ -149,10 +165,28 @@ export interface DateTimeScalarConfig extends GraphQLScalarTypeConfig<ResolversT
   name: 'DateTime';
 }
 
+export interface UploadScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['Upload'], any> {
+  name: 'Upload';
+}
+
+export type MutationResolvers<
+  ContextType = EnvelopContext,
+  ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']
+> = {
+  uploadFileToBase64?: Resolver<
+    ResolversTypes['String'],
+    ParentType,
+    ContextType,
+    RequireFields<MutationUploadFileToBase64Args, 'file'>
+  >;
+};
+
 export type Resolvers<ContextType = EnvelopContext> = {
   Query?: QueryResolvers<ContextType>;
   Subscription?: SubscriptionResolvers<ContextType>;
   DateTime?: GraphQLScalarType;
+  Upload?: GraphQLScalarType;
+  Mutation?: MutationResolvers<ContextType>;
 };
 
 /**

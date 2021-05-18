@@ -1,9 +1,9 @@
 import assert from 'assert';
-import { Express, json, Request, Response, Router } from 'express';
+import { Express, json, Request, RequestHandler, Response, Router } from 'express';
 import { gql } from 'graphql-modules';
 import { createServer, Server } from 'http';
 
-import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app.js';
+import { BaseEnvelopAppOptionsWithUpload, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app.js';
 import { handleIDE, IDEOptions } from './common/ide/handle.js';
 import { CreateSubscriptionsServer, WebSocketSubscriptionsOptions } from './common/subscriptions/websocket.js';
 
@@ -16,7 +16,7 @@ export interface BuildContextArgs {
   response: Response;
 }
 
-export interface EnvelopAppOptions extends BaseEnvelopAppOptions<EnvelopContext> {
+export interface EnvelopAppOptions extends BaseEnvelopAppOptionsWithUpload<EnvelopContext> {
   /**
    * @default "/graphql"
    */
@@ -128,7 +128,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
 
         const requestHandler = customHandleRequest || handleRequest;
 
-        EnvelopApp.use(path, (req, res, next) => {
+        const ExpressRequestHandler: RequestHandler = (req, res, next) => {
           const request = {
             body: req.body,
             headers: req.headers,
@@ -159,7 +159,20 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
               return defaultHandle(req, res, result);
             },
           }).catch(next);
-        });
+        };
+
+        EnvelopApp.get(path, ExpressRequestHandler);
+        if (config.GraphQLUpload) {
+          const GraphQLUploadMiddleware: typeof import('graphql-upload').graphqlUploadExpress = (
+            await import('graphql-upload/public/graphqlUploadExpress.js')
+          ).default;
+
+          const middleware = GraphQLUploadMiddleware(typeof config.GraphQLUpload === 'object' ? config.GraphQLUpload : undefined);
+
+          EnvelopApp.post(path, middleware, ExpressRequestHandler);
+        } else {
+          EnvelopApp.post(path, ExpressRequestHandler);
+        }
 
         await Promise.all([IDEPromise, subscriptionsPromise]);
 

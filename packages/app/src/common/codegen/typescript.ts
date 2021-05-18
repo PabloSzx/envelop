@@ -168,7 +168,6 @@ export async function EnvelopCodegen(
     customResolverFn: deepPartialResolvers
       ? `(parent: TParent, args: TArgs, context: TContext, info: GraphQLResolveInfo) => Promise<import("${moduleName}").DeepPartial<TResult>> | import("${moduleName}").DeepPartial<TResult>`
       : undefined,
-    // TODO: Add default recommended types
     scalars,
     contextType: `${moduleName}#EnvelopContext`,
     ...codegenOptions,

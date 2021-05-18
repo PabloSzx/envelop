@@ -72,7 +72,7 @@ export const { registerModule, buildApp, registerDataLoader, modules, plugins } 
         async uploadFileToBase64(_root, { file }) {
           const fileBuffer = await readStreamToBuffer(file);
 
-          return Buffer.from(fileBuffer).toString('base64');
+          return fileBuffer.toString('base64');
         },
       },
     },

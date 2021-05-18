@@ -1,4 +1,4 @@
-import { CreateApp, BuildContextArgs, InferFunctionReturn, gql } from '@pablosz/envelop-app/koa';
+import { CreateApp, BuildContextArgs, InferFunctionReturn, gql, readStreamToBuffer } from '@pablosz/envelop-app/koa';
 
 function buildContext({ request }: BuildContextArgs) {
   return {
@@ -12,6 +12,7 @@ declare module '@pablosz/envelop-app/koa' {
 }
 
 export const { registerModule, buildApp } = CreateApp({
+  GraphQLUpload: true,
   codegen: {
     federation: true,
     deepPartialResolvers: true,
@@ -35,11 +36,21 @@ export const { registerModule, buildApp } = CreateApp({
       type Query {
         hello3: String!
       }
+      type Mutation {
+        uploadFileToBase64(file: Upload!): String!
+      }
     `,
     resolvers: {
       Query: {
         hello3(_root, _args, _ctx) {
           return 'zzz';
+        },
+      },
+      Mutation: {
+        async uploadFileToBase64(_root, { file }) {
+          const fileBuffer = await readStreamToBuffer(file);
+
+          return fileBuffer.toString('base64');
         },
       },
     },
