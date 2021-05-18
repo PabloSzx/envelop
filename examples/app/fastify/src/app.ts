@@ -9,6 +9,7 @@ function buildContext({ request }: BuildContextArgs) {
 
 export const { registerModule, buildApp, registerDataLoader, modules, plugins } = CreateApp({
   allowBatchedQueries: true,
+  GraphQLUpload: true,
   codegen: {
     federation: true,
     deepPartialResolvers: true,

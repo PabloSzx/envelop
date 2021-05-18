@@ -10,6 +10,7 @@ import type { FastifyInstance, FastifyPluginCallback, FastifyReply, FastifyReque
 import type { Server } from 'http';
 import type { EnvelopContext } from './common/types';
 import type { AltairFastifyPluginOptions } from 'altair-fastify-plugin';
+import type { UploadOptions } from 'graphql-upload';
 
 export type EnvelopAppPlugin = FastifyPluginCallback<{}, Server>;
 
@@ -43,6 +44,19 @@ export interface EnvelopAppOptions extends BaseEnvelopAppOptions<EnvelopContext>
    * Custom Fastify Route options
    */
   routeOptions?: Omit<RouteOptions, 'method' | 'url' | 'handler'>;
+
+  /**
+   * Enable GraphQL Upload
+   *
+   * @default false
+   */
+  GraphQLUpload?: boolean | UploadOptions;
+}
+
+declare module 'fastify' {
+  interface FastifyRequest {
+    isMultipart?: true;
+  }
 }
 
 export interface BuildAppOptions {
@@ -62,7 +76,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
   const { appBuilder, ...commonApp } = createEnvelopAppFactory(config, {
     moduleName: 'fastify',
   });
-  const { websocketSubscriptions, path = '/graphql' } = config;
+  const { websocketSubscriptions, path = '/graphql', GraphQLUpload = false } = config;
 
   const subscriptionsClientFactoryPromise = CreateSubscriptionsServer(websocketSubscriptions);
 
@@ -127,6 +141,27 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
           });
 
           const subscriptionsPromise = handleSubscriptions(getEnveloped, instance);
+
+          if (GraphQLUpload) {
+            const processRequest: typeof import('graphql-upload').processRequest = (
+              await import('graphql-upload/public/processRequest.js')
+            ).default;
+
+            instance.addContentTypeParser('multipart', (req, _payload, done) => {
+              req.isMultipart = true;
+              done(null);
+            });
+
+            instance.addHook('preValidation', async function (request, reply) {
+              if (!request.isMultipart) return;
+
+              request.body = await processRequest(
+                request.raw,
+                reply.raw,
+                typeof GraphQLUpload === 'object' ? GraphQLUpload : undefined
+              );
+            });
+          }
 
           const requestHandler = customHandleRequest || handleRequest;
 
