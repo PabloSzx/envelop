@@ -143,6 +143,15 @@ export interface BaseEnvelopAppOptions<TContext> extends Partial<ApplicationConf
    * Override `handleRequest` logic
    */
   customHandleRequest?: typeof handleRequest;
+
+  /**
+   * Allow batched queries
+   *
+   * > Specify a number to set the maximum (inclusive) amount of batched queries allowed
+   *
+   * @default false
+   */
+  allowBatchedQueries?: boolean | number;
 }
 
 export function createEnvelopAppFactory<TContext>(

@@ -8,6 +8,7 @@ function buildContext({ request }: BuildContextArgs) {
 }
 
 export const { registerModule, buildApp, registerDataLoader, modules, plugins } = CreateApp({
+  allowBatchedQueries: true,
   codegen: {
     federation: true,
     deepPartialResolvers: true,

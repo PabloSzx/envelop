@@ -78,9 +78,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
 
     instance.addHook('onClose', function (_fastify, done) {
       Promise.all(
-        state.wsServers.map(
-          server => new Promise<Error | undefined>(resolve => server.close(err => resolve(err)))
-        )
+        state.wsServers.map(server => new Promise<Error | undefined>(resolve => server.close(err => resolve(err))))
       ).then(() => done(), done);
     });
 
@@ -147,6 +145,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
               return requestHandler({
                 request,
                 getEnveloped,
+                baseOptions: config,
                 buildContextArgs() {
                   return {
                     request: req,

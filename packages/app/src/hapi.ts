@@ -106,6 +106,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
               return requestHandler<BuildContextArgs, Lifecycle.ReturnValueTypes>({
                 request,
                 getEnveloped,
+                baseOptions: config,
                 buildContext,
                 buildContextArgs() {
                   return {

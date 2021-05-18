@@ -60,6 +60,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
           return requestHandler({
             request,
             getEnveloped,
+            baseOptions: config,
             buildContext,
             buildContextArgs() {
               return {

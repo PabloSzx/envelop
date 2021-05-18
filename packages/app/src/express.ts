@@ -139,6 +139,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
           return requestHandler({
             request,
             getEnveloped,
+            baseOptions: config,
             buildContextArgs() {
               return {
                 request: req,

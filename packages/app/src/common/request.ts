@@ -1,15 +1,32 @@
-import {
-  ExecutionContext,
-  getGraphQLParameters,
-  MultipartResponse,
-  processRequest,
-  Push,
-  Request,
-  Response,
-} from 'graphql-helix';
+import { ExecutionContext, getGraphQLParameters, MultipartResponse, processRequest, Push, Request } from 'graphql-helix';
 
 import type { Envelop } from '@envelop/types';
 import type { IncomingMessage, ServerResponse } from 'http';
+import type { ExecutionResult } from 'graphql';
+import type { BaseEnvelopAppOptions } from './app';
+
+export type EnvelopResponse = {
+  type: 'RESPONSE';
+  status: number;
+  payload: ExecutionResult | ExecutionResult[];
+};
+
+export interface HandleRequestOptions<BuildContextArgs, TReturn = unknown> {
+  request: Request;
+  getEnveloped: Envelop<unknown>;
+
+  baseOptions: BaseEnvelopAppOptions<never>;
+
+  buildContextArgs: () => BuildContextArgs;
+  buildContext: ((args: BuildContextArgs) => Record<string, unknown> | Promise<Record<string, unknown>>) | undefined;
+
+  onResponse: (result: EnvelopResponse, defaultHandle: typeof defaultResponseHandle) => TReturn | Promise<TReturn>;
+  onMultiPartResponse: (
+    result: MultipartResponse<unknown, unknown>,
+    defaultHandle: typeof defaultMultipartResponseHandle
+  ) => TReturn | Promise<TReturn>;
+  onPushResponse: (result: Push<unknown, unknown>, defaultHandle: typeof defaultPushResponseHandle) => TReturn | Promise<TReturn>;
+}
 
 export async function handleRequest<BuildContextArgs, TReturn = unknown>({
   request,
@@ -19,22 +36,8 @@ export async function handleRequest<BuildContextArgs, TReturn = unknown>({
   onResponse,
   onMultiPartResponse,
   onPushResponse,
-}: {
-  request: Request;
-  getEnveloped: Envelop<unknown>;
-
-  buildContextArgs: () => BuildContextArgs;
-  buildContext: ((args: BuildContextArgs) => Record<string, unknown> | Promise<Record<string, unknown>>) | undefined;
-
-  onResponse: (result: Response<unknown, unknown>, defaultHandle: typeof defaultResponseHandle) => TReturn | Promise<TReturn>;
-  onMultiPartResponse: (
-    result: MultipartResponse<unknown, unknown>,
-    defaultHandle: typeof defaultMultipartResponseHandle
-  ) => TReturn | Promise<TReturn>;
-  onPushResponse: (result: Push<unknown, unknown>, defaultHandle: typeof defaultPushResponseHandle) => TReturn | Promise<TReturn>;
-}): Promise<TReturn> {
-  const { operationName, query, variables } = getGraphQLParameters(request);
-
+  baseOptions,
+}: HandleRequestOptions<BuildContextArgs, TReturn>): Promise<TReturn> {
   const { parse, validate, contextFactory: contextFactoryEnvelop, execute, schema, subscribe } = getEnveloped();
 
   async function contextFactory(helixCtx: ExecutionContext) {
@@ -44,6 +47,50 @@ export async function handleRequest<BuildContextArgs, TReturn = unknown>({
 
     return contextFactoryEnvelop(helixCtx);
   }
+
+  if (Array.isArray(request.body)) {
+    const allowBatchedQueries = baseOptions.allowBatchedQueries;
+
+    if (!allowBatchedQueries) throw Error('Batched queries not enabled!');
+
+    if (typeof allowBatchedQueries === 'number' && request.body.length > allowBatchedQueries) {
+      throw Error('Batched queries limit exceeded!');
+    }
+
+    const payload = await Promise.all(
+      request.body.map(async body => {
+        const { operationName, query, variables } = getGraphQLParameters({ ...request, body });
+
+        const result = await processRequest({
+          operationName,
+          query,
+          variables,
+          request,
+          schema,
+          parse,
+          validate,
+          contextFactory,
+          execute,
+          subscribe,
+        });
+
+        if (result.type !== 'RESPONSE') throw Error(`Unsupported ${result.type} in Batched Queries!`);
+
+        return result.payload;
+      })
+    );
+
+    return onResponse(
+      {
+        type: 'RESPONSE',
+        status: 200,
+        payload,
+      },
+      defaultResponseHandle
+    );
+  }
+
+  const { operationName, query, variables } = getGraphQLParameters(request);
 
   const result = await processRequest({
     operationName,
@@ -71,7 +118,7 @@ export async function handleRequest<BuildContextArgs, TReturn = unknown>({
   }
 }
 
-export function defaultResponseHandle(_req: IncomingMessage, res: ServerResponse, result: Response<unknown, unknown>): void {
+export function defaultResponseHandle(_req: IncomingMessage, res: ServerResponse, result: EnvelopResponse): void {
   res.writeHead(result.status, {
     'content-type': 'application/json',
   });
