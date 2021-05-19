@@ -15,3 +15,7 @@ query GetContext {
 mutation uploadFile($file: Upload!) {
   uploadFileToBase64(file: $file)
 }
+
+subscription pingSubscription {
+  ping
+}

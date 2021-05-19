@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* istanbul ignore file */
 
-import DataLoader from 'dataloader';
 import FormData from 'form-data';
 import { promises } from 'fs';
 import getPort from 'get-port';
@@ -10,8 +9,7 @@ import merge from 'lodash/merge';
 import { Readable } from 'stream';
 import tmp from 'tmp-promise';
 import { Pool } from 'undici';
-import { RequestOptions } from 'undici/types/client';
-
+import ws from 'ws';
 import {
   BaseEnvelopAppOptions,
   BaseEnvelopBuilder,
@@ -23,9 +21,14 @@ import {
   LazyPromise,
   PLazy,
 } from '@envelop/app/extend';
+import { createClient as createGraphQLWSClient } from 'graphql-ws';
+import { SubscriptionClient as SubscriptionsTransportClient } from 'subscriptions-transport-ws-envelop';
+import { isDocumentNode } from '@graphql-tools/utils';
 
 import { UploadFileDocument } from './generated/envelop.generated';
 
+import type DataLoader from 'dataloader';
+import type { RequestOptions } from 'undici/types/client';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
 export const { readFile } = promises;
@@ -93,7 +96,7 @@ export function commonImplementation({ registerDataLoader, registerModule }: Bas
         Subscription: {
           ping: {
             async *subscribe() {
-              for (let i = 1; i <= 5; ++i) {
+              for (let i = 1; i <= 3; ++i) {
                 await sleep(100);
 
                 yield {
@@ -217,7 +220,17 @@ export async function startFastifyServer({
     TearDownPromises.push(new PLazy<void>(resolve => app.close(resolve)));
   });
 
-  return { ...getRequestPool(port), tmpPath, tmpSchemaPath, codegenPromise, app };
+  const pool = getRequestPool(port);
+
+  return {
+    ...pool,
+    tmpPath,
+    tmpSchemaPath,
+    codegenPromise,
+    app,
+    GraphQLWSWebsocketsClient: createGraphQLWSWebsocketsClient(pool.address),
+    SubscriptionsTransportWebsocketsClient: createSubscriptionsTransportWebsocketsClient(pool.address),
+  };
 }
 
 export async function startHTTPServer({
@@ -404,4 +417,91 @@ export function createUploadFileBody(content: string) {
   body.append('1', content, { filename: uploadFilename });
 
   return body;
+}
+
+export function createGraphQLWSWebsocketsClient(httpUrl: string) {
+  const url = new URL(httpUrl + '/graphql');
+
+  url.protocol = url.protocol.replace('http', 'ws');
+
+  const client = createGraphQLWSClient({
+    url: url.href,
+    webSocketImpl: ws,
+  });
+
+  TearDownPromises.push(
+    LazyPromise(async () => {
+      try {
+        await client.dispose();
+      } catch (err) {}
+    })
+  );
+
+  function subscribe<TResult = unknown>(query: string | TypedDocumentNode<TResult>, onData: (data: TResult) => void) {
+    let unsubscribe = () => {};
+
+    const done = new Promise<void>((resolve, reject) => {
+      unsubscribe = client.subscribe(
+        {
+          query: isDocumentNode(query) ? print(query) : query,
+        },
+        {
+          next: onData,
+          error: reject,
+          complete: resolve,
+        }
+      );
+    });
+
+    return {
+      done,
+      unsubscribe,
+    };
+  }
+
+  return { subscribe };
+}
+
+export function createSubscriptionsTransportWebsocketsClient(httpUrl: string) {
+  const url = new URL(httpUrl + '/graphql');
+
+  url.protocol = url.protocol.replace('http', 'ws');
+
+  const client = new SubscriptionsTransportClient(
+    url.href,
+    {
+      lazy: true,
+    },
+    ws
+  );
+
+  TearDownPromises.push(
+    LazyPromise(async () => {
+      client.close();
+    })
+  );
+
+  function subscribe<TResult = unknown>(query: string | TypedDocumentNode<TResult>, onData: (data: TResult) => void) {
+    let unsubscribe = () => {};
+
+    const done = new Promise<void>((resolve, reject) => {
+      const { subscribe } = client.request({
+        query: isDocumentNode(query) ? print(query) : query,
+      });
+
+      const result = subscribe({
+        next: onData as any,
+        error: reject,
+        complete: resolve,
+      });
+      unsubscribe = result.unsubscribe;
+    });
+
+    return {
+      done,
+      unsubscribe,
+    };
+  }
+
+  return { subscribe };
 }

@@ -4,7 +4,7 @@ import { buildClientSchema, getIntrospectionQuery, IntrospectionQuery, printSche
 
 import { gql, readStreamToBuffer } from '@envelop/app/extend';
 
-import { GetContextDocument, HelloDocument, UsersDocument } from './generated/envelop.generated';
+import { GetContextDocument, HelloDocument, PingSubscriptionDocument, UsersDocument } from './generated/envelop.generated';
 import { commonImplementation, createUploadFileBody, readFile, startFastifyServer } from './utils';
 
 const serverReady = startFastifyServer({
@@ -35,6 +35,7 @@ const serverReady = startFastifyServer({
         },
       },
     },
+    websocketSubscriptions: true,
   },
   buildOptions: {
     prepare(tools) {
@@ -1936,4 +1937,166 @@ test('batched queries', async () => {
       },
     ]
   `);
+});
+
+test('GraphQLWS websocket subscriptions', async () => {
+  const { GraphQLWSWebsocketsClient } = await serverReady;
+
+  let n = 0;
+
+  const { done } = GraphQLWSWebsocketsClient.subscribe(PingSubscriptionDocument, data => {
+    ++n;
+
+    switch (n) {
+      case 1:
+      case 2:
+      case 3:
+        return expect(data).toStrictEqual({
+          data: {
+            ping: 'pong',
+          },
+        });
+      default:
+        throw Error('Unexpected data from subscription!');
+    }
+  });
+
+  await done;
+
+  expect(n).toBe(3);
+});
+
+test('websocket subscriptions legacy only', async () => {
+  const { SubscriptionsTransportWebsocketsClient } = await startFastifyServer({
+    options: {
+      websocketSubscriptions: 'legacy',
+      scalars: '*',
+    },
+    buildOptions: {
+      prepare(tools) {
+        commonImplementation(tools);
+        tools.registerModule(
+          gql`
+            extend type Query {
+              getContext: JSONObject!
+            }
+          `,
+          {
+            resolvers: {
+              Query: {
+                getContext(_root, _args, ctx) {
+                  return ctx;
+                },
+              },
+            },
+          }
+        );
+      },
+    },
+  });
+
+  let n = 0;
+
+  const { done: doneSubscriptionsTransport } = SubscriptionsTransportWebsocketsClient.subscribe(
+    PingSubscriptionDocument,
+    data => {
+      ++n;
+
+      switch (n) {
+        case 1:
+        case 2:
+        case 3:
+          return expect(data).toStrictEqual({
+            data: {
+              ping: 'pong',
+            },
+          });
+        default:
+          throw Error('Unexpected data from subscription!');
+      }
+    }
+  );
+
+  await doneSubscriptionsTransport;
+
+  expect(n).toBe(3);
+});
+
+test('websocket subscriptions supporting both legacy and new protocols', async () => {
+  const { GraphQLWSWebsocketsClient, SubscriptionsTransportWebsocketsClient } = await startFastifyServer({
+    options: {
+      websocketSubscriptions: 'both',
+      scalars: '*',
+    },
+    buildOptions: {
+      prepare(tools) {
+        commonImplementation(tools);
+        tools.registerModule(
+          gql`
+            extend type Query {
+              getContext: JSONObject!
+            }
+          `,
+          {
+            resolvers: {
+              Query: {
+                getContext(_root, _args, ctx) {
+                  return ctx;
+                },
+              },
+            },
+          }
+        );
+      },
+    },
+  });
+
+  let nGraphQLWS = 0;
+
+  const { done } = GraphQLWSWebsocketsClient.subscribe(PingSubscriptionDocument, data => {
+    ++nGraphQLWS;
+
+    switch (nGraphQLWS) {
+      case 1:
+      case 2:
+      case 3:
+        return expect(data).toStrictEqual({
+          data: {
+            ping: 'pong',
+          },
+        });
+      default:
+        throw Error('Unexpected data from subscription!');
+    }
+  });
+
+  await done;
+
+  expect(nGraphQLWS).toBe(3);
+
+  let nSubscriptionsTransport = 0;
+
+  const { done: doneSubscriptionsTransport } = SubscriptionsTransportWebsocketsClient.subscribe(
+    PingSubscriptionDocument,
+    data => {
+      ++nSubscriptionsTransport;
+
+      switch (nSubscriptionsTransport) {
+        case 1:
+        case 2:
+        case 3:
+          return expect(data).toStrictEqual({
+            data: {
+              ping: 'pong',
+            },
+          });
+        default:
+          throw Error('Unexpected data from subscription!');
+      }
+    }
+  );
+
+  await doneSubscriptionsTransport;
+
+  expect(nSubscriptionsTransport).toBe(3);
 });

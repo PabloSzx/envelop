@@ -90,7 +90,7 @@ export interface WebSocketSubscriptionsObjectOptions {
   wsOptions?: Pick<WebSocket.ServerOptions, 'verifyClient' | 'clientTracking' | 'perMessageDeflate' | 'maxPayload'>;
 }
 
-export type WebSocketSubscriptionsOptions = WebSocketSubscriptionsObjectOptions | boolean | 'legacy';
+export type WebSocketSubscriptionsOptions = WebSocketSubscriptionsObjectOptions | boolean | 'legacy' | 'both';
 
 export type CommonSubscriptionsServer = Promise<
   ((getEnveloped: Envelop<unknown>) => (httpServer: HttpServer, path: string) => SubscriptionsState) | null
@@ -107,9 +107,10 @@ type SubscriptionsTransportOnConnectArgs = [
 export const CreateSubscriptionsServer = async (
   options: WebSocketSubscriptionsOptions | undefined
 ): CommonSubscriptionsServer => {
-  const enableOldTransport = options === 'legacy' || (typeof options === 'object' && options.subscriptionsTransport);
+  const enableOldTransport =
+    options === 'legacy' || options === 'both' || (typeof options === 'object' && options.subscriptionsTransport);
 
-  const enableGraphQLWS = options === true || (typeof options === 'object' && options.graphQLWS);
+  const enableGraphQLWS = options === true || options === 'both' || (typeof options === 'object' && options.graphQLWS);
 
   const enableAll = enableOldTransport && enableGraphQLWS;
 

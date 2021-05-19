@@ -230,6 +230,10 @@ export type UploadFileMutationVariables = Exact<{
 
 export type UploadFileMutation = { __typename?: 'Mutation' } & Pick<Mutation, 'uploadFileToBase64'>;
 
+export type PingSubscriptionSubscriptionVariables = Exact<{ [key: string]: never }>;
+
+export type PingSubscriptionSubscription = { __typename?: 'Subscription' } & Pick<Subscription, 'ping'>;
+
 export const HelloDocument: DocumentNode<HelloQuery, HelloQueryVariables> = {
   kind: 'Document',
   definitions: [
@@ -302,6 +306,17 @@ export const UploadFileDocument: DocumentNode<UploadFileMutation, UploadFileMuta
           },
         ],
       },
+    },
+  ],
+};
+export const PingSubscriptionDocument: DocumentNode<PingSubscriptionSubscription, PingSubscriptionSubscriptionVariables> = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'subscription',
+      name: { kind: 'Name', value: 'pingSubscription' },
+      selectionSet: { kind: 'SelectionSet', selections: [{ kind: 'Field', name: { kind: 'Name', value: 'ping' } }] },
     },
   ],
 };
