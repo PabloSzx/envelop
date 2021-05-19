@@ -14,7 +14,8 @@
     "prepare": "husky install",
     "pretty": "pretty-quick",
     "pretty-all": "prettier -w **/*.ts **/*.js",
-    "test": "jest"
+    "test": "jest",
+    "test:full": "jest --watchAll -u --coverage"
   },
   "dependencies": {
     "@types/jest": "^26.0.23",

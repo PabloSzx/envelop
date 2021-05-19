@@ -125,26 +125,12 @@ test('altair', async () => {
     `"@charset \\"UTF-8\\";[class*=ant-]::-ms-clear,[class*=ant-] input::-ms-clear,[class*=ant-] input::-ms-reveal,[class^=ant-]::-ms-clear,[class^=ant-] input::-ms-clear,[class^=ant-] input::-ms-reveal{display:none}[class*=ant-],[class*=ant-] *,[class*=ant-] :after,[class*=ant-] :before,[class^=ant-],[class^"`
   );
 
-  expect(
-    await requestRaw({
-      method: 'GET',
-      path: '/altair/other/not_found',
-    })
-  ).toMatchInlineSnapshot(`
-    Object {
-      "body": Promise {},
-      "headers": Object {
-        "connection": "keep-alive",
-        "content-length": "9",
-        "content-type": "text/plain; charset=utf-8",
-        "date": "Wed, 19 May 2021 21:08:34 GMT",
-        "keep-alive": "timeout=5",
-      },
-      "opaque": null,
-      "statusCode": 404,
-      "trailers": Object {},
-    }
-  `);
+  const notFoundRequest = await requestRaw({
+    method: 'GET',
+    path: '/altair/other/not_found',
+  });
+
+  expect(notFoundRequest.statusCode).toBe(404);
 });
 
 test('graphiql', async () => {
