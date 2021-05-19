@@ -2,7 +2,7 @@ import EventSource from 'eventsource';
 import got from 'got';
 import { buildClientSchema, getIntrospectionQuery, IntrospectionQuery, printSchema, print } from 'graphql';
 
-import { gql, readStreamToBuffer } from '@envelop/app/extend';
+import { createDeferredPromise, gql, readStreamToBuffer } from '@envelop/app/extend';
 
 import { GetContextDocument, HelloDocument, PingSubscriptionDocument, UsersDocument } from './generated/envelop.generated';
 import { commonImplementation, createUploadFileBody, readFile, startFastifyServer } from './utils';
@@ -2126,4 +2126,62 @@ test('websocket subscriptions supporting both legacy and new protocols', async (
   await doneSubscriptionsTransport;
 
   expect(nSubscriptionsTransport).toBe(3);
+});
+
+test('JIT works', async () => {
+  const { query } = await startFastifyServer({
+    options: {
+      scalars: '*',
+      jit: true,
+      codegen: {
+        onFinish() {},
+      },
+    },
+    buildOptions: {
+      prepare(tools) {
+        commonImplementation(tools);
+      },
+    },
+  });
+
+  await query(HelloDocument).then(v => {
+    expect(v).toMatchInlineSnapshot(`
+      Object {
+        "data": Object {
+          "hello": "Hello World!",
+        },
+      }
+    `);
+  });
+});
+
+test('codegen onFinish', async () => {
+  const onFinishPromise = createDeferredPromise<boolean>();
+  const { query } = await startFastifyServer({
+    options: {
+      scalars: '*',
+
+      codegen: {
+        onFinish() {
+          onFinishPromise.resolve(true);
+        },
+      },
+    },
+    buildOptions: {
+      prepare(tools) {
+        commonImplementation(tools);
+      },
+    },
+  });
+  await query(HelloDocument).then(v => {
+    expect(v).toMatchInlineSnapshot(`
+      Object {
+        "data": Object {
+          "hello": "Hello World!",
+        },
+      }
+    `);
+  });
+
+  expect(await onFinishPromise.promise).toBe(true);
 });
