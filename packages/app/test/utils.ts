@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+/* istanbul ignore file */
 
 import DataLoader from 'dataloader';
+import FormData from 'form-data';
 import { promises } from 'fs';
 import getPort from 'get-port';
 import { ExecutionResult, print } from 'graphql';
@@ -21,6 +23,8 @@ import {
   LazyPromise,
   PLazy,
 } from '@envelop/app/extend';
+
+import { UploadFileDocument } from './generated/envelop.generated';
 
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
@@ -213,7 +217,7 @@ export async function startFastifyServer({
     TearDownPromises.push(new PLazy<void>(resolve => app.close(resolve)));
   });
 
-  return { ...getRequestPool(port), tmpPath, tmpSchemaPath, codegenPromise };
+  return { ...getRequestPool(port), tmpPath, tmpSchemaPath, codegenPromise, app };
 }
 
 export async function startHTTPServer({
@@ -382,4 +386,22 @@ function getJSONFromStream<T>(stream: import('stream').Readable): Promise<T> {
       }
     });
   });
+}
+
+export function createUploadFileBody(content: string) {
+  const body = new FormData();
+
+  const uploadFilename = 'a.png';
+
+  const query = print(UploadFileDocument);
+  const operations = {
+    query,
+    variables: { file: null },
+  };
+
+  body.append('operations', JSON.stringify(operations));
+  body.append('map', JSON.stringify({ '1': ['variables.file'] }));
+  body.append('1', content, { filename: uploadFilename });
+
+  return body;
 }

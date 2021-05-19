@@ -1,14 +1,16 @@
 import EventSource from 'eventsource';
 import got from 'got';
-import { buildClientSchema, getIntrospectionQuery, IntrospectionQuery, printSchema } from 'graphql';
+import { buildClientSchema, getIntrospectionQuery, IntrospectionQuery, printSchema, print } from 'graphql';
 
-import { gql } from '@envelop/app/extend';
+import { gql, readStreamToBuffer } from '@envelop/app/extend';
 
 import { GetContextDocument, HelloDocument, UsersDocument } from './generated/envelop.generated';
-import { commonImplementation, readFile, startFastifyServer } from './utils';
+import { commonImplementation, createUploadFileBody, readFile, startFastifyServer } from './utils';
 
 const serverReady = startFastifyServer({
   options: {
+    allowBatchedQueries: true,
+    GraphQLUpload: true,
     scalars: {
       DateTime: 1,
       JSONObject: 1,
@@ -18,6 +20,20 @@ const serverReady = startFastifyServer({
       return {
         foo: 'bar',
       };
+    },
+    schema: {
+      typeDefs: gql`
+        type Mutation {
+          uploadFileToBase64(file: Upload!): String!
+        }
+      `,
+      resolvers: {
+        Mutation: {
+          async uploadFileToBase64(_root, { file }) {
+            return (await readStreamToBuffer(file)).toString('base64');
+          },
+        },
+      },
     },
   },
   buildOptions: {
@@ -242,6 +258,13 @@ test('resulting schema', async () => {
     The \`JSONObject\` scalar type represents JSON objects as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
     \\"\\"\\"
     scalar JSONObject
+
+    \\"\\"\\"The \`Upload\` scalar type represents a file upload.\\"\\"\\"
+    scalar Upload
+
+    type Mutation {
+      uploadFileToBase64(file: Upload!): String!
+    }
     "
   `);
 });
@@ -264,6 +287,7 @@ test('codegen result', async () => {
     export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
     export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
     export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
+    export type RequireFields<T, K extends keyof T> = { [X in Exclude<keyof T, K>]?: T[X] } & { [P in K]-?: NonNullable<T[P]> };
     /** All built-in and custom scalars, mapped to their actual values */
     export type Scalars = {
       ID: string;
@@ -275,6 +299,8 @@ test('codegen result', async () => {
       DateTime: any;
       /** The \`JSONObject\` scalar type represents JSON objects as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf). */
       JSONObject: any;
+      /** The \`Upload\` scalar type represents a file upload. */
+      Upload: Promise<import('graphql-upload').FileUpload>;
     };
 
     export type Query = {
@@ -293,6 +319,15 @@ test('codegen result', async () => {
     export type User = {
       __typename?: 'User';
       id: Scalars['Int'];
+    };
+
+    export type Mutation = {
+      __typename?: 'Mutation';
+      uploadFileToBase64: Scalars['String'];
+    };
+
+    export type MutationUploadFileToBase64Args = {
+      file: Scalars['Upload'];
     };
 
     export type ResolverTypeWrapper<T> = Promise<T> | T;
@@ -383,6 +418,8 @@ test('codegen result', async () => {
       Int: ResolverTypeWrapper<Scalars['Int']>;
       DateTime: ResolverTypeWrapper<Scalars['DateTime']>;
       JSONObject: ResolverTypeWrapper<Scalars['JSONObject']>;
+      Upload: ResolverTypeWrapper<Scalars['Upload']>;
+      Mutation: ResolverTypeWrapper<{}>;
       Boolean: ResolverTypeWrapper<Scalars['Boolean']>;
     };
 
@@ -395,6 +432,8 @@ test('codegen result', async () => {
       Int: Scalars['Int'];
       DateTime: Scalars['DateTime'];
       JSONObject: Scalars['JSONObject'];
+      Upload: Scalars['Upload'];
+      Mutation: {};
       Boolean: Scalars['Boolean'];
     };
 
@@ -431,12 +470,30 @@ test('codegen result', async () => {
       name: 'JSONObject';
     }
 
+    export interface UploadScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['Upload'], any> {
+      name: 'Upload';
+    }
+
+    export type MutationResolvers<
+      ContextType = EnvelopContext,
+      ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']
+    > = {
+      uploadFileToBase64?: Resolver<
+        ResolversTypes['String'],
+        ParentType,
+        ContextType,
+        RequireFields<MutationUploadFileToBase64Args, 'file'>
+      >;
+    };
+
     export type Resolvers<ContextType = EnvelopContext> = {
       Query?: QueryResolvers<ContextType>;
       Subscription?: SubscriptionResolvers<ContextType>;
       User?: UserResolvers<ContextType>;
       DateTime?: GraphQLScalarType;
       JSONObject?: GraphQLScalarType;
+      Upload?: GraphQLScalarType;
+      Mutation?: MutationResolvers<ContextType>;
     };
 
     /**
@@ -469,7 +526,9 @@ test('outputSchema result', async () => {
         \\"queryType\\": {
           \\"name\\": \\"Query\\"
         },
-        \\"mutationType\\": null,
+        \\"mutationType\\": {
+          \\"name\\": \\"Mutation\\"
+        },
         \\"subscriptionType\\": {
           \\"name\\": \\"Subscription\\"
         },
@@ -656,6 +715,58 @@ test('outputSchema result', async () => {
             \\"fields\\": null,
             \\"inputFields\\": null,
             \\"interfaces\\": null,
+            \\"enumValues\\": null,
+            \\"possibleTypes\\": null
+          },
+          {
+            \\"kind\\": \\"SCALAR\\",
+            \\"name\\": \\"Upload\\",
+            \\"description\\": \\"The \`Upload\` scalar type represents a file upload.\\",
+            \\"fields\\": null,
+            \\"inputFields\\": null,
+            \\"interfaces\\": null,
+            \\"enumValues\\": null,
+            \\"possibleTypes\\": null
+          },
+          {
+            \\"kind\\": \\"OBJECT\\",
+            \\"name\\": \\"Mutation\\",
+            \\"description\\": null,
+            \\"fields\\": [
+              {
+                \\"name\\": \\"uploadFileToBase64\\",
+                \\"description\\": null,
+                \\"args\\": [
+                  {
+                    \\"name\\": \\"file\\",
+                    \\"description\\": null,
+                    \\"type\\": {
+                      \\"kind\\": \\"NON_NULL\\",
+                      \\"name\\": null,
+                      \\"ofType\\": {
+                        \\"kind\\": \\"SCALAR\\",
+                        \\"name\\": \\"Upload\\",
+                        \\"ofType\\": null
+                      }
+                    },
+                    \\"defaultValue\\": null
+                  }
+                ],
+                \\"type\\": {
+                  \\"kind\\": \\"NON_NULL\\",
+                  \\"name\\": null,
+                  \\"ofType\\": {
+                    \\"kind\\": \\"SCALAR\\",
+                    \\"name\\": \\"String\\",
+                    \\"ofType\\": null
+                  }
+                },
+                \\"isDeprecated\\": false,
+                \\"deprecationReason\\": null
+              }
+            ],
+            \\"inputFields\\": null,
+            \\"interfaces\\": [],
             \\"enumValues\\": null,
             \\"possibleTypes\\": null
           },
@@ -1729,5 +1840,100 @@ test('outputSchema result', async () => {
       }
     }
     "
+  `);
+});
+
+test('upload file', async () => {
+  const { app } = await serverReady;
+
+  const fileMessage = 'hello-world';
+
+  const body = createUploadFileBody(fileMessage);
+  const res = await app.inject({
+    method: 'POST',
+    url: '/graphql',
+    headers: body.getHeaders(),
+    payload: body,
+  });
+
+  const { data } = JSON.parse(res.body);
+  expect(data).toMatchInlineSnapshot(`
+    Object {
+      "uploadFileToBase64": "aGVsbG8td29ybGQ=",
+    }
+  `);
+
+  const recovered = Buffer.from(data.uploadFileToBase64, 'base64').toString('utf-8');
+
+  expect(recovered).toMatchInlineSnapshot(`"hello-world"`);
+
+  expect(recovered).toBe(fileMessage);
+
+  expect(res.statusCode).toBe(200);
+});
+
+test('batched queries', async () => {
+  const { app } = await serverReady;
+
+  const res = await app.inject({
+    method: 'POST',
+    url: '/graphql',
+    headers: {
+      'content-type': 'application/json',
+    },
+    payload: JSON.stringify([
+      {
+        query: print(UsersDocument),
+      },
+      {
+        query: print(HelloDocument),
+      },
+    ]),
+  });
+
+  expect(JSON.parse(res.payload)).toMatchInlineSnapshot(`
+    Array [
+      Object {
+        "data": Object {
+          "users": Array [
+            Object {
+              "id": 0,
+            },
+            Object {
+              "id": 100,
+            },
+            Object {
+              "id": 200,
+            },
+            Object {
+              "id": 300,
+            },
+            Object {
+              "id": 400,
+            },
+            Object {
+              "id": 500,
+            },
+            Object {
+              "id": 600,
+            },
+            Object {
+              "id": 700,
+            },
+            Object {
+              "id": 800,
+            },
+            Object {
+              "id": 900,
+            },
+          ],
+        },
+      },
+      Object {
+        "data": Object {
+          "hello": "Hello World!",
+        },
+      },
+    ]
   `);
 });

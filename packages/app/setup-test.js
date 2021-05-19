@@ -22,6 +22,9 @@ module.exports = async () => {
           getContext: JSONObject!
           stream: [String!]!
         }
+        type Mutation {
+          uploadFileToBase64(file: Upload!): String!
+        }
         type Subscription {
           ping: String!
         }
@@ -29,16 +32,20 @@ module.exports = async () => {
           id: Int!
         }
         scalar JSONObject
+        scalar Upload
       `,
     }),
     {
       enableCodegen: true,
       codegen: {
-        preImportCode: `/* eslint-disable no-use-before-define */`,
+        preImportCode: `/* eslint-disable no-use-before-define */\n/* istanbul ignore file */\n\n`,
         targetPath: resolve(__dirname, `./test/generated/envelop.generated.ts`),
         documents: resolve(__dirname, './test/graphql/*.gql'),
         transformGenerated(code) {
           return code.replace(/@pablosz\/envelop-app\/extend/g, '../../src/common/types');
+        },
+        scalars: {
+          Upload: "Promise<import('graphql-upload').FileUpload>",
         },
       },
     },

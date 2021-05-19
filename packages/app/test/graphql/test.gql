@@ -11,3 +11,7 @@ query Users {
 query GetContext {
   getContext
 }
+
+mutation uploadFile($file: Upload!) {
+  uploadFileToBase64(file: $file)
+}

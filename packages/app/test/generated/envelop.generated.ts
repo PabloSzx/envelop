@@ -1,4 +1,6 @@
 /* eslint-disable no-use-before-define */
+/* istanbul ignore file */
+
 import type { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
 import type { EnvelopContext } from '../../src/common/types';
 import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
@@ -6,6 +8,7 @@ export type Maybe<T> = T | null;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
+export type RequireFields<T, K extends keyof T> = { [X in Exclude<keyof T, K>]?: T[X] } & { [P in K]-?: NonNullable<T[P]> };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
   ID: string;
@@ -14,6 +17,7 @@ export type Scalars = {
   Int: number;
   Float: number;
   JSONObject: any;
+  Upload: Promise<import('graphql-upload').FileUpload>;
 };
 
 export type Query = {
@@ -22,6 +26,15 @@ export type Query = {
   users: Array<User>;
   getContext: Scalars['JSONObject'];
   stream: Array<Scalars['String']>;
+};
+
+export type Mutation = {
+  __typename?: 'Mutation';
+  uploadFileToBase64: Scalars['String'];
+};
+
+export type MutationUploadFileToBase64Args = {
+  file: Scalars['Upload'];
 };
 
 export type Subscription = {
@@ -117,10 +130,12 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 export type ResolversTypes = {
   Query: ResolverTypeWrapper<{}>;
   String: ResolverTypeWrapper<Scalars['String']>;
+  Mutation: ResolverTypeWrapper<{}>;
   Subscription: ResolverTypeWrapper<{}>;
   User: ResolverTypeWrapper<User>;
   Int: ResolverTypeWrapper<Scalars['Int']>;
   JSONObject: ResolverTypeWrapper<Scalars['JSONObject']>;
+  Upload: ResolverTypeWrapper<Scalars['Upload']>;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']>;
 };
 
@@ -128,10 +143,12 @@ export type ResolversTypes = {
 export type ResolversParentTypes = {
   Query: {};
   String: Scalars['String'];
+  Mutation: {};
   Subscription: {};
   User: User;
   Int: Scalars['Int'];
   JSONObject: Scalars['JSONObject'];
+  Upload: Scalars['Upload'];
   Boolean: Scalars['Boolean'];
 };
 
@@ -143,6 +160,18 @@ export type QueryResolvers<
   users?: Resolver<Array<ResolversTypes['User']>, ParentType, ContextType>;
   getContext?: Resolver<ResolversTypes['JSONObject'], ParentType, ContextType>;
   stream?: Resolver<Array<ResolversTypes['String']>, ParentType, ContextType>;
+};
+
+export type MutationResolvers<
+  ContextType = EnvelopContext,
+  ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']
+> = {
+  uploadFileToBase64?: Resolver<
+    ResolversTypes['String'],
+    ParentType,
+    ContextType,
+    RequireFields<MutationUploadFileToBase64Args, 'file'>
+  >;
 };
 
 export type SubscriptionResolvers<
@@ -164,11 +193,17 @@ export interface JsonObjectScalarConfig extends GraphQLScalarTypeConfig<Resolver
   name: 'JSONObject';
 }
 
+export interface UploadScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['Upload'], any> {
+  name: 'Upload';
+}
+
 export type Resolvers<ContextType = EnvelopContext> = {
   Query?: QueryResolvers<ContextType>;
+  Mutation?: MutationResolvers<ContextType>;
   Subscription?: SubscriptionResolvers<ContextType>;
   User?: UserResolvers<ContextType>;
   JSONObject?: GraphQLScalarType;
+  Upload?: GraphQLScalarType;
 };
 
 /**
@@ -188,6 +223,12 @@ export type UsersQuery = { __typename?: 'Query' } & { users: Array<{ __typename?
 export type GetContextQueryVariables = Exact<{ [key: string]: never }>;
 
 export type GetContextQuery = { __typename?: 'Query' } & Pick<Query, 'getContext'>;
+
+export type UploadFileMutationVariables = Exact<{
+  file: Scalars['Upload'];
+}>;
+
+export type UploadFileMutation = { __typename?: 'Mutation' } & Pick<Mutation, 'uploadFileToBase64'>;
 
 export const HelloDocument: DocumentNode<HelloQuery, HelloQueryVariables> = {
   kind: 'Document',
@@ -228,6 +269,39 @@ export const GetContextDocument: DocumentNode<GetContextQuery, GetContextQueryVa
       operation: 'query',
       name: { kind: 'Name', value: 'GetContext' },
       selectionSet: { kind: 'SelectionSet', selections: [{ kind: 'Field', name: { kind: 'Name', value: 'getContext' } }] },
+    },
+  ],
+};
+export const UploadFileDocument: DocumentNode<UploadFileMutation, UploadFileMutationVariables> = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'uploadFile' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'file' } },
+          type: { kind: 'NonNullType', type: { kind: 'NamedType', name: { kind: 'Name', value: 'Upload' } } },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'uploadFileToBase64' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'file' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'file' } },
+              },
+            ],
+          },
+        ],
+      },
     },
   ],
 };
