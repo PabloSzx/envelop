@@ -82,7 +82,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
 
         const requestHandler = customHandleRequest || handleRequest;
 
-        return async function (req, res) {
+        return async function (req, res): Promise<void> {
           const pathname = getPathname(req.url)!;
 
           if (pathname !== path) {
@@ -93,8 +93,6 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
             }
 
             if (handleNotFound) return res.writeHead(404).end();
-
-            return;
           }
 
           let payload = '';
@@ -137,7 +135,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
                   return defaultHandle(req, res, result);
                 },
               });
-            } catch (err) {
+            } catch (err) /* istanbul ignore next */ {
               res
                 .writeHead(500, {
                   'Content-Type': 'application/json',
@@ -161,7 +159,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
       async requestHandler(req, res) {
         try {
           await (app || (await appPromise).app)(req, res);
-        } catch (err) {
+        } catch (err) /* istanbul ignore next */ {
           res
             .writeHead(500, {
               'content-type': 'application/json',

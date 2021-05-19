@@ -111,13 +111,32 @@ test('SSE subscription', async () => {
   const { address } = await serverReady;
   const eventSource = new EventSource(`${address}/graphql?query=subscription{ping}`);
 
+  let n = 0;
   const payload = await new Promise<string>(resolve => {
     eventSource.addEventListener('message', (event: any) => {
-      resolve(event.data);
-      eventSource.close();
+      switch (++n) {
+        case 1:
+        case 2:
+          return expect(JSON.parse(event.data)).toStrictEqual({
+            data: {
+              ping: 'pong',
+            },
+          });
+        case 3:
+          expect(JSON.parse(event.data)).toStrictEqual({
+            data: {
+              ping: 'pong',
+            },
+          });
+          return resolve('OK');
+        default:
+          console.error(event);
+          throw Error('Unexpected event');
+      }
     });
   });
-  expect(payload).toMatchInlineSnapshot(`"{\\"data\\":{\\"ping\\":\\"pong\\"}}"`);
+  eventSource.close();
+  expect(payload).toBe('OK');
 });
 
 test('dataloaders', async () => {
@@ -166,7 +185,7 @@ test('dataloaders', async () => {
 });
 
 test('altair', async () => {
-  const { request } = await serverReady;
+  const { request, requestRaw } = await serverReady;
 
   expect(
     (
@@ -191,6 +210,14 @@ test('altair', async () => {
     <body>
       <a"
   `);
+
+  const redirection = await requestRaw({
+    path: '/altair/',
+    method: 'GET',
+  });
+
+  expect(redirection.statusCode).toBe(302);
+  expect(redirection.headers.location).toBe('/altair');
 
   expect(
     (

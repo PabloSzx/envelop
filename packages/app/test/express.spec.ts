@@ -1,15 +1,40 @@
+import EventSource from 'eventsource';
+import got from 'got';
 import { buildClientSchema, getIntrospectionQuery, IntrospectionQuery, printSchema } from 'graphql';
+import fetch from 'node-fetch';
+import { gql, readStreamToBuffer } from '@envelop/app/extend';
 
-import { gql } from '@envelop/app/extend';
-
-import { HelloDocument, UsersDocument } from './generated/envelop.generated';
-import { commonImplementation, readFile, startExpressServer } from './utils';
+import { HelloDocument, PingSubscriptionDocument, UsersDocument } from './generated/envelop.generated';
+import { commonImplementation, createUploadFileBody, readFile, startExpressServer } from './utils';
 
 const serverReady = startExpressServer({
   options: {
     scalars: ['DateTime'],
     enableCodegen: true,
     cache: false,
+    websocketSubscriptions: true,
+    buildContext() {
+      return {
+        foo: 'bar',
+      };
+    },
+    GraphQLUpload: {},
+    schema: [
+      {
+        typeDefs: gql`
+          type Mutation {
+            uploadFileToBase64(file: Upload!): String!
+          }
+        `,
+        resolvers: {
+          Mutation: {
+            async uploadFileToBase64(_root, { file }) {
+              return (await readStreamToBuffer(file)).toString('base64');
+            },
+          },
+        },
+      },
+    ],
   },
   buildOptions: {
     prepare(tools) {
@@ -142,6 +167,60 @@ test('graphiql', async () => {
   `);
 });
 
+test('query with @stream', async () => {
+  const { address } = await serverReady;
+  const stream = got.stream.post(`${address}/graphql`, {
+    json: {
+      query: `
+      query {
+        stream @stream(initialCount: 1)
+      }
+      `,
+    },
+  });
+
+  const chunks: string[] = [];
+  for await (const chunk of stream) {
+    chunks.push(chunk.toString());
+  }
+  expect(chunks).toHaveLength(3);
+  expect(chunks[0]).toContain(`{"data":{"stream":["A"]},"hasNext":true}`);
+  expect(chunks[1]).toContain(`{"data":"B","path":["stream",1],"hasNext":true}`);
+  expect(chunks[2]).toContain(`{"data":"C","path":["stream",2],"hasNext":true}`);
+});
+
+test('SSE subscription', async () => {
+  const { address } = await serverReady;
+  const eventSource = new EventSource(`${address}/graphql?query=subscription{ping}`);
+
+  let n = 0;
+  const payload = await new Promise<string>(resolve => {
+    eventSource.addEventListener('message', (event: any) => {
+      switch (++n) {
+        case 1:
+        case 2:
+          return expect(JSON.parse(event.data)).toStrictEqual({
+            data: {
+              ping: 'pong',
+            },
+          });
+        case 3:
+          expect(JSON.parse(event.data)).toStrictEqual({
+            data: {
+              ping: 'pong',
+            },
+          });
+          return resolve('OK');
+        default:
+          console.error(event);
+          throw Error('Unexpected event');
+      }
+    });
+  });
+  eventSource.close();
+  expect(payload).toBe('OK');
+});
+
 test('resulting schema', async () => {
   const { query } = await serverReady;
 
@@ -165,6 +244,13 @@ test('resulting schema', async () => {
     A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the \`date-time\` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
     \\"\\"\\"
     scalar DateTime
+
+    \\"\\"\\"The \`Upload\` scalar type represents a file upload.\\"\\"\\"
+    scalar Upload
+
+    type Mutation {
+      uploadFileToBase64(file: Upload!): String!
+    }
     "
   `);
 });
@@ -187,6 +273,7 @@ test('codegen result', async () => {
     export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
     export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
     export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
+    export type RequireFields<T, K extends keyof T> = { [X in Exclude<keyof T, K>]?: T[X] } & { [P in K]-?: NonNullable<T[P]> };
     /** All built-in and custom scalars, mapped to their actual values */
     export type Scalars = {
       ID: string;
@@ -196,6 +283,8 @@ test('codegen result', async () => {
       Float: number;
       /** A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the \`date-time\` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar. */
       DateTime: any;
+      /** The \`Upload\` scalar type represents a file upload. */
+      Upload: Promise<import('graphql-upload').FileUpload>;
     };
 
     export type Query = {
@@ -213,6 +302,15 @@ test('codegen result', async () => {
     export type User = {
       __typename?: 'User';
       id: Scalars['Int'];
+    };
+
+    export type Mutation = {
+      __typename?: 'Mutation';
+      uploadFileToBase64: Scalars['String'];
+    };
+
+    export type MutationUploadFileToBase64Args = {
+      file: Scalars['Upload'];
     };
 
     export type ResolverTypeWrapper<T> = Promise<T> | T;
@@ -302,6 +400,8 @@ test('codegen result', async () => {
       User: ResolverTypeWrapper<User>;
       Int: ResolverTypeWrapper<Scalars['Int']>;
       DateTime: ResolverTypeWrapper<Scalars['DateTime']>;
+      Upload: ResolverTypeWrapper<Scalars['Upload']>;
+      Mutation: ResolverTypeWrapper<{}>;
       Boolean: ResolverTypeWrapper<Scalars['Boolean']>;
     };
 
@@ -313,6 +413,8 @@ test('codegen result', async () => {
       User: User;
       Int: Scalars['Int'];
       DateTime: Scalars['DateTime'];
+      Upload: Scalars['Upload'];
+      Mutation: {};
       Boolean: Scalars['Boolean'];
     };
 
@@ -344,11 +446,29 @@ test('codegen result', async () => {
       name: 'DateTime';
     }
 
+    export interface UploadScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['Upload'], any> {
+      name: 'Upload';
+    }
+
+    export type MutationResolvers<
+      ContextType = EnvelopContext,
+      ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']
+    > = {
+      uploadFileToBase64?: Resolver<
+        ResolversTypes['String'],
+        ParentType,
+        ContextType,
+        RequireFields<MutationUploadFileToBase64Args, 'file'>
+      >;
+    };
+
     export type Resolvers<ContextType = EnvelopContext> = {
       Query?: QueryResolvers<ContextType>;
       Subscription?: SubscriptionResolvers<ContextType>;
       User?: UserResolvers<ContextType>;
       DateTime?: GraphQLScalarType;
+      Upload?: GraphQLScalarType;
+      Mutation?: MutationResolvers<ContextType>;
     };
 
     /**
@@ -378,6 +498,7 @@ test('outputSchema result', async () => {
   ).toMatchInlineSnapshot(`
     "schema {
       query: Query
+      mutation: Mutation
       subscription: Subscription
     }
 
@@ -399,6 +520,210 @@ test('outputSchema result', async () => {
     A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the \`date-time\` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
     \\"\\"\\"
     scalar DateTime
+
+    \\"\\"\\"
+    The \`Upload\` scalar type represents a file upload.
+    \\"\\"\\"
+    scalar Upload
+
+    type Mutation {
+      uploadFileToBase64(file: Upload!): String!
+    }
     "
   `);
+});
+
+test('GraphQLWS websocket subscriptions', async () => {
+  const { GraphQLWSWebsocketsClient } = await serverReady;
+
+  let n = 0;
+
+  const { done } = GraphQLWSWebsocketsClient.subscribe(PingSubscriptionDocument, data => {
+    ++n;
+
+    switch (n) {
+      case 1:
+      case 2:
+      case 3:
+        return expect(data).toStrictEqual({
+          data: {
+            ping: 'pong',
+          },
+        });
+      default:
+        throw Error('Unexpected data from subscription!');
+    }
+  });
+
+  await done;
+
+  expect(n).toBe(3);
+});
+
+test('websocket subscriptions legacy only', async () => {
+  const { SubscriptionsTransportWebsocketsClient } = await startExpressServer({
+    options: {
+      websocketSubscriptions: 'legacy',
+      scalars: '*',
+    },
+    buildOptions: {
+      prepare(tools) {
+        commonImplementation(tools);
+        tools.registerModule(
+          gql`
+            extend type Query {
+              getContext: JSONObject!
+            }
+          `,
+          {
+            resolvers: {
+              Query: {
+                getContext(_root, _args, ctx) {
+                  return ctx;
+                },
+              },
+            },
+          }
+        );
+      },
+    },
+  });
+
+  let n = 0;
+
+  const { done: doneSubscriptionsTransport } = SubscriptionsTransportWebsocketsClient.subscribe(
+    PingSubscriptionDocument,
+    data => {
+      ++n;
+
+      switch (n) {
+        case 1:
+        case 2:
+        case 3:
+          return expect(data).toStrictEqual({
+            data: {
+              ping: 'pong',
+            },
+          });
+        default:
+          throw Error('Unexpected data from subscription!');
+      }
+    }
+  );
+
+  await doneSubscriptionsTransport;
+
+  expect(n).toBe(3);
+});
+
+test('websocket subscriptions supporting both legacy and new protocols', async () => {
+  const { GraphQLWSWebsocketsClient, SubscriptionsTransportWebsocketsClient } = await startExpressServer({
+    options: {
+      websocketSubscriptions: 'both',
+      scalars: '*',
+    },
+    buildOptions: {
+      prepare(tools) {
+        commonImplementation(tools);
+        tools.registerModule(
+          gql`
+            extend type Query {
+              getContext: JSONObject!
+            }
+          `,
+          {
+            resolvers: {
+              Query: {
+                getContext(_root, _args, ctx) {
+                  return ctx;
+                },
+              },
+            },
+          }
+        );
+      },
+    },
+  });
+
+  let nGraphQLWS = 0;
+
+  const { done } = GraphQLWSWebsocketsClient.subscribe(PingSubscriptionDocument, data => {
+    ++nGraphQLWS;
+
+    switch (nGraphQLWS) {
+      case 1:
+      case 2:
+      case 3:
+        return expect(data).toStrictEqual({
+          data: {
+            ping: 'pong',
+          },
+        });
+      default:
+        throw Error('Unexpected data from subscription!');
+    }
+  });
+
+  await done;
+
+  expect(nGraphQLWS).toBe(3);
+
+  let nSubscriptionsTransport = 0;
+
+  const { done: doneSubscriptionsTransport } = SubscriptionsTransportWebsocketsClient.subscribe(
+    PingSubscriptionDocument,
+    data => {
+      ++nSubscriptionsTransport;
+
+      switch (nSubscriptionsTransport) {
+        case 1:
+        case 2:
+        case 3:
+          return expect(data).toStrictEqual({
+            data: {
+              ping: 'pong',
+            },
+          });
+        default:
+          throw Error('Unexpected data from subscription!');
+      }
+    }
+  );
+
+  await doneSubscriptionsTransport;
+
+  expect(nSubscriptionsTransport).toBe(3);
+});
+
+test('upload file', async () => {
+  const { address } = await serverReady;
+
+  const fileMessage = 'hello-world';
+
+  const body = createUploadFileBody(fileMessage);
+
+  const response = await fetch(address + '/graphql', {
+    body,
+    method: 'POST',
+    headers: body.getHeaders(),
+  });
+
+  expect(await response.clone().text()).toMatchInlineSnapshot(`"{\\"data\\":{\\"uploadFileToBase64\\":\\"aGVsbG8td29ybGQ=\\"}}"`);
+
+  expect(response.status).toBe(200);
+
+  const { data } = await response.json();
+  expect(data).toMatchInlineSnapshot(`
+    Object {
+      "uploadFileToBase64": "aGVsbG8td29ybGQ=",
+    }
+  `);
+
+  const recovered = Buffer.from(data.uploadFileToBase64, 'base64').toString('utf-8');
+
+  expect(recovered).toMatchInlineSnapshot(`"hello-world"`);
+
+  expect(recovered).toBe(fileMessage);
+
+  expect(response.status).toBe(200);
 });

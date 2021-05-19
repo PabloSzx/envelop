@@ -90,10 +90,6 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
                   });
                   return;
                 }
-                case undefined: {
-                  ctx.status = 404;
-                  return;
-                }
                 default: {
                   const resolvedPath = resolve(getDistDirectory(), ctx.url.slice(baseURL.length));
 

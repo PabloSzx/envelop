@@ -1,9 +1,12 @@
+import EventSource from 'eventsource';
+import got from 'got';
 import { buildClientSchema, getIntrospectionQuery, IntrospectionQuery, printSchema } from 'graphql';
+import fetch from 'node-fetch';
 
-import { gql } from '@envelop/app/extend';
+import { gql, readStreamToBuffer } from '@envelop/app/extend';
 
 import { HelloDocument, UsersDocument } from './generated/envelop.generated';
-import { commonImplementation, readFile, startKoaServer } from './utils';
+import { commonImplementation, createUploadFileBody, readFile, startKoaServer } from './utils';
 
 const serverReady = startKoaServer({
   options: {
@@ -11,6 +14,11 @@ const serverReady = startKoaServer({
     cache: {
       parse: {},
       validation: {},
+    },
+    buildContext() {
+      return {
+        foo: 'bar',
+      };
     },
   },
   buildOptions: {
@@ -80,7 +88,7 @@ test('dataloaders', async () => {
 });
 
 test('altair', async () => {
-  const { request } = await serverReady;
+  const { request, requestRaw } = await serverReady;
 
   expect(
     (
@@ -116,6 +124,27 @@ test('altair', async () => {
   ).toMatchInlineSnapshot(
     `"@charset \\"UTF-8\\";[class*=ant-]::-ms-clear,[class*=ant-] input::-ms-clear,[class*=ant-] input::-ms-reveal,[class^=ant-]::-ms-clear,[class^=ant-] input::-ms-clear,[class^=ant-] input::-ms-reveal{display:none}[class*=ant-],[class*=ant-] *,[class*=ant-] :after,[class*=ant-] :before,[class^=ant-],[class^"`
   );
+
+  expect(
+    await requestRaw({
+      method: 'GET',
+      path: '/altair/other/not_found',
+    })
+  ).toMatchInlineSnapshot(`
+    Object {
+      "body": Promise {},
+      "headers": Object {
+        "connection": "keep-alive",
+        "content-length": "9",
+        "content-type": "text/plain; charset=utf-8",
+        "date": "Wed, 19 May 2021 21:08:34 GMT",
+        "keep-alive": "timeout=5",
+      },
+      "opaque": null,
+      "statusCode": 404,
+      "trailers": Object {},
+    }
+  `);
 });
 
 test('graphiql', async () => {
@@ -384,4 +413,114 @@ test('outputSchema result', async () => {
     }
     "
   `);
+});
+
+test('query with @stream', async () => {
+  const { address } = await serverReady;
+  const stream = got.stream.post(`${address}/graphql`, {
+    json: {
+      query: `
+      query {
+        stream @stream(initialCount: 1)
+      }
+      `,
+    },
+  });
+
+  const chunks: string[] = [];
+  for await (const chunk of stream) {
+    chunks.push(chunk.toString());
+  }
+  expect(chunks).toHaveLength(3);
+  expect(chunks[0]).toContain(`{"data":{"stream":["A"]},"hasNext":true}`);
+  expect(chunks[1]).toContain(`{"data":"B","path":["stream",1],"hasNext":true}`);
+  expect(chunks[2]).toContain(`{"data":"C","path":["stream",2],"hasNext":true}`);
+});
+
+test('SSE subscription', async () => {
+  const { address } = await serverReady;
+  const eventSource = new EventSource(`${address}/graphql?query=subscription{ping}`);
+
+  let n = 0;
+  const payload = await new Promise<string>(resolve => {
+    eventSource.addEventListener('message', (event: any) => {
+      switch (++n) {
+        case 1:
+        case 2:
+          return expect(JSON.parse(event.data)).toStrictEqual({
+            data: {
+              ping: 'pong',
+            },
+          });
+        case 3:
+          expect(JSON.parse(event.data)).toStrictEqual({
+            data: {
+              ping: 'pong',
+            },
+          });
+          return resolve('OK');
+        default:
+          console.error(event);
+          throw Error('Unexpected event');
+      }
+    });
+  });
+  eventSource.close();
+  expect(payload).toBe('OK');
+});
+
+test('upload file', async () => {
+  const { address } = await startKoaServer({
+    options: {
+      GraphQLUpload: true,
+      schema: {
+        typeDefs: gql`
+          type Mutation {
+            uploadFileToBase64(file: Upload!): String!
+          }
+        `,
+        resolvers: {
+          Mutation: {
+            async uploadFileToBase64(_root, { file }) {
+              return (await readStreamToBuffer(file)).toString('base64');
+            },
+          },
+        },
+      },
+    },
+    buildOptions: {
+      prepare(tools) {
+        commonImplementation(tools);
+      },
+    },
+  });
+
+  const fileMessage = 'hello-world';
+
+  const body = createUploadFileBody(fileMessage);
+
+  const response = await fetch(address + '/graphql', {
+    body,
+    method: 'POST',
+    headers: body.getHeaders(),
+  });
+
+  expect(await response.clone().text()).toMatchInlineSnapshot(`"{\\"data\\":{\\"uploadFileToBase64\\":\\"aGVsbG8td29ybGQ=\\"}}"`);
+
+  expect(response.status).toBe(200);
+
+  const { data } = await response.json();
+  expect(data).toMatchInlineSnapshot(`
+    Object {
+      "uploadFileToBase64": "aGVsbG8td29ybGQ=",
+    }
+  `);
+
+  const recovered = Buffer.from(data.uploadFileToBase64, 'base64').toString('utf-8');
+
+  expect(recovered).toMatchInlineSnapshot(`"hello-world"`);
+
+  expect(recovered).toBe(fileMessage);
+
+  expect(response.status).toBe(200);
 });

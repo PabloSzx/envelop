@@ -196,7 +196,16 @@ export async function startExpressServer({
     TearDownPromises.push(new PLazy(resolve => server.close(resolve)));
   });
 
-  return { ...getRequestPool(port), tmpPath, tmpSchemaPath, codegenPromise };
+  const pool = getRequestPool(port);
+
+  return {
+    ...pool,
+    tmpPath,
+    tmpSchemaPath,
+    codegenPromise,
+    GraphQLWSWebsocketsClient: createGraphQLWSWebsocketsClient(pool.address),
+    SubscriptionsTransportWebsocketsClient: createSubscriptionsTransportWebsocketsClient(pool.address),
+  };
 }
 
 export async function startFastifyServer({
@@ -296,7 +305,14 @@ export async function startHapiServer({
     })
   );
 
-  return { ...getRequestPool(port), tmpPath, tmpSchemaPath, codegenPromise };
+  const pool = getRequestPool(port);
+
+  return {
+    ...pool,
+    tmpPath,
+    tmpSchemaPath,
+    codegenPromise,
+  };
 }
 
 export async function startKoaServer({
@@ -344,6 +360,12 @@ function getRequestPool(port: number) {
       const { body } = await requestPool.request(options);
 
       return getStringFromStream(body);
+    },
+
+    async requestRaw(options: RequestOptions) {
+      const { body, ...rest } = await requestPool.request(options);
+
+      return { body: getStringFromStream(body), ...rest };
     },
     async query<TData, TVariables>(
       document: TypedDocumentNode<TData, TVariables> | string,
