@@ -1,7 +1,7 @@
 /* eslint-disable no-use-before-define */
 
 import type { GraphQLResolveInfo } from 'graphql';
-import type { EnvelopContext } from '@envelop/app/nextjs';
+import type { EnvelopContext } from '@pablosz/envelop-app/nextjs';
 import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
 export type Maybe<T> = T | null;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
@@ -125,7 +125,7 @@ export type ResolversParentTypes = {
 };
 
 export type QueryResolvers<
-  ContextType = any,
+  ContextType = EnvelopContext,
   ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']
 > = {
   hello?: Resolver<ResolversTypes['String'], ParentType, ContextType>;

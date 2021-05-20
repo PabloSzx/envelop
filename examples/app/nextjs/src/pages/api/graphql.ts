@@ -1,8 +1,8 @@
-import { buildApp } from '../../src/api/app';
+import { buildApp } from '../../api/app';
 
 const EnvelopApp = buildApp({
   async prepare() {
-    await import('../../src/api/modules');
+    await import('../../api/modules');
   },
 });
 

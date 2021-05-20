@@ -5,33 +5,9 @@
   "license": "MIT",
   "author": "PabloSz <pablosaez1995@gmail.com>",
   "exports": {
-    "./express": {
-      "import": "./dist/esm/express.js",
-      "require": "./dist/cjs/express.js"
-    },
-    "./extend": {
-      "import": "./dist/esm/extend.js",
-      "require": "./dist/cjs/extend.js"
-    },
-    "./fastify": {
-      "import": "./dist/esm/fastify.js",
-      "require": "./dist/cjs/fastify.js"
-    },
-    "./hapi": {
-      "import": "./dist/esm/hapi.js",
-      "require": "./dist/cjs/hapi.js"
-    },
-    "./http": {
-      "import": "./dist/esm/http.js",
-      "require": "./dist/cjs/http.js"
-    },
-    "./koa": {
-      "import": "./dist/esm/koa.js",
-      "require": "./dist/cjs/koa.js"
-    },
-    "./nextjs": {
-      "import": "./dist/esm/nextjs.js",
-      "require": "./dist/cjs/nextjs.js"
+    "./*": {
+      "require": "./dist/cjs/*.js",
+      "import": "./dist/esm/*.js"
     }
   },
   "files": [
