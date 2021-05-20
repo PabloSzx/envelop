@@ -1,9 +1,9 @@
-import { promises } from 'fs';
+import { promises, existsSync } from 'fs';
 import tmp from 'tmp-promise';
+import { resolve } from 'path';
+import { EnvelopCodegen, gql, LazyPromise, makeExecutableSchema, writeOutputSchema } from '@envelop/app/extend';
 
-import { EnvelopCodegen, gql, LazyPromise, makeExecutableSchema } from '@envelop/app/extend';
-
-const { writeFile, readFile } = promises;
+const { writeFile, readFile, unlink } = promises;
 
 const TearDownPromises: Promise<void>[] = [];
 
@@ -84,5 +84,70 @@ describe('codegen with operations', () => {
     expect(generatedFile).toContain('export const HelloDocument: DocumentNode<HelloQuery, HelloQueryVariables>');
 
     expect(generatedFile).toContain('export const ByeDocument: DocumentNode<ByeQuery, ByeQueryVariables>');
+  });
+});
+
+describe('outputSchema', () => {
+  test('wrong extension', async () => {
+    const tmpWrongFile = await tmp.file({
+      postfix: '.ts',
+    });
+
+    TearDownPromises.push(
+      LazyPromise(async () => {
+        await tmpWrongFile.cleanup();
+      })
+    );
+
+    const schema = makeExecutableSchema({
+      typeDefs: gql`
+        type Query {
+          hello: String!
+        }
+      `,
+    });
+    await expect(
+      writeOutputSchema(schema, tmpWrongFile.path).catch(err => {
+        throw Error(err.message.replace(tmpWrongFile.path, '###'));
+      })
+    ).rejects.toMatchInlineSnapshot(
+      `[Error: You have to specify a extension between '.gql', '.graphql' and '.json' for the outputSchema, received: "###"]`
+    );
+  });
+  test('default path', async () => {
+    const defaultPath = resolve('./schema.gql');
+
+    TearDownPromises.push(
+      LazyPromise(async () => {
+        if (existsSync(defaultPath)) {
+          await unlink(defaultPath);
+        }
+      })
+    );
+
+    const schema = makeExecutableSchema({
+      typeDefs: gql`
+        type Query {
+          hello: String!
+        }
+      `,
+    });
+
+    await writeOutputSchema(schema, true);
+
+    expect(
+      await readFile(defaultPath, {
+        encoding: 'utf-8',
+      })
+    ).toMatchInlineSnapshot(`
+      "schema {
+        query: Query
+      }
+
+      type Query {
+        hello: String!
+      }
+      "
+    `);
   });
 });

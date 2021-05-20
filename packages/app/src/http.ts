@@ -3,6 +3,7 @@ import { gql } from 'graphql-modules';
 import querystring from 'querystring';
 
 import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app.js';
+import { LazyPromise } from './common/base.js';
 import { parseIDEConfig } from './common/ide/handle.js';
 import { RawAltairHandler } from './common/ide/rawAltair.js';
 import { getPathname } from './common/utils/url.js';
@@ -171,7 +172,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
             );
         }
       },
-      getEnveloped: appPromise.then(v => v.getEnveloped),
+      getEnveloped: LazyPromise(() => appPromise.then(v => v.getEnveloped)),
     };
   }
 

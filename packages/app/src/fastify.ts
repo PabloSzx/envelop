@@ -2,6 +2,7 @@ import assert from 'assert';
 import { gql } from 'graphql-modules';
 
 import { BaseEnvelopAppOptionsWithUpload, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app.js';
+import { LazyPromise } from './common/base.js';
 import { handleIDE, IDEOptions } from './common/ide/handle.js';
 import { CreateSubscriptionsServer, WebSocketSubscriptionsOptions } from './common/subscriptions/websocket.js';
 
@@ -204,7 +205,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
       async plugin(instance) {
         await (await appPromise).app(instance);
       },
-      getEnveloped: appPromise.then(v => v.getEnveloped),
+      getEnveloped: LazyPromise(() => appPromise.then(v => v.getEnveloped)),
     };
   }
 

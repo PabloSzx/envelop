@@ -90,7 +90,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
       async handler(req, res) {
         await (app || (await appPromise).app)(req, res);
       },
-      getEnveloped: appPromise.then(v => v.getEnveloped),
+      getEnveloped: LazyPromise(() => appPromise.then(v => v.getEnveloped)),
     };
   }
 

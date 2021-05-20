@@ -2,66 +2,68 @@ import EventSource from 'eventsource';
 import got from 'got';
 import { buildClientSchema, getIntrospectionQuery, IntrospectionQuery, printSchema, print } from 'graphql';
 
-import { createDeferredPromise, gql, readStreamToBuffer } from '@envelop/app/extend';
+import { createDeferredPromise, gql, LazyPromise, makeExecutableSchema, readStreamToBuffer } from '@envelop/app/extend';
 
 import { GetContextDocument, HelloDocument, PingSubscriptionDocument, UsersDocument } from './generated/envelop.generated';
 import { commonImplementation, createUploadFileBody, readFile, startFastifyServer } from './utils';
 
-const serverReady = startFastifyServer({
-  options: {
-    allowBatchedQueries: true,
-    GraphQLUpload: true,
-    scalars: {
-      DateTime: 1,
-      JSONObject: 1,
-    },
-    enableCodegen: true,
-    buildContext() {
-      return {
-        foo: 'bar',
-      };
-    },
-    schema: {
-      typeDefs: gql`
-        type Mutation {
-          uploadFileToBase64(file: Upload!): String!
-        }
-      `,
-      resolvers: {
-        Mutation: {
-          async uploadFileToBase64(_root, { file }) {
-            return (await readStreamToBuffer(file)).toString('base64');
+const serverReady = LazyPromise(() =>
+  startFastifyServer({
+    options: {
+      allowBatchedQueries: true,
+      GraphQLUpload: true,
+      scalars: {
+        DateTime: 1,
+        JSONObject: 1,
+      },
+      enableCodegen: true,
+      buildContext() {
+        return {
+          foo: 'bar',
+        };
+      },
+      schema: {
+        typeDefs: gql`
+          type Mutation {
+            uploadFileToBase64(file: Upload!): String!
+          }
+        `,
+        resolvers: {
+          Mutation: {
+            async uploadFileToBase64(_root, { file }) {
+              return (await readStreamToBuffer(file)).toString('base64');
+            },
           },
         },
       },
+      websocketSubscriptions: true,
     },
-    websocketSubscriptions: true,
-  },
-  buildOptions: {
-    prepare(tools) {
-      commonImplementation(tools);
-      tools.registerModule(
-        gql`
-          extend type Query {
-            getContext: JSONObject!
-          }
-        `,
-        {
-          resolvers: {
-            Query: {
-              getContext(_root, _args, ctx) {
-                return ctx;
+    buildOptions: {
+      prepare(tools) {
+        commonImplementation(tools);
+        tools.registerModule(
+          gql`
+            extend type Query {
+              getContext: JSONObject!
+            }
+          `,
+          {
+            resolvers: {
+              Query: {
+                getContext(_root, _args, ctx) {
+                  return ctx;
+                },
               },
             },
-          },
-        }
-      );
+          }
+        );
+      },
     },
-  },
-  testCodegenOptions: {
-    tmpSchemaExtension: '.json',
-  },
-});
+    testCodegenOptions: {
+      tmpSchemaExtension: '.json',
+    },
+  })
+);
 
 test('works', async () => {
   const { query } = await serverReady;
@@ -269,12 +271,12 @@ test('resulting schema', async () => {
       getContext: JSONObject!
     }
 
-    type Subscription {
-      ping: String!
-    }
-
     type User {
       id: Int!
+    }
+
+    type Subscription {
+      ping: String!
     }
 
     \\"\\"\\"
@@ -339,14 +341,14 @@ test('codegen result', async () => {
       getContext: Scalars['JSONObject'];
     };
 
-    export type Subscription = {
-      __typename?: 'Subscription';
-      ping: Scalars['String'];
-    };
-
     export type User = {
       __typename?: 'User';
       id: Scalars['Int'];
+    };
+
+    export type Subscription = {
+      __typename?: 'Subscription';
+      ping: Scalars['String'];
     };
 
     export type Mutation = {
@@ -441,9 +443,9 @@ test('codegen result', async () => {
     export type ResolversTypes = {
       Query: ResolverTypeWrapper<{}>;
       String: ResolverTypeWrapper<Scalars['String']>;
-      Subscription: ResolverTypeWrapper<{}>;
       User: ResolverTypeWrapper<User>;
       Int: ResolverTypeWrapper<Scalars['Int']>;
+      Subscription: ResolverTypeWrapper<{}>;
       DateTime: ResolverTypeWrapper<Scalars['DateTime']>;
       JSONObject: ResolverTypeWrapper<Scalars['JSONObject']>;
       Upload: ResolverTypeWrapper<Scalars['Upload']>;
@@ -455,9 +457,9 @@ test('codegen result', async () => {
     export type ResolversParentTypes = {
       Query: {};
       String: Scalars['String'];
-      Subscription: {};
       User: User;
       Int: Scalars['Int'];
+      Subscription: {};
       DateTime: Scalars['DateTime'];
       JSONObject: Scalars['JSONObject'];
       Upload: Scalars['Upload'];
@@ -475,19 +477,19 @@ test('codegen result', async () => {
       getContext?: Resolver<ResolversTypes['JSONObject'], ParentType, ContextType>;
     };
 
-    export type SubscriptionResolvers<
-      ContextType = EnvelopContext,
-      ParentType extends ResolversParentTypes['Subscription'] = ResolversParentTypes['Subscription']
-    > = {
-      ping?: SubscriptionResolver<ResolversTypes['String'], 'ping', ParentType, ContextType>;
-    };
-
     export type UserResolvers<
       ContextType = EnvelopContext,
       ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']
     > = {
       id?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
       __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+    };
+
+    export type SubscriptionResolvers<
+      ContextType = EnvelopContext,
+      ParentType extends ResolversParentTypes['Subscription'] = ResolversParentTypes['Subscription']
+    > = {
+      ping?: SubscriptionResolver<ResolversTypes['String'], 'ping', ParentType, ContextType>;
     };
 
     export interface DateTimeScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['DateTime'], any> {
@@ -516,8 +518,8 @@ test('codegen result', async () => {
 
     export type Resolvers<ContextType = EnvelopContext> = {
       Query?: QueryResolvers<ContextType>;
-      Subscription?: SubscriptionResolvers<ContextType>;
       User?: UserResolvers<ContextType>;
+      Subscription?: SubscriptionResolvers<ContextType>;
       DateTime?: GraphQLScalarType;
       JSONObject?: GraphQLScalarType;
       Upload?: GraphQLScalarType;
@@ -664,33 +666,6 @@ test('outputSchema result', async () => {
           },
           {
             \\"kind\\": \\"OBJECT\\",
-            \\"name\\": \\"Subscription\\",
-            \\"description\\": null,
-            \\"fields\\": [
-              {
-                \\"name\\": \\"ping\\",
-                \\"description\\": null,
-                \\"args\\": [],
-                \\"type\\": {
-                  \\"kind\\": \\"NON_NULL\\",
-                  \\"name\\": null,
-                  \\"ofType\\": {
-                    \\"kind\\": \\"SCALAR\\",
-                    \\"name\\": \\"String\\",
-                    \\"ofType\\": null
-                  }
-                },
-                \\"isDeprecated\\": false,
-                \\"deprecationReason\\": null
-              }
-            ],
-            \\"inputFields\\": null,
-            \\"interfaces\\": [],
-            \\"enumValues\\": null,
-            \\"possibleTypes\\": null
-          },
-          {
-            \\"kind\\": \\"OBJECT\\",
             \\"name\\": \\"User\\",
             \\"description\\": null,
             \\"fields\\": [
@@ -723,6 +698,33 @@ test('outputSchema result', async () => {
             \\"fields\\": null,
             \\"inputFields\\": null,
             \\"interfaces\\": null,
+            \\"enumValues\\": null,
+            \\"possibleTypes\\": null
+          },
+          {
+            \\"kind\\": \\"OBJECT\\",
+            \\"name\\": \\"Subscription\\",
+            \\"description\\": null,
+            \\"fields\\": [
+              {
+                \\"name\\": \\"ping\\",
+                \\"description\\": null,
+                \\"args\\": [],
+                \\"type\\": {
+                  \\"kind\\": \\"NON_NULL\\",
+                  \\"name\\": null,
+                  \\"ofType\\": {
+                    \\"kind\\": \\"SCALAR\\",
+                    \\"name\\": \\"String\\",
+                    \\"ofType\\": null
+                  }
+                },
+                \\"isDeprecated\\": false,
+                \\"deprecationReason\\": null
+              }
+            ],
+            \\"inputFields\\": null,
+            \\"interfaces\\": [],
             \\"enumValues\\": null,
             \\"possibleTypes\\": null
           },
@@ -1900,70 +1902,113 @@ test('upload file', async () => {
   expect(res.statusCode).toBe(200);
 });
 
-test('batched queries', async () => {
-  const { app } = await serverReady;
+describe('batched queries', () => {
+  test('batched queries', async () => {
+    const { app } = await serverReady;
 
-  const res = await app.inject({
-    method: 'POST',
-    url: '/graphql',
-    headers: {
-      'content-type': 'application/json',
-    },
-    payload: JSON.stringify([
-      {
-        query: print(UsersDocument),
+    const res = await app.inject({
+      method: 'POST',
+      url: '/graphql',
+      headers: {
+        'content-type': 'application/json',
       },
-      {
-        query: print(HelloDocument),
-      },
-    ]),
+      payload: JSON.stringify([
+        {
+          query: print(UsersDocument),
+        },
+        {
+          query: print(HelloDocument),
+        },
+      ]),
+    });
+
+    expect(JSON.parse(res.payload)).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "data": Object {
+            "users": Array [
+              Object {
+                "id": 0,
+              },
+              Object {
+                "id": 100,
+              },
+              Object {
+                "id": 200,
+              },
+              Object {
+                "id": 300,
+              },
+              Object {
+                "id": 400,
+              },
+              Object {
+                "id": 500,
+              },
+              Object {
+                "id": 600,
+              },
+              Object {
+                "id": 700,
+              },
+              Object {
+                "id": 800,
+              },
+              Object {
+                "id": 900,
+              },
+            ],
+          },
+        },
+        Object {
+          "data": Object {
+            "hello": "Hello World!",
+          },
+        },
+      ]
+    `);
   });
 
-  expect(JSON.parse(res.payload)).toMatchInlineSnapshot(`
-    Array [
-      Object {
-        "data": Object {
-          "users": Array [
-            Object {
-              "id": 0,
-            },
-            Object {
-              "id": 100,
-            },
-            Object {
-              "id": 200,
-            },
-            Object {
-              "id": 300,
-            },
-            Object {
-              "id": 400,
-            },
-            Object {
-              "id": 500,
-            },
-            Object {
-              "id": 600,
-            },
-            Object {
-              "id": 700,
-            },
-            Object {
-              "id": 800,
-            },
-            Object {
-              "id": 900,
-            },
-          ],
+  test('batched queries limit', async () => {
+    const { app } = await startFastifyServer({
+      options: {
+        scalars: '*',
+        allowBatchedQueries: 2,
+      },
+      buildOptions: {
+        prepare(tools) {
+          commonImplementation(tools);
         },
       },
-      Object {
-        "data": Object {
-          "hello": "Hello World!",
-        },
+    });
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/graphql',
+      headers: {
+        'content-type': 'application/json',
       },
-    ]
-  `);
+      payload: JSON.stringify([
+        {
+          query: print(UsersDocument),
+        },
+        {
+          query: print(HelloDocument),
+        },
+        {
+          query: print(HelloDocument),
+        },
+      ]),
+    });
+
+    expect(JSON.parse(res.payload)).toMatchInlineSnapshot(`
+      Object {
+        "error": "Internal Server Error",
+        "message": "Batched queries limit exceeded!",
+        "statusCode": 500,
+      }
+    `);
+  });
 });
 
 test('GraphQLWS websocket subscriptions', async () => {
@@ -2184,4 +2229,116 @@ test('codegen onFinish', async () => {
   });
 
   expect(await onFinishPromise.promise).toBe(true);
+});
+
+test('prebuilt schemas', async () => {
+  const schema = makeExecutableSchema({
+    typeDefs: gql`
+      type Query {
+        hello: String!
+      }
+    `,
+  });
+
+  const { query } = await startFastifyServer({
+    options: {
+      schema,
+      scalars: ['DateTime'],
+    },
+  });
+
+  const introspectedSchema = buildClientSchema((await query<IntrospectionQuery, never>(gql(getIntrospectionQuery()))).data!);
+  expect(printSchema(introspectedSchema)).toMatchInlineSnapshot(`
+    "\\"\\"\\"
+    A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the \`date-time\` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
+    \\"\\"\\"
+    scalar DateTime
+
+    type Query {
+      hello: String!
+    }
+    "
+  `);
+
+  const schema2 = makeExecutableSchema({
+    typeDefs: gql`
+      type Query {
+        hello2: String!
+      }
+    `,
+  });
+
+  const { query: query2 } = await startFastifyServer({
+    options: {
+      schema: [schema, schema2],
+      scalars: ['DateTime'],
+    },
+  });
+
+  const introspectedSchema2 = buildClientSchema((await query2<IntrospectionQuery, never>(gql(getIntrospectionQuery()))).data!);
+  expect(printSchema(introspectedSchema2)).toMatchInlineSnapshot(`
+    "\\"\\"\\"
+    A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the \`date-time\` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
+    \\"\\"\\"
+    scalar DateTime
+
+    type Query {
+      hello: String!
+      hello2: String!
+    }
+    "
+  `);
+});
+
+test('schema not provided', async () => {
+  const erroredServer = await startFastifyServer({
+    options: {
+      schema: [],
+
+      enableCodegen: false,
+    },
+  }).catch(err => err);
+
+  expect(erroredServer).toMatchInlineSnapshot(`[Error: No GraphQL Schema specified!]`);
+});
+
+test('getEnveloped', async () => {
+  const { envelop } = await serverReady;
+
+  const getEnveloped = await envelop.getEnveloped;
+  const { schema } = getEnveloped();
+  expect(printSchema(schema)).toMatchInlineSnapshot(`
+    "type Query {
+      hello: String!
+      users: [User!]!
+      stream: [String!]!
+      getContext: JSONObject!
+    }
+
+    type User {
+      id: Int!
+    }
+
+    type Subscription {
+      ping: String!
+    }
+
+    \\"\\"\\"
+    A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the \`date-time\` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
+    \\"\\"\\"
+    scalar DateTime
+
+    \\"\\"\\"
+    The \`JSONObject\` scalar type represents JSON objects as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+    \\"\\"\\"
+    scalar JSONObject @specifiedBy(url: \\"http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf\\")
+
+    \\"\\"\\"The \`Upload\` scalar type represents a file upload.\\"\\"\\"
+    scalar Upload
+
+    type Mutation {
+      uploadFileToBase64(file: Upload!): String!
+    }
+    "
+  `);
 });

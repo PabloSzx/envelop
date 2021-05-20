@@ -1,6 +1,7 @@
 import { gql } from 'graphql-modules';
 
 import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app.js';
+import { LazyPromise } from './common/base.js';
 import { handleIDE } from './common/ide/handle.js';
 import { RawAltairHandler } from './common/ide/rawAltair.js';
 
@@ -141,7 +142,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
           await (await registerApp).app(server);
         },
       },
-      getEnveloped: registerApp.then(v => v.getEnveloped),
+      getEnveloped: LazyPromise(() => registerApp.then(v => v.getEnveloped)),
     };
   }
 

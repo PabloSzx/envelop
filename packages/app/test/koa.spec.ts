@@ -170,12 +170,12 @@ test('resulting schema', async () => {
       stream: [String!]!
     }
 
-    type Subscription {
-      ping: String!
-    }
-
     type User {
       id: Int!
+    }
+
+    type Subscription {
+      ping: String!
     }
     "
   `);
@@ -215,14 +215,14 @@ test('codegen result', async () => {
       stream: Array<Scalars['String']>;
     };
 
-    export type Subscription = {
-      __typename?: 'Subscription';
-      ping: Scalars['String'];
-    };
-
     export type User = {
       __typename?: 'User';
       id: Scalars['Int'];
+    };
+
+    export type Subscription = {
+      __typename?: 'Subscription';
+      ping: Scalars['String'];
     };
 
     export type ResolverTypeWrapper<T> = Promise<T> | T;
@@ -308,9 +308,9 @@ test('codegen result', async () => {
     export type ResolversTypes = {
       Query: ResolverTypeWrapper<{}>;
       String: ResolverTypeWrapper<Scalars['String']>;
-      Subscription: ResolverTypeWrapper<{}>;
       User: ResolverTypeWrapper<User>;
       Int: ResolverTypeWrapper<Scalars['Int']>;
+      Subscription: ResolverTypeWrapper<{}>;
       Boolean: ResolverTypeWrapper<Scalars['Boolean']>;
     };
 
@@ -318,9 +318,9 @@ test('codegen result', async () => {
     export type ResolversParentTypes = {
       Query: {};
       String: Scalars['String'];
-      Subscription: {};
       User: User;
       Int: Scalars['Int'];
+      Subscription: {};
       Boolean: Scalars['Boolean'];
     };
 
@@ -333,13 +333,6 @@ test('codegen result', async () => {
       stream?: Resolver<Array<ResolversTypes['String']>, ParentType, ContextType>;
     };
 
-    export type SubscriptionResolvers<
-      ContextType = EnvelopContext,
-      ParentType extends ResolversParentTypes['Subscription'] = ResolversParentTypes['Subscription']
-    > = {
-      ping?: SubscriptionResolver<ResolversTypes['String'], 'ping', ParentType, ContextType>;
-    };
-
     export type UserResolvers<
       ContextType = EnvelopContext,
       ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']
@@ -348,10 +341,17 @@ test('codegen result', async () => {
       __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
     };
 
+    export type SubscriptionResolvers<
+      ContextType = EnvelopContext,
+      ParentType extends ResolversParentTypes['Subscription'] = ResolversParentTypes['Subscription']
+    > = {
+      ping?: SubscriptionResolver<ResolversTypes['String'], 'ping', ParentType, ContextType>;
+    };
+
     export type Resolvers<ContextType = EnvelopContext> = {
       Query?: QueryResolvers<ContextType>;
-      Subscription?: SubscriptionResolvers<ContextType>;
       User?: UserResolvers<ContextType>;
+      Subscription?: SubscriptionResolvers<ContextType>;
     };
 
     /**
@@ -390,12 +390,12 @@ test('outputSchema result', async () => {
       stream: [String!]!
     }
 
-    type Subscription {
-      ping: String!
-    }
-
     type User {
       id: Int!
+    }
+
+    type Subscription {
+      ping: String!
     }
     "
   `);

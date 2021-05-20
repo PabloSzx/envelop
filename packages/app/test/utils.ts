@@ -5,11 +5,15 @@ import FormData from 'form-data';
 import { promises } from 'fs';
 import getPort from 'get-port';
 import { ExecutionResult, print } from 'graphql';
+import { createModule } from 'graphql-modules';
+import { createClient as createGraphQLWSClient } from 'graphql-ws';
 import merge from 'lodash/merge';
 import { Readable } from 'stream';
+import { SubscriptionClient as SubscriptionsTransportClient } from 'subscriptions-transport-ws-envelop';
 import tmp from 'tmp-promise';
 import { Pool } from 'undici';
 import ws from 'ws';
+
 import {
   BaseEnvelopAppOptions,
   BaseEnvelopBuilder,
@@ -21,8 +25,6 @@ import {
   LazyPromise,
   PLazy,
 } from '@envelop/app/extend';
-import { createClient as createGraphQLWSClient } from 'graphql-ws';
-import { SubscriptionClient as SubscriptionsTransportClient } from 'subscriptions-transport-ws-envelop';
 import { isDocumentNode } from '@graphql-tools/utils';
 
 import { UploadFileDocument } from './generated/envelop.generated';
@@ -30,7 +32,6 @@ import { UploadFileDocument } from './generated/envelop.generated';
 import type DataLoader from 'dataloader';
 import type { RequestOptions } from 'undici/types/client';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
-
 export const { readFile } = promises;
 
 const TearDownPromises: Promise<unknown>[] = [];
@@ -45,6 +46,30 @@ declare module '../src/extend' {
 
 export const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+export const PingSubscriptionModule = createModule({
+  id: 'PingSubscription',
+  typeDefs: gql`
+    type Subscription {
+      ping: String!
+    }
+  `,
+  resolvers: {
+    Subscription: {
+      ping: {
+        async *subscribe() {
+          for (let i = 1; i <= 3; ++i) {
+            await sleep(100);
+
+            yield {
+              ping: 'pong',
+            };
+          }
+        },
+      },
+    },
+  },
+});
+
 export function commonImplementation({ registerDataLoader, registerModule }: BaseEnvelopBuilder) {
   registerDataLoader('numberMultiplier', DataLoader => {
     return new DataLoader(async (keys: readonly number[]) => {
@@ -58,9 +83,6 @@ export function commonImplementation({ registerDataLoader, registerModule }: Bas
         hello: String!
         users: [User!]!
         stream: [String!]!
-      }
-      type Subscription {
-        ping: String!
       }
       type User {
         id: Int!
@@ -93,22 +115,11 @@ export function commonImplementation({ registerDataLoader, registerModule }: Bas
             return ctx.numberMultiplier.load(root.id);
           },
         },
-        Subscription: {
-          ping: {
-            async *subscribe() {
-              for (let i = 1; i <= 3; ++i) {
-                await sleep(100);
-
-                yield {
-                  ping: 'pong',
-                };
-              }
-            },
-          },
-        },
       },
     }
   );
+
+  registerModule(PingSubscriptionModule);
 }
 
 export interface TestCodegenOptions {
@@ -219,7 +230,8 @@ export async function startFastifyServer({
 
   const { tmpPath, tmpSchemaPath, codegenPromise } = await Codegen(options, testCodegenOptions);
 
-  app.register(CreateApp(options).buildApp(buildOptions).plugin);
+  const envelop = CreateApp(options).buildApp(buildOptions);
+  await app.register(envelop.plugin);
 
   const port = await getPort();
 
@@ -233,6 +245,7 @@ export async function startFastifyServer({
 
   return {
     ...pool,
+    envelop,
     tmpPath,
     tmpSchemaPath,
     codegenPromise,
@@ -251,10 +264,10 @@ export async function startHTTPServer({
 
   const { tmpPath, tmpSchemaPath, codegenPromise } = await Codegen(options, testCodegenOptions);
 
-  const app = CreateApp(options).buildApp(buildOptions);
+  const envelop = CreateApp(options).buildApp(buildOptions);
 
   const server = (await import('http')).createServer((req, res) => {
-    app.requestHandler(req, res);
+    envelop.requestHandler(req, res);
   });
 
   const port = await getPort();
@@ -274,7 +287,7 @@ export async function startHTTPServer({
     );
   });
 
-  return { ...getRequestPool(port), tmpPath, tmpSchemaPath, codegenPromise };
+  return { ...getRequestPool(port), envelop, tmpPath, tmpSchemaPath, codegenPromise };
 }
 
 export async function startHapiServer({
@@ -293,9 +306,9 @@ export async function startHapiServer({
 
   const { tmpPath, tmpSchemaPath, codegenPromise } = await Codegen(options, testCodegenOptions);
 
-  const app = CreateApp(options).buildApp(buildOptions);
+  const envelop = CreateApp(options).buildApp(buildOptions);
 
-  await server.register(app.plugin);
+  await server.register(envelop.plugin);
 
   await server.start();
 
@@ -309,6 +322,7 @@ export async function startHapiServer({
 
   return {
     ...pool,
+    envelop,
     tmpPath,
     tmpSchemaPath,
     codegenPromise,

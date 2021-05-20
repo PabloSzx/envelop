@@ -1,5 +1,6 @@
 import EventSource from 'eventsource';
 import got from 'got';
+import { printSchema } from 'graphql';
 import { HelloDocument, UsersDocument } from './generated/envelop.generated';
 import { commonImplementation, readFile, startHTTPServer } from './utils';
 
@@ -229,33 +230,6 @@ test('outputSchema result', async () => {
           },
           {
             \\"kind\\": \\"OBJECT\\",
-            \\"name\\": \\"Subscription\\",
-            \\"description\\": null,
-            \\"fields\\": [
-              {
-                \\"name\\": \\"ping\\",
-                \\"description\\": null,
-                \\"args\\": [],
-                \\"type\\": {
-                  \\"kind\\": \\"NON_NULL\\",
-                  \\"name\\": null,
-                  \\"ofType\\": {
-                    \\"kind\\": \\"SCALAR\\",
-                    \\"name\\": \\"String\\",
-                    \\"ofType\\": null
-                  }
-                },
-                \\"isDeprecated\\": false,
-                \\"deprecationReason\\": null
-              }
-            ],
-            \\"inputFields\\": null,
-            \\"interfaces\\": [],
-            \\"enumValues\\": null,
-            \\"possibleTypes\\": null
-          },
-          {
-            \\"kind\\": \\"OBJECT\\",
             \\"name\\": \\"User\\",
             \\"description\\": null,
             \\"fields\\": [
@@ -288,6 +262,33 @@ test('outputSchema result', async () => {
             \\"fields\\": null,
             \\"inputFields\\": null,
             \\"interfaces\\": null,
+            \\"enumValues\\": null,
+            \\"possibleTypes\\": null
+          },
+          {
+            \\"kind\\": \\"OBJECT\\",
+            \\"name\\": \\"Subscription\\",
+            \\"description\\": null,
+            \\"fields\\": [
+              {
+                \\"name\\": \\"ping\\",
+                \\"description\\": null,
+                \\"args\\": [],
+                \\"type\\": {
+                  \\"kind\\": \\"NON_NULL\\",
+                  \\"name\\": null,
+                  \\"ofType\\": {
+                    \\"kind\\": \\"SCALAR\\",
+                    \\"name\\": \\"String\\",
+                    \\"ofType\\": null
+                  }
+                },
+                \\"isDeprecated\\": false,
+                \\"deprecationReason\\": null
+              }
+            ],
+            \\"inputFields\\": null,
+            \\"interfaces\\": [],
             \\"enumValues\\": null,
             \\"possibleTypes\\": null
           },
@@ -1455,4 +1456,27 @@ test('404', async () => {
       })
     ).slice(0, 300)
   ).toMatchInlineSnapshot(`""`);
+});
+
+test('getEnveloped', async () => {
+  const { envelop } = await serverReady;
+
+  const getEnveloped = await envelop.getEnveloped;
+  const { schema } = getEnveloped();
+  expect(printSchema(schema)).toMatchInlineSnapshot(`
+    "type Query {
+      hello: String!
+      users: [User!]!
+      stream: [String!]!
+    }
+
+    type User {
+      id: Int!
+    }
+
+    type Subscription {
+      ping: String!
+    }
+    "
+  `);
 });
