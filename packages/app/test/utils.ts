@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+/* eslint-disable no-console */
 /* istanbul ignore file */
 
 import FormData from 'form-data';
