@@ -6,7 +6,8 @@ module.exports = {
   resolver: 'ts-jest-resolver',
   testEnvironment: 'node',
   modulePathIgnorePatterns: ['/dist/'],
-  testPathIgnorePatterns: ['/node_modules/', '/dist/'],
+  testPathIgnorePatterns: ['/node_modules/', '/dist/', '/.next'],
+  coveragePathIgnorePatterns: ['node_modules', '/.next'],
   globals: {
     'ts-jest': {
       diagnostics: false,

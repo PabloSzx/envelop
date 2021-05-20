@@ -8,6 +8,7 @@ import { ExecutionResult, print } from 'graphql';
 import { createModule } from 'graphql-modules';
 import { createClient as createGraphQLWSClient } from 'graphql-ws';
 import merge from 'lodash/merge';
+import { resolve } from 'path';
 import { Readable } from 'stream';
 import { SubscriptionClient as SubscriptionsTransportClient } from 'subscriptions-transport-ws-envelop';
 import tmp from 'tmp-promise';
@@ -360,7 +361,43 @@ export async function startKoaServer({
   return { ...getRequestPool(port), tmpPath, tmpSchemaPath, codegenPromise };
 }
 
-function getRequestPool(port: number) {
+export async function startNextJSServer() {
+  const app = (await import('fastify')).default({
+    pluginTimeout: 10000,
+  });
+
+  app.addContentTypeParser('application/json', (_req, body, done) => {
+    done(null, body);
+  });
+
+  const FastifyNext = (await import('fastify-nextjs')).default;
+
+  const NextJSDir = resolve(__dirname, './nextjs');
+
+  app
+    .register(FastifyNext, {
+      dir: NextJSDir,
+      dev: true,
+      logLevel: 'warn',
+    })
+    .after(async () => {
+      app.next('*', { method: 'POST', schema: {} });
+    });
+
+  const port = await getPort();
+
+  await new Promise((resolve, reject) => {
+    app.listen(port).then(resolve, reject);
+
+    TearDownPromises.push(new PLazy<void>(resolve => app.close(resolve)));
+  });
+
+  const pool = getRequestPool(port, '/api/graphql');
+
+  return { ...pool, NextJSDir };
+}
+
+function getRequestPool(port: number, path = '/graphql') {
   const address = `http://127.0.0.1:${port}`;
   const requestPool = new Pool(address, {
     connections: 5,
@@ -385,7 +422,7 @@ function getRequestPool(port: number) {
       document: TypedDocumentNode<TData, TVariables> | string,
       variables?: TVariables
     ): Promise<ExecutionResult<TData>> {
-      const { body } = await requestPool.request({
+      const { body, headers } = await requestPool.request({
         method: 'POST',
         headers: {
           'content-type': 'application/json',
@@ -393,8 +430,16 @@ function getRequestPool(port: number) {
         body: Readable.from(JSON.stringify({ query: typeof document === 'string' ? document : print(document), variables }), {
           objectMode: false,
         }),
-        path: '/graphql',
+        path,
       });
+
+      if (!headers['content-type']?.startsWith('application/json')) {
+        console.error({
+          body: await getStringFromStream(body),
+          headers,
+        });
+        throw Error('Unexpected content type received: ' + headers['content-type']);
+      }
 
       return getJSONFromStream(body);
     },
@@ -455,8 +500,8 @@ export function createUploadFileBody(content: string) {
   return body;
 }
 
-export function createGraphQLWSWebsocketsClient(httpUrl: string) {
-  const url = new URL(httpUrl + '/graphql');
+export function createGraphQLWSWebsocketsClient(httpUrl: string, path = '/graphql') {
+  const url = new URL(httpUrl + path);
 
   url.protocol = url.protocol.replace('http', 'ws');
 
@@ -498,8 +543,8 @@ export function createGraphQLWSWebsocketsClient(httpUrl: string) {
   return { subscribe };
 }
 
-export function createSubscriptionsTransportWebsocketsClient(httpUrl: string) {
-  const url = new URL(httpUrl + '/graphql');
+export function createSubscriptionsTransportWebsocketsClient(httpUrl: string, path = '/graphql') {
+  const url = new URL(httpUrl + path);
 
   url.protocol = url.protocol.replace('http', 'ws');
 
