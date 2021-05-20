@@ -186,6 +186,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
                   reply.send(result.payload);
                 },
                 onMultiPartResponse(result, defaultHandle) {
+                  reply.hijack();
                   return defaultHandle(req.raw, reply.raw, result);
                 },
                 onPushResponse(result, defaultHandle) {

@@ -7,11 +7,14 @@ import { promises } from 'fs';
 import getPort from 'get-port';
 import { ExecutionResult, print } from 'graphql';
 import { createModule } from 'graphql-modules';
-import { createClient as createGraphQLWSClient } from 'graphql-ws';
+import { ClientOptions as GraphQLWSClientOptions, createClient as createGraphQLWSClient } from 'graphql-ws';
 import merge from 'lodash/merge';
 import { resolve } from 'path';
 import { Readable } from 'stream';
-import { SubscriptionClient as SubscriptionsTransportClient } from 'subscriptions-transport-ws-envelop';
+import {
+  ClientOptions as SubscriptionsTransportClientOptions,
+  SubscriptionClient as SubscriptionsTransportClient,
+} from 'subscriptions-transport-ws-envelop';
 import tmp from 'tmp-promise';
 import { Pool } from 'undici';
 import ws from 'ws';
@@ -186,12 +189,18 @@ export interface StartTestServerOptions<
   options?: Options;
   buildOptions?: Partial<BuildOptions>;
   testCodegenOptions?: TestCodegenOptions;
+  graphqlWsClientOptions?: Partial<GraphQLWSClientOptions>;
+  websocketPath?: string;
+  subscriptionsTransportClientOptions?: Partial<SubscriptionsTransportClientOptions>;
 }
 
 export async function startExpressServer({
   options = {},
   buildOptions = {},
   testCodegenOptions,
+  graphqlWsClientOptions,
+  websocketPath,
+  subscriptionsTransportClientOptions,
 }: StartTestServerOptions<import('../src/express').EnvelopAppOptions, import('../src/express').BuildAppOptions>) {
   const app = (await import('express')).default();
 
@@ -216,8 +225,12 @@ export async function startExpressServer({
     tmpPath,
     tmpSchemaPath,
     codegenPromise,
-    GraphQLWSWebsocketsClient: createGraphQLWSWebsocketsClient(pool.address),
-    SubscriptionsTransportWebsocketsClient: createSubscriptionsTransportWebsocketsClient(pool.address),
+    GraphQLWSWebsocketsClient: createGraphQLWSWebsocketsClient(pool.address, websocketPath, graphqlWsClientOptions),
+    SubscriptionsTransportWebsocketsClient: createSubscriptionsTransportWebsocketsClient(
+      pool.address,
+      websocketPath,
+      subscriptionsTransportClientOptions
+    ),
   };
 }
 
@@ -225,7 +238,10 @@ export async function startFastifyServer({
   options = {},
   buildOptions,
   testCodegenOptions,
-}: StartTestServerOptions<import('../src/fastify').EnvelopAppOptions, import('../src/express').BuildAppOptions>) {
+  graphqlWsClientOptions,
+  websocketPath,
+  subscriptionsTransportClientOptions,
+}: StartTestServerOptions<import('../src/fastify').EnvelopAppOptions, import('../src/fastify').BuildAppOptions>) {
   const app = (await import('fastify')).default();
 
   const { CreateApp } = await import('../src/fastify');
@@ -252,8 +268,12 @@ export async function startFastifyServer({
     tmpSchemaPath,
     codegenPromise,
     app,
-    GraphQLWSWebsocketsClient: createGraphQLWSWebsocketsClient(pool.address),
-    SubscriptionsTransportWebsocketsClient: createSubscriptionsTransportWebsocketsClient(pool.address),
+    GraphQLWSWebsocketsClient: createGraphQLWSWebsocketsClient(pool.address, websocketPath, graphqlWsClientOptions),
+    SubscriptionsTransportWebsocketsClient: createSubscriptionsTransportWebsocketsClient(
+      pool.address,
+      websocketPath,
+      subscriptionsTransportClientOptions
+    ),
   };
 }
 
@@ -502,7 +522,11 @@ export function createUploadFileBody(content: string) {
   return body;
 }
 
-export function createGraphQLWSWebsocketsClient(httpUrl: string, path = '/graphql') {
+export function createGraphQLWSWebsocketsClient(
+  httpUrl: string,
+  path: string = '/graphql',
+  options: Partial<GraphQLWSClientOptions> = {}
+) {
   const url = new URL(httpUrl + path);
 
   url.protocol = url.protocol.replace('http', 'ws');
@@ -510,6 +534,7 @@ export function createGraphQLWSWebsocketsClient(httpUrl: string, path = '/graphq
   const client = createGraphQLWSClient({
     url: url.href,
     webSocketImpl: ws,
+    ...options,
   });
 
   TearDownPromises.push(
@@ -545,7 +570,11 @@ export function createGraphQLWSWebsocketsClient(httpUrl: string, path = '/graphq
   return { subscribe };
 }
 
-export function createSubscriptionsTransportWebsocketsClient(httpUrl: string, path = '/graphql') {
+export function createSubscriptionsTransportWebsocketsClient(
+  httpUrl: string,
+  path = '/graphql',
+  options: Partial<SubscriptionsTransportClientOptions> = {}
+) {
   const url = new URL(httpUrl + path);
 
   url.protocol = url.protocol.replace('http', 'ws');
@@ -554,6 +583,7 @@ export function createSubscriptionsTransportWebsocketsClient(httpUrl: string, pa
     url.href,
     {
       lazy: true,
+      ...options,
     },
     ws
   );

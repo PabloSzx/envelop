@@ -138,7 +138,7 @@ export async function defaultMultipartResponseHandle(
     'Content-Encoding': 'none',
   });
 
-  req.on('close', () => {
+  req.socket.on('close', () => {
     result.unsubscribe();
   });
 
@@ -171,7 +171,7 @@ export async function defaultPushResponseHandle(
     'Cache-Control': 'no-cache',
   });
 
-  req.on('close', () => {
+  req.socket.on('close', () => {
     result.unsubscribe();
   });
 
