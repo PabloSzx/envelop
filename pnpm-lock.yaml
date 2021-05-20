@@ -230,6 +230,7 @@ importers:
       eventsource: ^1.1.0
       express: ^4.17.1
       fastify: ^3.15.1
+      fastify-nextjs: ^5.4.1
       form-data: ^4.0.0
       get-port: ^5.1.1
       got: ^11.8.2
@@ -314,6 +315,7 @@ importers:
       eventsource: 1.1.0
       express: 4.17.1
       fastify: 3.15.1
+      fastify-nextjs: 5.4.1_next@10.2.0
       form-data: 4.0.0
       get-port: 5.1.1
       got: 11.8.2
@@ -4195,6 +4197,17 @@ packages:
   /fastify-error/0.3.1:
     resolution: {integrity: sha512-oCfpcsDndgnDVgiI7bwFKAun2dO+4h84vBlkWsWnz/OUK9Reff5UFoFl241xTiLeHWX/vU9zkDVXqYUxjOwHcQ==}
 
+  /fastify-nextjs/5.4.1_next@10.2.0:
+    resolution: {integrity: sha512-Qy3kbp95iyajuh89leNlv7xYQzvo7xR6K4WZ6C9cF35y5KLNcG+5mzmO0uxBeC05iwr+3hjE1GuItTAb5JD0JQ==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      next: 9.x.x || 10.x.x
+    dependencies:
+      fastify-plugin: 3.0.0
+      next: 10.2.0_typescript@4.2.4
+      under-pressure: 5.6.0
+    dev: true
+
   /fastify-plugin/2.3.4:
     resolution: {integrity: sha512-I+Oaj6p9oiRozbam30sh39BiuiqBda7yK2nmSPVwDCfIBlKnT8YB3MY+pRQc2Fcd07bf6KPGklHJaQ2Qu81TYQ==}
     dependencies:
@@ -4203,7 +4216,6 @@ packages:
 
   /fastify-plugin/3.0.0:
     resolution: {integrity: sha512-ZdCvKEEd92DNLps5n0v231Bha8bkz1DjnPP/aEz37rz/q42Z5JVLmgnqR4DYuNn3NXAO3IDCPyRvgvxtJ4Ym4w==}
-    dev: false
 
   /fastify-static/3.4.0:
     resolution: {integrity: sha512-5y9xTNiPTj6/jDwzH6CqBIcI3/yZtocUiHoLud2NYPfHSOLlS6eW6DTheiU8b9WWlfmHfqOjwFFBdhiH1+nBhg==}
@@ -8343,6 +8355,14 @@ packages:
     resolution: {integrity: sha1-5z3T17DXxe2G+6xrCufYxqadUPo=}
     engines: {node: '>=0.10.0'}
     dev: false
+
+  /under-pressure/5.6.0:
+    resolution: {integrity: sha512-bs6ylFUxmdyi42Ruh705FLGcxe4UdDLWuD+ihbgt4iznRKW9iMgJ/jF5x6O5UzGy4WOsyNDPJCESiIvNBUTzog==}
+    engines: {node: '>=10'}
+    dependencies:
+      fastify-error: 0.3.1
+      fastify-plugin: 3.0.0
+    dev: true
 
   /undici/3.3.6:
     resolution: {integrity: sha512-/j3YTZ5AobMB4ZrTY72mzM54uFUX32v0R/JRW9G2vOyF1uSKYAx+WT8dMsAcRS13TOFISv094TxIyWYk+WEPsA==}
