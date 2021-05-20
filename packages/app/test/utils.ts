@@ -524,7 +524,7 @@ export function createUploadFileBody(content: string) {
 
 export function createGraphQLWSWebsocketsClient(
   httpUrl: string,
-  path: string = '/graphql',
+  path = '/graphql',
   options: Partial<GraphQLWSClientOptions> = {}
 ) {
   const url = new URL(httpUrl + path);
