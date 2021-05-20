@@ -364,7 +364,7 @@ export async function startKoaServer({
 
 export async function startNextJSServer() {
   const app = (await import('fastify')).default({
-    pluginTimeout: 10000,
+    pluginTimeout: 20000,
   });
 
   app.addContentTypeParser('application/json', (_req, body, done) => {
@@ -382,6 +382,7 @@ export async function startNextJSServer() {
       logLevel: 'warn',
     })
     .after(async () => {
+      if (!app.next) return;
       app.next('*', { method: 'POST', schema: {} });
     });
 

@@ -9,7 +9,7 @@ const startServer = LazyPromise(() => {
 
 beforeAll(async () => {
   await startServer;
-}, 10000);
+}, 20000);
 
 test('works', async () => {
   const { query } = await startServer;
