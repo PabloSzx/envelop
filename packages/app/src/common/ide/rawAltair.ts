@@ -26,9 +26,7 @@ const RawAltairDeps = LazyPromise(async () => {
   };
 });
 
-export function RawAltairHandlerDeps(
-  options: RawAltairHandlerOptions
-): {
+export function RawAltairHandlerDeps(options: RawAltairHandlerOptions): {
   path: string;
   baseURL: string;
   renderOptions: RenderOptions;
@@ -53,7 +51,7 @@ export function RawAltairHandler(options: RawAltairHandlerOptions): (req: Incomi
     try {
       const { renderAltair, getDistDirectory, readFile, resolve, lookup } = await RawAltairDeps;
 
-      switch (req.url) {
+      switch ((req.url ||= '_')) {
         case path:
         case baseURL: {
           res.setHeader('content-type', 'text/html');
@@ -63,9 +61,6 @@ export function RawAltairHandler(options: RawAltairHandlerOptions): (req: Incomi
               baseURL,
             })
           );
-        }
-        case undefined: {
-          return res.writeHead(404).end();
         }
         default: {
           const resolvedPath = resolve(getDistDirectory(), req.url.slice(baseURL.length));
@@ -79,7 +74,7 @@ export function RawAltairHandler(options: RawAltairHandlerOptions): (req: Incomi
           return res.end(result);
         }
       }
-    } catch (err) {
+    } catch (err) /* istanbul ignore next */ {
       res
         .writeHead(500, {
           'content-type': 'application/json',
