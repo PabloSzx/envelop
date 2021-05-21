@@ -1,10 +1,8 @@
-import { renderGraphiQL } from 'graphql-helix';
-
 import { cleanObject } from '../utils/object.js';
+import { LazyPromise } from '../utils/promise.js';
 
 import type { RenderOptions } from 'altair-static';
 import type { RenderGraphiQLOptions } from 'graphql-helix/dist/types';
-
 export interface GraphiQLOptions extends RenderGraphiQLOptions {
   /**
    * @default "/graphiql"
@@ -68,6 +66,11 @@ export function parseIDEConfig(userOptions: IDEOptions, graphqlPath?: string): I
     isGraphiQLEnabled,
   };
 }
+const GraphiQLDeps = LazyPromise(async () => {
+  const { renderGraphiQL } = await import('graphql-helix/dist/render-graphiql');
+
+  return { renderGraphiQL };
+});
 
 export async function handleIDE(
   userOptions: IDEOptions = true,
@@ -81,9 +84,11 @@ export async function handleIDE(
   await Promise.all([
     isAltairEnabled ? internal.handleAltair(altairOptions) : null,
     isGraphiQLEnabled
-      ? internal.handleGraphiQL({
-          ...graphiQLOptions,
-          html: renderGraphiQL(graphiQLOptions),
+      ? GraphiQLDeps.then(({ renderGraphiQL }) => {
+          return internal.handleGraphiQL({
+            ...graphiQLOptions,
+            html: renderGraphiQL(graphiQLOptions),
+          });
         })
       : null,
   ]);

@@ -1,4 +1,3 @@
-import { renderGraphiQL } from 'graphql-helix';
 import { gql } from 'graphql-modules';
 
 import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app.js';
@@ -107,15 +106,23 @@ export interface GraphiQLHandlerOptions extends RenderGraphiQLOptions {
   endpoint?: string;
 }
 
+const GraphiQLDeps = LazyPromise(async () => {
+  const { renderGraphiQL } = await import('graphql-helix/dist/render-graphiql');
+
+  return { renderGraphiQL };
+});
+
 export function GraphiQLHandler(options: GraphiQLHandlerOptions = {}): NextApiHandler<unknown> {
   const { endpoint = '/api/graphql', ...renderOptions } = options;
 
-  const html = renderGraphiQL({ ...renderOptions, endpoint });
-  return function (req, res) {
+  const html = GraphiQLDeps.then(({ renderGraphiQL }) => {
+    return renderGraphiQL({ ...renderOptions, endpoint });
+  });
+  return async function (req, res) {
     if (req.method !== 'GET') return res.status(404).end();
 
     res.setHeader('content-type', 'text/html');
-    res.send(html);
+    res.send(await html);
   };
 }
 

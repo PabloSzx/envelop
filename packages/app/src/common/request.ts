@@ -1,5 +1,7 @@
-import { ExecutionContext, getGraphQLParameters, MultipartResponse, processRequest, Push, Request } from 'graphql-helix';
+import { getGraphQLParameters } from 'graphql-helix/dist/get-graphql-parameters';
+import { processRequest } from 'graphql-helix/dist/process-request';
 
+import type { ExecutionContext, MultipartResponse, Push, Request } from 'graphql-helix';
 import type { Envelop } from '@envelop/types';
 import type { IncomingMessage, ServerResponse } from 'http';
 import type { ExecutionResult } from 'graphql';

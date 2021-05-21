@@ -1,4 +1,3 @@
-import { renderGraphiQL } from 'graphql-helix';
 import { gql } from 'graphql-modules';
 import querystring from 'querystring';
 
@@ -184,14 +183,25 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
 
 export interface GraphiQLHandlerOptions extends RenderGraphiQLOptions {}
 
+const GraphiQLDeps = LazyPromise(async () => {
+  const { renderGraphiQL } = await import('graphql-helix/dist/render-graphiql');
+
+  return { renderGraphiQL };
+});
+
 export function GraphiQLHandler(options: GraphiQLHandlerOptions = {}): RequestHandler {
   const { endpoint = '/graphql', ...renderOptions } = options;
-  return function (req, res) {
+
+  const html = GraphiQLDeps.then(({ renderGraphiQL }) => {
+    return renderGraphiQL({ ...renderOptions, endpoint });
+  });
+
+  return async function (req, res) {
     if (req.method !== 'GET') return res.writeHead(404).end();
 
     res.setHeader('content-type', 'text/html');
 
-    res.end(renderGraphiQL({ ...renderOptions, endpoint }));
+    res.end(await html);
   };
 }
 
