@@ -25,7 +25,7 @@ export interface EnvelopAppOptions extends BaseEnvelopAppOptionsWithUpload<Envel
   /**
    * JSON body-parser options
    */
-  bodyParserJSONOptions?: BodyParserOptions | false;
+  bodyParserJSONOptions?: BodyParserOptions | boolean;
 
   /**
    * Build Context
@@ -109,7 +109,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
       async adapterFactory(getEnveloped) {
         const EnvelopApp = Router();
 
-        if (jsonOptions) EnvelopApp.use(json(jsonOptions));
+        if (jsonOptions) EnvelopApp.use(json(typeof jsonOptions === 'object' ? jsonOptions : undefined));
 
         const IDEPromise = handleIDE(ide, path, {
           async handleAltair(ideOptions) {
