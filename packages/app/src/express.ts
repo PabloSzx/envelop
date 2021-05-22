@@ -6,6 +6,7 @@ import { createServer, Server } from 'http';
 import { BaseEnvelopAppOptionsWithUpload, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app.js';
 import { handleCodegen, WithCodegen } from './common/codegen.js';
 import { handleIDE, IDEOptions } from './common/ide/handle.js';
+import { handleJit, WithJit } from './common/jit.js';
 import { CreateSubscriptionsServer, WebSocketSubscriptionsOptions } from './common/subscriptions/websocket.js';
 
 import type { Envelop } from '@envelop/types';
@@ -17,7 +18,7 @@ export interface BuildContextArgs {
   response: Response;
 }
 
-export interface EnvelopAppOptions extends BaseEnvelopAppOptionsWithUpload<EnvelopContext>, WithCodegen {
+export interface EnvelopAppOptions extends BaseEnvelopAppOptionsWithUpload<EnvelopContext>, WithCodegen, WithJit {
   /**
    * @default "/graphql"
    */
@@ -62,10 +63,15 @@ export interface EnvelopAppBuilder extends BaseEnvelopBuilder {
 }
 
 export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
-  const { appBuilder, ...commonApp } = createEnvelopAppFactory(config, getEnveloped => {
-    handleCodegen(getEnveloped, config, {
-      moduleName: 'express',
-    });
+  const { appBuilder, ...commonApp } = createEnvelopAppFactory(config, {
+    async preBuild(plugins) {
+      await handleJit(config, plugins);
+    },
+    afterBuilt(getEnveloped) {
+      handleCodegen(getEnveloped, config, {
+        moduleName: 'express',
+      });
+    },
   });
 
   const { path = '/graphql', websocketSubscriptions, customHandleRequest } = config;

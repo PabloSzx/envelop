@@ -5,6 +5,7 @@ import { BaseEnvelopAppOptionsWithUpload, BaseEnvelopBuilder, createEnvelopAppFa
 import { handleCodegen, WithCodegen } from './common/codegen.js';
 import { handleIDE } from './common/ide/handle.js';
 import { RawAltairHandlerDeps } from './common/ide/rawAltair.js';
+import { handleJit, WithJit } from './common/jit.js';
 
 import type * as KoaRouter from '@koa/router';
 import type { EnvelopContext, IDEOptions } from './common/types';
@@ -16,7 +17,7 @@ export interface BuildContextArgs {
   response: Response;
 }
 
-export interface EnvelopAppOptions extends BaseEnvelopAppOptionsWithUpload<EnvelopContext>, WithCodegen {
+export interface EnvelopAppOptions extends BaseEnvelopAppOptionsWithUpload<EnvelopContext>, WithCodegen, WithJit {
   /**
    * Build Context
    */
@@ -59,10 +60,15 @@ export interface EnvelopAppBuilder extends BaseEnvelopBuilder {
 }
 
 export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
-  const { appBuilder, ...commonApp } = createEnvelopAppFactory(config, getEnveloped => {
-    handleCodegen(getEnveloped, config, {
-      moduleName: 'koa',
-    });
+  const { appBuilder, ...commonApp } = createEnvelopAppFactory(config, {
+    async preBuild(plugins) {
+      await handleJit(config, plugins);
+    },
+    afterBuilt(getEnveloped) {
+      handleCodegen(getEnveloped, config, {
+        moduleName: 'koa',
+      });
+    },
   });
 
   async function buildApp({ router, prepare }: BuildAppOptions): Promise<EnvelopApp> {

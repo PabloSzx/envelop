@@ -12,7 +12,6 @@ import { uniqueArray } from './utils/object.js';
 
 import type { GraphQLSchema } from 'graphql';
 import type { EnvelopContext, EnvelopResolvers, GraphQLUploadConfig } from './types';
-import type { useGraphQlJit } from '@envelop/graphql-jit';
 import type { handleRequest } from './request';
 import type { IExecutableSchemaDefinition } from '@graphql-tools/schema';
 import type { MergeSchemasConfig } from '@graphql-tools/merge';
@@ -80,7 +79,11 @@ export type SchemaDefinition<TContext = EnvelopContext> =
   | Promise<ExecutableSchemaDefinition<TContext>>;
 
 export interface BaseEnvelopAppOptions<TContext> extends Partial<ApplicationConfig> {
+  /**
+   * Custom Envelop Plugins
+   */
   plugins?: Plugin[];
+
   /**
    * Pre-built schemas
    */
@@ -95,13 +98,6 @@ export interface BaseEnvelopAppOptions<TContext> extends Partial<ApplicationConf
    * Add scalars
    */
   scalars?: ScalarsConfig;
-
-  /**
-   * Enable JIT Compilation using [graphql-jit](https://github.com/zalando-incubator/graphql-jit)
-   *
-   * @default false
-   */
-  jit?: boolean | Parameters<typeof useGraphQlJit>;
 
   /**
    * Enable/Disable/Customize in-memory cache that improves performance
@@ -146,7 +142,13 @@ export interface BaseEnvelopAppOptionsWithUpload<TContext> extends BaseEnvelopAp
 
 export function createEnvelopAppFactory<TContext>(
   config: BaseEnvelopAppOptions<TContext>,
-  onBuiltEnvelop: (getEnveloped: Envelop<unknown>) => Promise<void> | void
+  {
+    preBuild,
+    afterBuilt,
+  }: {
+    preBuild?: (plugins: Plugin[]) => void | Promise<void>;
+    afterBuilt?: (getEnveloped: Envelop<unknown>) => void | Promise<void>;
+  }
 ): EnvelopAppFactoryType {
   const { mergeSchemasConfig } = config;
   const factoryModules = uniqueArray(config.modules);
@@ -186,7 +188,7 @@ export function createEnvelopAppFactory<TContext>(
       const appModules = uniqueArray(factoryModules);
       const appPlugins = uniqueArray(factoryPlugins);
 
-      const { schema, middlewares, providers, schemaBuilder, jit = false, cache = true } = config;
+      const { schema, middlewares, providers, schemaBuilder, cache = true } = config;
 
       const scalarsModule = await scalarsModulePromise;
 
@@ -203,12 +205,6 @@ export function createEnvelopAppFactory<TContext>(
 
       const cachePromise = CachePlugins(cache, appPlugins);
 
-      const jitPromise = jit
-        ? import('@envelop/graphql-jit').then(({ useGraphQlJit }) => {
-            appPlugins.push(typeof jit === 'object' ? useGraphQlJit(...jit) : useGraphQlJit());
-          })
-        : null;
-
       const schemaPromise = schema
         ? prepareSchema({
             appModules,
@@ -218,13 +214,15 @@ export function createEnvelopAppFactory<TContext>(
           })
         : null;
 
-      await Promise.all([jitPromise, schemaPromise, cachePromise]);
+      await Promise.all([schemaPromise, cachePromise]);
+
+      if (preBuild) await preBuild(appPlugins);
 
       const getEnveloped = envelop({
         plugins: uniqueArray(appPlugins),
       });
 
-      await onBuiltEnvelop(getEnveloped);
+      if (afterBuilt) await afterBuilt(getEnveloped);
 
       return {
         app: adapterFactory(getEnveloped, modulesApplication),

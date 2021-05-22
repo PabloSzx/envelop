@@ -6,6 +6,7 @@ import { LazyPromise } from './common/base.js';
 import { handleCodegen, WithCodegen } from './common/codegen.js';
 import { parseIDEConfig } from './common/ide/handle.js';
 import { RawAltairHandler } from './common/ide/rawAltair.js';
+import { handleJit, WithJit } from './common/jit.js';
 import { getPathname } from './common/utils/url.js';
 
 import type { RenderGraphiQLOptions } from 'graphql-helix/dist/types';
@@ -19,7 +20,7 @@ export interface BuildContextArgs {
   response: ServerResponse;
 }
 
-export interface EnvelopAppOptions extends BaseEnvelopAppOptions<EnvelopContext>, WithCodegen {
+export interface EnvelopAppOptions extends BaseEnvelopAppOptions<EnvelopContext>, WithCodegen, WithJit {
   /**
    * Build Context
    */
@@ -62,10 +63,15 @@ export interface EnvelopAppBuilder extends BaseEnvelopBuilder {
 }
 
 export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
-  const { appBuilder, ...commonApp } = createEnvelopAppFactory(config, getEnveloped => {
-    handleCodegen(getEnveloped, config, {
-      moduleName: 'http',
-    });
+  const { appBuilder, ...commonApp } = createEnvelopAppFactory(config, {
+    async preBuild(plugins) {
+      await handleJit(config, plugins);
+    },
+    afterBuilt(getEnveloped) {
+      handleCodegen(getEnveloped, config, {
+        moduleName: 'http',
+      });
+    },
   });
 
   function buildApp({ prepare }: BuildAppOptions): EnvelopApp {

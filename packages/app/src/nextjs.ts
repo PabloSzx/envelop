@@ -2,6 +2,7 @@ import { gql } from 'graphql-modules';
 
 import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app.js';
 import { handleCodegen, WithCodegen } from './common/codegen.js';
+import { handleJit, WithJit } from './common/jit.js';
 import { LazyPromise } from './common/utils/promise.js';
 
 import type { RenderGraphiQLOptions } from 'graphql-helix/dist/types';
@@ -9,12 +10,13 @@ import type { NextApiHandler, NextApiRequest, NextApiResponse } from 'next';
 import type { EnvelopContext } from './common/types';
 import type { RenderOptions } from 'altair-static';
 import type { Envelop } from '@envelop/types';
+
 export interface BuildContextArgs {
   request: NextApiRequest;
   response: NextApiResponse;
 }
 
-export interface EnvelopAppOptions extends BaseEnvelopAppOptions<EnvelopContext>, WithCodegen {
+export interface EnvelopAppOptions extends BaseEnvelopAppOptions<EnvelopContext>, WithCodegen, WithJit {
   /**
    * Build Context
    */
@@ -35,10 +37,15 @@ export interface EnvelopAppBuilder extends BaseEnvelopBuilder {
 }
 
 export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
-  const { appBuilder, ...commonApp } = createEnvelopAppFactory(config, getEnveloped => {
-    handleCodegen(getEnveloped, config, {
-      moduleName: 'nextjs',
-    });
+  const { appBuilder, ...commonApp } = createEnvelopAppFactory(config, {
+    async preBuild(plugins) {
+      await handleJit(config, plugins);
+    },
+    afterBuilt(getEnveloped) {
+      handleCodegen(getEnveloped, config, {
+        moduleName: 'express',
+      });
+    },
   });
 
   function buildApp({ prepare }: BuildAppOptions = {}): EnvelopApp {

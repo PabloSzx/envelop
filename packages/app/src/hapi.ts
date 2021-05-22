@@ -5,6 +5,7 @@ import { LazyPromise } from './common/base.js';
 import { handleCodegen, WithCodegen } from './common/codegen.js';
 import { handleIDE } from './common/ide/handle.js';
 import { RawAltairHandler } from './common/ide/rawAltair.js';
+import { handleJit, WithJit } from './common/jit.js';
 
 import type { EnvelopContext, IDEOptions } from './common/types';
 import type { Request, ResponseToolkit, Plugin, Server, Lifecycle } from '@hapi/hapi';
@@ -15,7 +16,7 @@ export interface BuildContextArgs {
   h: ResponseToolkit;
 }
 
-export interface EnvelopAppOptions extends BaseEnvelopAppOptions<EnvelopContext>, WithCodegen {
+export interface EnvelopAppOptions extends BaseEnvelopAppOptions<EnvelopContext>, WithCodegen, WithJit {
   /**
    * Build Context
    */
@@ -47,10 +48,15 @@ export interface EnvelopAppBuilder extends BaseEnvelopBuilder {
 }
 
 export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
-  const { appBuilder, ...commonApp } = createEnvelopAppFactory(config, getEnveloped => {
-    handleCodegen(getEnveloped, config, {
-      moduleName: 'hapi',
-    });
+  const { appBuilder, ...commonApp } = createEnvelopAppFactory(config, {
+    async preBuild(plugins) {
+      await handleJit(config, plugins);
+    },
+    afterBuilt(getEnveloped) {
+      handleCodegen(getEnveloped, config, {
+        moduleName: 'hapi',
+      });
+    },
   });
 
   function buildApp({ prepare }: BuildAppOptions = {}): EnvelopApp {
