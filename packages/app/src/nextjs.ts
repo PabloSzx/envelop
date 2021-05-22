@@ -1,6 +1,7 @@
 import { gql } from 'graphql-modules';
 
 import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app.js';
+import { handleCodegen, WithCodegen } from './common/codegen.js';
 import { LazyPromise } from './common/utils/promise.js';
 
 import type { RenderGraphiQLOptions } from 'graphql-helix/dist/types';
@@ -8,13 +9,12 @@ import type { NextApiHandler, NextApiRequest, NextApiResponse } from 'next';
 import type { EnvelopContext } from './common/types';
 import type { RenderOptions } from 'altair-static';
 import type { Envelop } from '@envelop/types';
-
 export interface BuildContextArgs {
   request: NextApiRequest;
   response: NextApiResponse;
 }
 
-export interface EnvelopAppOptions extends BaseEnvelopAppOptions<EnvelopContext> {
+export interface EnvelopAppOptions extends BaseEnvelopAppOptions<EnvelopContext>, WithCodegen {
   /**
    * Build Context
    */
@@ -35,8 +35,10 @@ export interface EnvelopAppBuilder extends BaseEnvelopBuilder {
 }
 
 export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
-  const { appBuilder, ...commonApp } = createEnvelopAppFactory(config, {
-    moduleName: 'nextjs',
+  const { appBuilder, ...commonApp } = createEnvelopAppFactory(config, getEnveloped => {
+    handleCodegen(getEnveloped, config, {
+      moduleName: 'nextjs',
+    });
   });
 
   function buildApp({ prepare }: BuildAppOptions = {}): EnvelopApp {

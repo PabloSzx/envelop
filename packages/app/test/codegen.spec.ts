@@ -1,7 +1,7 @@
 import { promises, existsSync } from 'fs';
 import tmp from 'tmp-promise';
 import { resolve } from 'path';
-import { EnvelopCodegen, gql, LazyPromise, makeExecutableSchema, writeOutputSchema } from '@envelop/app/extend';
+import { EnvelopTypeScriptCodegen, gql, LazyPromise, makeExecutableSchema, writeOutputSchema } from '@envelop/app/extend';
 
 const { writeFile, readFile, unlink } = promises;
 
@@ -61,7 +61,7 @@ describe('codegen with operations', () => {
       `,
     });
 
-    await EnvelopCodegen(
+    await EnvelopTypeScriptCodegen(
       schema,
       {
         codegen: {

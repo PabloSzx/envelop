@@ -3,6 +3,7 @@ import { gql } from 'graphql-modules';
 
 import { BaseEnvelopAppOptionsWithUpload, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app.js';
 import { LazyPromise } from './common/base.js';
+import { handleCodegen, WithCodegen } from './common/codegen.js';
 import { handleIDE, IDEOptions } from './common/ide/handle.js';
 import { CreateSubscriptionsServer, WebSocketSubscriptionsOptions } from './common/subscriptions/websocket.js';
 
@@ -19,7 +20,7 @@ export interface BuildContextArgs {
   response: FastifyReply;
 }
 
-export interface EnvelopAppOptions extends BaseEnvelopAppOptionsWithUpload<EnvelopContext> {
+export interface EnvelopAppOptions extends BaseEnvelopAppOptionsWithUpload<EnvelopContext>, WithCodegen {
   /**
    * @default "/graphql"
    */
@@ -66,8 +67,8 @@ export interface EnvelopAppBuilder extends BaseEnvelopBuilder {
 }
 
 export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
-  const { appBuilder, ...commonApp } = createEnvelopAppFactory(config, {
-    moduleName: 'fastify',
+  const { appBuilder, ...commonApp } = createEnvelopAppFactory(config, getEnveloped => {
+    handleCodegen(getEnveloped, config, { moduleName: 'fastify' });
   });
   const { websocketSubscriptions, path = '/graphql', GraphQLUpload = false } = config;
 

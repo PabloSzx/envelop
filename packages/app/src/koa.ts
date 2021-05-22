@@ -2,6 +2,7 @@ import { gql } from 'graphql-modules';
 import bodyParser from 'koa-bodyparser';
 
 import { BaseEnvelopAppOptionsWithUpload, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app.js';
+import { handleCodegen, WithCodegen } from './common/codegen.js';
 import { handleIDE } from './common/ide/handle.js';
 import { RawAltairHandlerDeps } from './common/ide/rawAltair.js';
 
@@ -15,7 +16,7 @@ export interface BuildContextArgs {
   response: Response;
 }
 
-export interface EnvelopAppOptions extends BaseEnvelopAppOptionsWithUpload<EnvelopContext> {
+export interface EnvelopAppOptions extends BaseEnvelopAppOptionsWithUpload<EnvelopContext>, WithCodegen {
   /**
    * Build Context
    */
@@ -58,8 +59,10 @@ export interface EnvelopAppBuilder extends BaseEnvelopBuilder {
 }
 
 export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
-  const { appBuilder, ...commonApp } = createEnvelopAppFactory(config, {
-    moduleName: 'koa',
+  const { appBuilder, ...commonApp } = createEnvelopAppFactory(config, getEnveloped => {
+    handleCodegen(getEnveloped, config, {
+      moduleName: 'koa',
+    });
   });
 
   async function buildApp({ router, prepare }: BuildAppOptions): Promise<EnvelopApp> {

@@ -12,7 +12,6 @@ import { uniqueArray } from './utils/object.js';
 
 import type { GraphQLSchema } from 'graphql';
 import type { EnvelopContext, EnvelopResolvers, GraphQLUploadConfig } from './types';
-import type { CodegenConfig } from './codegen/typescript';
 import type { useGraphQlJit } from '@envelop/graphql-jit';
 import type { handleRequest } from './request';
 import type { IExecutableSchemaDefinition } from '@graphql-tools/schema';
@@ -20,8 +19,8 @@ import type { MergeSchemasConfig } from '@graphql-tools/merge';
 
 export type AdapterFactory<T> = (envelop: Envelop<unknown>, modulesApplication: Application) => T;
 
-export interface InternalEnvelopConfig {
-  moduleName: 'express' | 'fastify' | 'nextjs' | 'http' | 'koa' | 'hapi';
+export interface InternalCodegenConfig {
+  moduleName: 'express' | 'fastify' | 'nextjs' | 'http' | 'koa' | 'hapi' | 'extend';
 }
 
 export interface BaseEnvelopBuilder {
@@ -93,28 +92,6 @@ export interface BaseEnvelopAppOptions<TContext> extends Partial<ApplicationConf
   mergeSchemasConfig?: FilteredMergeSchemasConfig;
 
   /**
-   * Enable code generation, by default it's enabled if `NODE_ENV` is not `production` nor `test`
-   *
-   * @default process.env.NODE_ENV !== "production" && process.env.NODE_ENV !== "test"
-   */
-  enableCodegen?: boolean;
-
-  /**
-   * Add custom codegen config
-   */
-  codegen?: CodegenConfig;
-
-  /**
-   * Output schema target path or flag
-   *
-   * If `true`, defaults to `"./schema.gql"`
-   * You have to specify a `.gql`, `.graphql` or `.json` extension
-   *
-   * @default false
-   */
-  outputSchema?: boolean | string;
-
-  /**
    * Add scalars
    */
   scalars?: ScalarsConfig;
@@ -169,7 +146,7 @@ export interface BaseEnvelopAppOptionsWithUpload<TContext> extends BaseEnvelopAp
 
 export function createEnvelopAppFactory<TContext>(
   config: BaseEnvelopAppOptions<TContext>,
-  internalConfig: InternalEnvelopConfig
+  onBuiltEnvelop: (getEnveloped: Envelop<unknown>) => Promise<void> | void
 ): EnvelopAppFactoryType {
   const { mergeSchemasConfig } = config;
   const factoryModules = uniqueArray(config.modules);
@@ -209,20 +186,7 @@ export function createEnvelopAppFactory<TContext>(
       const appModules = uniqueArray(factoryModules);
       const appPlugins = uniqueArray(factoryPlugins);
 
-      const {
-        enableCodegen = process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test',
-        schema,
-        middlewares,
-        providers,
-        schemaBuilder,
-        codegen: {
-          // eslint-disable-next-line no-console
-          onError: onCodegenError = console.error,
-          onFinish,
-        } = {},
-        jit = false,
-        cache = true,
-      } = config;
+      const { schema, middlewares, providers, schemaBuilder, jit = false, cache = true } = config;
 
       const scalarsModule = await scalarsModulePromise;
 
@@ -260,15 +224,7 @@ export function createEnvelopAppFactory<TContext>(
         plugins: uniqueArray(appPlugins),
       });
 
-      if (enableCodegen) {
-        import('./codegen/handle.js')
-          .then(({ handleCodegen }) => {
-            handleCodegen(getEnveloped, config, internalConfig);
-          })
-          .catch(onCodegenError);
-      } else if (onFinish) {
-        onFinish();
-      }
+      await onBuiltEnvelop(getEnveloped);
 
       return {
         app: adapterFactory(getEnveloped, modulesApplication),
@@ -290,3 +246,5 @@ export function createEnvelopAppFactory<TContext>(
 }
 
 export * from './request.js';
+
+export { gql };

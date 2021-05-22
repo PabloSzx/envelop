@@ -1,5 +1,5 @@
 import { isDocumentNode } from '@graphql-tools/utils';
-import { createModule, Module, TypeDefs } from 'graphql-modules';
+import { createModule, Module, TypeDefs, gql } from 'graphql-modules';
 
 import type { EnvelopModuleConfig } from './types';
 
@@ -49,3 +49,5 @@ export function RegisterModuleFactory(modules: Module[]): RegisterModuleState {
     return firstParam;
   }
 }
+
+export { gql };

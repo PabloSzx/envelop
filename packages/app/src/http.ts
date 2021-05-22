@@ -3,6 +3,7 @@ import querystring from 'querystring';
 
 import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app.js';
 import { LazyPromise } from './common/base.js';
+import { handleCodegen, WithCodegen } from './common/codegen.js';
 import { parseIDEConfig } from './common/ide/handle.js';
 import { RawAltairHandler } from './common/ide/rawAltair.js';
 import { getPathname } from './common/utils/url.js';
@@ -18,7 +19,7 @@ export interface BuildContextArgs {
   response: ServerResponse;
 }
 
-export interface EnvelopAppOptions extends BaseEnvelopAppOptions<EnvelopContext> {
+export interface EnvelopAppOptions extends BaseEnvelopAppOptions<EnvelopContext>, WithCodegen {
   /**
    * Build Context
    */
@@ -61,8 +62,10 @@ export interface EnvelopAppBuilder extends BaseEnvelopBuilder {
 }
 
 export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
-  const { appBuilder, ...commonApp } = createEnvelopAppFactory(config, {
-    moduleName: 'http',
+  const { appBuilder, ...commonApp } = createEnvelopAppFactory(config, getEnveloped => {
+    handleCodegen(getEnveloped, config, {
+      moduleName: 'http',
+    });
   });
 
   function buildApp({ prepare }: BuildAppOptions): EnvelopApp {

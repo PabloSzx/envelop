@@ -2,6 +2,7 @@ import { gql } from 'graphql-modules';
 
 import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app.js';
 import { LazyPromise } from './common/base.js';
+import { handleCodegen, WithCodegen } from './common/codegen.js';
 import { handleIDE } from './common/ide/handle.js';
 import { RawAltairHandler } from './common/ide/rawAltair.js';
 
@@ -14,7 +15,7 @@ export interface BuildContextArgs {
   h: ResponseToolkit;
 }
 
-export interface EnvelopAppOptions extends BaseEnvelopAppOptions<EnvelopContext> {
+export interface EnvelopAppOptions extends BaseEnvelopAppOptions<EnvelopContext>, WithCodegen {
   /**
    * Build Context
    */
@@ -46,8 +47,10 @@ export interface EnvelopAppBuilder extends BaseEnvelopBuilder {
 }
 
 export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
-  const { appBuilder, ...commonApp } = createEnvelopAppFactory(config, {
-    moduleName: 'hapi',
+  const { appBuilder, ...commonApp } = createEnvelopAppFactory(config, getEnveloped => {
+    handleCodegen(getEnveloped, config, {
+      moduleName: 'hapi',
+    });
   });
 
   function buildApp({ prepare }: BuildAppOptions = {}): EnvelopApp {

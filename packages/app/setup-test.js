@@ -11,9 +11,9 @@ module.exports = async () => {
   /**
    * @type {import("./src/extend")}
    */
-  const { EnvelopCodegen, gql } = require('./dist/cjs/extend');
+  const { EnvelopTypeScriptCodegen, gql } = require('./dist/cjs/extend');
 
-  await EnvelopCodegen(
+  await EnvelopTypeScriptCodegen(
     makeExecutableSchema({
       typeDefs: gql`
         type Query {
