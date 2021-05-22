@@ -36,7 +36,7 @@ const serverReady = LazyPromise(() =>
           },
         },
       },
-      websocketSubscriptions: true,
+      websockets: true,
     },
     buildOptions: {
       prepare(tools) {
@@ -2041,7 +2041,7 @@ test('GraphQLWS websocket subscriptions', async () => {
 test('websocket subscriptions legacy only', async () => {
   const { SubscriptionsTransportWebsocketsClient } = await startFastifyServer({
     options: {
-      websocketSubscriptions: 'legacy',
+      websockets: 'legacy',
       scalars: '*',
     },
     buildOptions: {
@@ -2097,7 +2097,7 @@ test('websocket subscriptions legacy only', async () => {
 test('websocket subscriptions supporting both legacy and new protocols', async () => {
   const { GraphQLWSWebsocketsClient, SubscriptionsTransportWebsocketsClient } = await startFastifyServer({
     options: {
-      websocketSubscriptions: 'both',
+      websockets: 'both',
       scalars: '*',
     },
     buildOptions: {

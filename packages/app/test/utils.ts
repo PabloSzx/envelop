@@ -29,6 +29,7 @@ import {
   InternalAppBuildOptions,
   LazyPromise,
   PLazy,
+  WithCodegen,
 } from '@envelop/app/extend';
 import { isDocumentNode } from '@graphql-tools/utils';
 
@@ -133,7 +134,7 @@ export interface TestCodegenOptions {
 }
 
 export async function Codegen(
-  options: BaseEnvelopAppOptions<never>,
+  options: BaseEnvelopAppOptions<never> & WithCodegen,
   { tmpSchemaExtension = '.gql', tmpTSGeneratedExtension = '.ts' }: TestCodegenOptions = {}
 ) {
   let tmpSchemaPath: string | undefined;

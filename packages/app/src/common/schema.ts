@@ -6,10 +6,25 @@ import { makeExecutableSchema } from '@graphql-tools/schema';
 import { cleanObject, toPlural } from './utils/object.js';
 import { LazyPromise } from './utils/promise.js';
 
+import type { IExecutableSchemaDefinition } from '@graphql-tools/schema';
+import type { MergeSchemasConfig } from '@graphql-tools/merge';
 import type { Plugin } from '@envelop/types';
 import type { Application, Module } from 'graphql-modules';
-import type { FilteredMergeSchemasConfig, SchemaDefinition } from './app';
 import type { ScalarsModule } from './scalars';
+import type { EnvelopContext, EnvelopResolvers } from './types.js';
+
+export type FilteredMergeSchemasConfig = Omit<MergeSchemasConfig, 'schemas'>;
+
+export interface EnvelopExecutableSchemaDefinition<TContext = EnvelopContext>
+  extends Omit<IExecutableSchemaDefinition<TContext>, 'resolvers'> {
+  resolvers?: EnvelopResolvers | EnvelopResolvers[];
+}
+
+export type EnvelopSchemaDefinition<TContext = EnvelopContext> =
+  | GraphQLSchema
+  | Promise<GraphQLSchema>
+  | EnvelopExecutableSchemaDefinition<TContext>
+  | Promise<EnvelopExecutableSchemaDefinition<TContext>>;
 
 export interface SchemaBuilderFactoryOptions {
   scalarsModulePromise?: Promise<ScalarsModule | null>;
@@ -17,10 +32,22 @@ export interface SchemaBuilderFactoryOptions {
 }
 
 export interface PrepareSchemaOptions {
-  schema: SchemaDefinition<never> | SchemaDefinition<never>[];
+  schema: EnvelopSchemaDefinition<never> | EnvelopSchemaDefinition<never>[];
   appPlugins: Plugin[];
   appModules: Module[];
   modulesApplication?: Application;
+}
+
+export interface WithSchemaBuilding<TContext> {
+  /**
+   * Pre-built schemas
+   */
+  schema?: EnvelopSchemaDefinition<TContext> | EnvelopSchemaDefinition<TContext>[];
+
+  /**
+   * Customize configuration of schema merging
+   */
+  mergeSchemasConfig?: FilteredMergeSchemasConfig;
 }
 
 const Merge = LazyPromise(() => {

@@ -2,12 +2,12 @@ import { gql } from 'graphql-modules';
 
 import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app.js';
 import { LazyPromise } from './common/base.js';
-import { handleCodegen, WithCodegen } from './common/codegen.js';
-import { handleIDE } from './common/ide/handle.js';
+import { handleCodegen, WithCodegen } from './common/codegen/handle.js';
+import { handleIDE, WithIDE } from './common/ide/handle.js';
 import { RawAltairHandler } from './common/ide/rawAltair.js';
 import { handleJit, WithJit } from './common/jit.js';
 
-import type { EnvelopContext, IDEOptions } from './common/types';
+import type { EnvelopContext } from './common/types';
 import type { Request, ResponseToolkit, Plugin, Server, Lifecycle } from '@hapi/hapi';
 import type { Envelop } from '@envelop/types';
 
@@ -16,7 +16,7 @@ export interface BuildContextArgs {
   h: ResponseToolkit;
 }
 
-export interface EnvelopAppOptions extends BaseEnvelopAppOptions<EnvelopContext>, WithCodegen, WithJit {
+export interface EnvelopAppOptions extends BaseEnvelopAppOptions<EnvelopContext>, WithCodegen, WithJit, WithIDE {
   /**
    * Build Context
    */
@@ -26,13 +26,6 @@ export interface EnvelopAppOptions extends BaseEnvelopAppOptions<EnvelopContext>
    * @default "/graphql"
    */
   path?: string;
-
-  /**
-   * IDE configuration
-   *
-   * @default { altair: true, graphiql: true }
-   */
-  ide?: IDEOptions;
 }
 
 export interface BuildAppOptions {

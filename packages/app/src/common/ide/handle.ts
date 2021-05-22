@@ -3,6 +3,7 @@ import { LazyPromise } from '../utils/promise.js';
 
 import type { RenderOptions } from 'altair-static';
 import type { RenderGraphiQLOptions } from 'graphql-helix/dist/types';
+
 export interface GraphiQLOptions extends RenderGraphiQLOptions {
   /**
    * @default "/graphiql"
@@ -26,6 +27,18 @@ export type IDEOptions<
       altair?: boolean | TAltairOptions;
       graphiql?: boolean | TGraphiQLOptions;
     };
+
+export interface WithIDE<
+  AltairConfig extends AltairOptions = AltairOptions,
+  GraphiQLConfig extends GraphiQLOptions = GraphiQLOptions
+> {
+  /**
+   * IDE configuration
+   *
+   * @default { altair: true, graphiql: true }
+   */
+  ide?: IDEOptions<AltairConfig, GraphiQLConfig>;
+}
 
 export interface InternalIDEOptions<AltairOptions extends RenderOptions = RenderOptions> {
   handleAltair: (options: AltairOptions & { path: string }) => Promise<void> | void;
@@ -67,7 +80,7 @@ export function parseIDEConfig(userOptions: IDEOptions, graphqlPath?: string): I
   };
 }
 const GraphiQLDeps = LazyPromise(async () => {
-  const { renderGraphiQL } = await import('graphql-helix/dist/render-graphiql');
+  const { renderGraphiQL } = await import('graphql-helix/dist/render-graphiql.js');
 
   return { renderGraphiQL };
 });

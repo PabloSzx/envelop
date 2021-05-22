@@ -11,7 +11,7 @@ test('handles wrong url', async () => {
           foo: 'bar',
         };
       },
-      websocketSubscriptions: true,
+      websockets: true,
     },
     buildOptions: {
       prepare(tools) {

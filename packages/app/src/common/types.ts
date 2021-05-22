@@ -1,10 +1,7 @@
 import type { ModuleConfig } from 'graphql-modules';
 import type { ExecutionContext } from 'graphql-helix/dist/types';
-import type { UploadOptions } from 'graphql-upload';
 
 type PossiblePromise<T> = T | Promise<T>;
-
-export type GraphQLUploadConfig = boolean | UploadOptions;
 
 export type DeepPartial<T> = T extends Function
   ? T
@@ -40,20 +37,10 @@ type PromiseType<T> = T extends PromiseLike<infer U> ? U : T;
 
 export type InferFunctionReturn<TFunction extends (...args: any) => any> = PromiseType<ReturnType<TFunction>>;
 
-export type { BaseEnvelopAppOptions, ExecutableSchemaDefinition, SchemaDefinition } from './app';
-
 export type { AltairOptions, GraphiQLOptions, IDEOptions } from './ide/handle';
 
 export type { ScalarsConfig } from './scalars';
 
 export type { CodegenConfig, CodegenDocumentsConfig } from './codegen/typescript';
-
-export type {
-  WebSocketSubscriptionsOptions,
-  BuildSubscriptionContextArgs,
-  FilteredGraphQLWSOptions,
-  FilteredSubscriptionsTransportOptions,
-  WebSocketSubscriptionsObjectOptions,
-} from './subscriptions/websocket';
 
 export type { InferDataLoader } from './dataloader';

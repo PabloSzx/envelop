@@ -3,14 +3,14 @@ import querystring from 'querystring';
 
 import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app.js';
 import { LazyPromise } from './common/base.js';
-import { handleCodegen, WithCodegen } from './common/codegen.js';
-import { parseIDEConfig } from './common/ide/handle.js';
+import { handleCodegen, WithCodegen } from './common/codegen/handle.js';
+import { parseIDEConfig, WithIDE } from './common/ide/handle.js';
 import { RawAltairHandler } from './common/ide/rawAltair.js';
 import { handleJit, WithJit } from './common/jit.js';
 import { getPathname } from './common/utils/url.js';
 
 import type { RenderGraphiQLOptions } from 'graphql-helix/dist/types';
-import type { EnvelopContext, IDEOptions } from './common/types';
+import type { EnvelopContext } from './common/types';
 import type { RenderOptions } from 'altair-static';
 import type { IncomingMessage, ServerResponse } from 'http';
 import type { Envelop } from '@envelop/types';
@@ -20,7 +20,7 @@ export interface BuildContextArgs {
   response: ServerResponse;
 }
 
-export interface EnvelopAppOptions extends BaseEnvelopAppOptions<EnvelopContext>, WithCodegen, WithJit {
+export interface EnvelopAppOptions extends BaseEnvelopAppOptions<EnvelopContext>, WithCodegen, WithJit, WithIDE {
   /**
    * Build Context
    */
@@ -30,13 +30,6 @@ export interface EnvelopAppOptions extends BaseEnvelopAppOptions<EnvelopContext>
    * @default "/graphql"
    */
   path?: string;
-
-  /**
-   * IDE configuration
-   *
-   * @default { altair: true, graphiql: true }
-   */
-  ide?: IDEOptions;
 
   /**
    * Handle Not Found
@@ -193,7 +186,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
 export interface GraphiQLHandlerOptions extends RenderGraphiQLOptions {}
 
 const GraphiQLDeps = LazyPromise(async () => {
-  const { renderGraphiQL } = await import('graphql-helix/dist/render-graphiql');
+  const { renderGraphiQL } = await import('graphql-helix/dist/render-graphiql.js');
 
   return { renderGraphiQL };
 });

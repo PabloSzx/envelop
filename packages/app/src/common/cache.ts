@@ -17,15 +17,28 @@ export type CacheOptions =
       validation?: boolean | ValidationCacheOptions;
     };
 
-export function CachePlugins(options: CacheOptions, plugins: Plugin[]): void | Promise<unknown> {
-  if (!options) return;
+export interface WithCache {
+  /**
+   * Enable/Disable/Customize in-memory cache that improves performance
+   *
+   * `cache === true` => Enable both parse & validation cache
+   *
+   * `cache === false` => Disable caching
+   *
+   * @default true
+   */
+  cache?: CacheOptions;
+}
 
-  const isParserEnabled = options === true || !!options.parse;
-  const isValidationEnabled = options === true || !!options.validation;
+export function handleCache({ cache = true }: WithCache, plugins: Plugin[]): void | Promise<unknown> {
+  if (!cache) return;
 
-  const parserOptions = options === true ? {} : typeof options.parse === 'object' ? options.parse : {};
+  const isParserEnabled = cache === true || !!cache.parse;
+  const isValidationEnabled = cache === true || !!cache.validation;
 
-  const validationOptions = options === true ? {} : typeof options.validation === 'object' ? options.validation : {};
+  const parserOptions = cache === true ? {} : typeof cache.parse === 'object' ? cache.parse : {};
+
+  const validationOptions = cache === true ? {} : typeof cache.validation === 'object' ? cache.validation : {};
 
   return Promise.all([
     isParserEnabled

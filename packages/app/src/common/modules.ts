@@ -1,7 +1,21 @@
+import { ApplicationConfig, createModule, gql, Module, TypeDefs } from 'graphql-modules';
+
 import { isDocumentNode } from '@graphql-tools/utils';
-import { createModule, Module, TypeDefs, gql } from 'graphql-modules';
 
 import type { EnvelopModuleConfig } from './types';
+
+export interface WithGraphQLModules {
+  /**
+   * __Not needed if using `registerModule`__
+   *
+   * List of extra GraphQL Modules instances
+   */
+  modules?: Module[];
+  /**
+   * Custom GraphQL Modules configuration
+   */
+  GraphQLModules?: Partial<Omit<ApplicationConfig, 'modules'>>;
+}
 
 export interface RegisterModule {
   (module: Module): Module;

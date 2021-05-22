@@ -12,7 +12,7 @@ const serverReady = startExpressServer({
     scalars: ['DateTime'],
     enableCodegen: true,
     cache: false,
-    websocketSubscriptions: true,
+    websockets: true,
     buildContext() {
       return {
         foo: 'bar',
@@ -563,7 +563,7 @@ test('GraphQLWS websocket subscriptions', async () => {
 test('websocket subscriptions legacy only', async () => {
   const { SubscriptionsTransportWebsocketsClient } = await startExpressServer({
     options: {
-      websocketSubscriptions: 'legacy',
+      websockets: 'legacy',
       scalars: '*',
     },
     buildOptions: {
@@ -619,7 +619,7 @@ test('websocket subscriptions legacy only', async () => {
 test('websocket subscriptions supporting both legacy and new protocols', async () => {
   const { GraphQLWSWebsocketsClient, SubscriptionsTransportWebsocketsClient } = await startExpressServer({
     options: {
-      websocketSubscriptions: 'both',
+      websockets: 'both',
       scalars: '*',
     },
     buildOptions: {

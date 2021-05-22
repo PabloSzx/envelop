@@ -13,8 +13,8 @@ import type { Source } from '@graphql-tools/utils';
 import type { LoadTypedefsOptions, UnnormalizedTypeDefPointer } from '@graphql-tools/load';
 import type { TypeScriptPluginConfig } from '@graphql-codegen/typescript';
 import type { TypeScriptResolversPluginConfig } from '@graphql-codegen/typescript-resolvers/config';
-import type { BaseEnvelopAppOptionsWithUpload, InternalCodegenConfig } from '../app';
-import type { WithCodegen } from '../codegen.js';
+import type { InternalCodegenConfig, WithCodegen } from './handle.js';
+import type { WithGraphQLUpload } from '../upload.js';
 
 export interface CodegenDocumentsConfig {
   /**
@@ -126,7 +126,7 @@ const CodegenDeps = LazyPromise(async () => {
 
 export async function EnvelopTypeScriptCodegen(
   executableSchema: GraphQLSchema,
-  options: WithCodegen & Pick<BaseEnvelopAppOptionsWithUpload<unknown>, 'GraphQLUpload'>,
+  options: WithCodegen & WithGraphQLUpload,
   internalConfig: InternalCodegenConfig
 ): Promise<void> {
   const moduleName = `@pablosz/envelop-app/${internalConfig.moduleName}`;

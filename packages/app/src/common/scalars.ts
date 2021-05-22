@@ -3,11 +3,19 @@ import { createModule, gql, Module } from 'graphql-modules';
 import type { resolvers as scalarResolvers } from 'graphql-scalars';
 import type { IScalarTypeResolver } from '@graphql-tools/utils';
 import type { DocumentNode, GraphQLScalarType } from 'graphql';
-import type { BaseEnvelopAppOptionsWithUpload } from './app';
+import type { WithGraphQLUpload } from './upload';
+import type { BaseEnvelopAppOptions } from './app';
 
 export type ScalarsConfig = '*' | { [k in keyof typeof scalarResolvers]?: boolean | 1 | 0 } | Array<keyof typeof scalarResolvers>;
 
 export type ScalarResolvers = Record<string, IScalarTypeResolver>;
+
+export interface WithScalars {
+  /**
+   * Add scalars
+   */
+  scalars?: ScalarsConfig;
+}
 
 export interface ScalarsModule {
   typeDefs: DocumentNode;
@@ -17,7 +25,7 @@ export interface ScalarsModule {
 
 export async function createScalarsModule(
   scalars: ScalarsConfig | undefined,
-  { GraphQLUpload }: BaseEnvelopAppOptionsWithUpload<never>
+  { GraphQLUpload }: BaseEnvelopAppOptions<never> & WithGraphQLUpload
 ): Promise<ScalarsModule | null> {
   if (!scalars) return getScalarsModule();
 

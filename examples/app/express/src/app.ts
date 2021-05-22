@@ -45,7 +45,7 @@ export const { registerModule, buildApp } = CreateApp({
     DateTime: true,
   },
   buildContext,
-  websocketSubscriptions: {
+  websockets: {
     graphQLWS: true,
     subscriptionsTransport: true,
   },

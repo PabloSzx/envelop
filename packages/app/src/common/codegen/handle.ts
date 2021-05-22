@@ -1,6 +1,5 @@
 import type { Envelop } from '@envelop/types';
-import type { InternalCodegenConfig } from './app';
-import type { CodegenConfig } from './codegen/typescript.js';
+import type { CodegenConfig } from './typescript.js';
 
 export interface WithCodegen {
   /**
@@ -26,8 +25,11 @@ export interface WithCodegen {
   outputSchema?: boolean | string;
 }
 
+export interface InternalCodegenConfig {
+  moduleName: 'express' | 'fastify' | 'nextjs' | 'http' | 'koa' | 'hapi' | 'extend';
+}
+
 export function handleCodegen(getEnveloped: Envelop<unknown>, config: WithCodegen, internalConfig: InternalCodegenConfig): void {
-  const { schema } = getEnveloped();
   const {
     codegen: {
       // eslint-disable-next-line no-console
@@ -35,19 +37,21 @@ export function handleCodegen(getEnveloped: Envelop<unknown>, config: WithCodege
       onFinish,
     } = {},
     outputSchema,
-    enableCodegen,
+    enableCodegen = process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test',
   } = config;
 
   if (!enableCodegen) return onFinish?.();
 
+  const { schema } = getEnveloped();
+
   Promise.all([
     outputSchema
-      ? import('./codegen/outputSchema.js').then(({ writeOutputSchema }) => {
+      ? import('./outputSchema.js').then(({ writeOutputSchema }) => {
           return writeOutputSchema(schema, outputSchema).catch(onError);
         })
       : null,
 
-    import('./codegen/typescript.js').then(({ EnvelopTypeScriptCodegen }) => {
+    import('./typescript.js').then(({ EnvelopTypeScriptCodegen }) => {
       return EnvelopTypeScriptCodegen(schema, config, internalConfig).catch(onError);
     }),
   ]).then(onFinish, onError);

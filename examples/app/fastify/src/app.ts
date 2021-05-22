@@ -34,10 +34,10 @@ export const { registerModule, buildApp, registerDataLoader, modules, plugins } 
     DateTime: 1,
   },
   buildContext,
-  websocketSubscriptions: {
+  websockets: {
     graphQLWS: true,
     subscriptionsTransport: true,
-    buildSubscriptionsContext({ request }) {
+    buildWebsocketsContext({ request }) {
       return {
         request,
         foo: 'baz',

@@ -1,18 +1,19 @@
 import assert from 'assert';
 import { gql } from 'graphql-modules';
 
-import { BaseEnvelopAppOptionsWithUpload, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app.js';
+import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app.js';
 import { LazyPromise } from './common/base.js';
-import { handleCodegen, WithCodegen } from './common/codegen.js';
-import { handleIDE, IDEOptions } from './common/ide/handle.js';
+import { handleCodegen, WithCodegen } from './common/codegen/handle.js';
+import { handleIDE, WithIDE } from './common/ide/handle.js';
 import { handleJit, WithJit } from './common/jit.js';
-import { CreateSubscriptionsServer, WebSocketSubscriptionsOptions } from './common/subscriptions/websocket.js';
+import { CreateWebSocketsServer, WithWebSockets } from './common/websockets/handle.js';
 
 import type { Envelop } from '@envelop/types';
 import type { FastifyInstance, FastifyPluginCallback, FastifyReply, FastifyRequest, RouteOptions } from 'fastify';
 import type { Server } from 'http';
 import type { EnvelopContext } from './common/types';
 import type { AltairFastifyPluginOptions } from 'altair-fastify-plugin';
+import type { WithGraphQLUpload } from './common/upload.js';
 
 export type EnvelopAppPlugin = FastifyPluginCallback<{}, Server>;
 
@@ -21,7 +22,13 @@ export interface BuildContextArgs {
   response: FastifyReply;
 }
 
-export interface EnvelopAppOptions extends BaseEnvelopAppOptionsWithUpload<EnvelopContext>, WithCodegen, WithJit {
+export interface EnvelopAppOptions
+  extends BaseEnvelopAppOptions<EnvelopContext>,
+    WithCodegen,
+    WithJit,
+    WithWebSockets,
+    WithIDE<AltairFastifyPluginOptions>,
+    WithGraphQLUpload {
   /**
    * @default "/graphql"
    */
@@ -31,16 +38,6 @@ export interface EnvelopAppOptions extends BaseEnvelopAppOptionsWithUpload<Envel
    * Build Context
    */
   buildContext?: (args: BuildContextArgs) => Record<string, unknown> | Promise<Record<string, unknown>>;
-
-  /**
-   * Websocket Suscriptions configuration
-   */
-  websocketSubscriptions?: WebSocketSubscriptionsOptions;
-
-  /**
-   * IDE configuration
-   */
-  ide?: IDEOptions<AltairFastifyPluginOptions>;
 
   /**
    * Custom Fastify Route options
@@ -78,12 +75,12 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
       });
     },
   });
-  const { websocketSubscriptions, path = '/graphql', GraphQLUpload = false } = config;
+  const { websockets, path = '/graphql' } = config;
 
-  const subscriptionsClientFactoryPromise = CreateSubscriptionsServer(websocketSubscriptions);
+  const subscriptionsClientFactoryPromise = CreateWebSocketsServer(websockets);
 
   async function handleSubscriptions(getEnveloped: Envelop<unknown>, instance: FastifyInstance) {
-    if (!websocketSubscriptions) return;
+    if (!websockets) return;
 
     const subscriptionsClientFactory = await subscriptionsClientFactoryPromise;
     assert(subscriptionsClientFactory);
@@ -144,7 +141,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
 
           const subscriptionsPromise = handleSubscriptions(getEnveloped, instance);
 
-          if (GraphQLUpload) {
+          if (config.GraphQLUpload) {
             const processRequest: typeof import('graphql-upload').processRequest = (
               await import('graphql-upload/public/processRequest.js')
             ).default;
@@ -160,7 +157,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
               request.body = await processRequest(
                 request.raw,
                 reply.raw,
-                typeof GraphQLUpload === 'object' ? GraphQLUpload : undefined
+                typeof config.GraphQLUpload === 'object' ? config.GraphQLUpload : undefined
               );
             });
           }

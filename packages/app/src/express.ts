@@ -3,22 +3,29 @@ import { Express, json, Request, RequestHandler, Response, Router } from 'expres
 import { gql } from 'graphql-modules';
 import { createServer, Server } from 'http';
 
-import { BaseEnvelopAppOptionsWithUpload, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app.js';
-import { handleCodegen, WithCodegen } from './common/codegen.js';
-import { handleIDE, IDEOptions } from './common/ide/handle.js';
+import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app.js';
+import { handleCodegen, WithCodegen } from './common/codegen/handle.js';
+import { handleIDE, WithIDE } from './common/ide/handle.js';
 import { handleJit, WithJit } from './common/jit.js';
-import { CreateSubscriptionsServer, WebSocketSubscriptionsOptions } from './common/subscriptions/websocket.js';
+import { CreateWebSocketsServer, WithWebSockets } from './common/websockets/handle.js';
 
 import type { Envelop } from '@envelop/types';
 import type { EnvelopContext } from './common/types';
 import type { OptionsJson as BodyParserOptions } from 'body-parser';
+import type { WithGraphQLUpload } from './common/upload.js';
 
 export interface BuildContextArgs {
   request: Request;
   response: Response;
 }
 
-export interface EnvelopAppOptions extends BaseEnvelopAppOptionsWithUpload<EnvelopContext>, WithCodegen, WithJit {
+export interface EnvelopAppOptions
+  extends BaseEnvelopAppOptions<EnvelopContext>,
+    WithCodegen,
+    WithJit,
+    WithWebSockets,
+    WithIDE,
+    WithGraphQLUpload {
   /**
    * @default "/graphql"
    */
@@ -33,18 +40,6 @@ export interface EnvelopAppOptions extends BaseEnvelopAppOptionsWithUpload<Envel
    * Build Context
    */
   buildContext?: (args: BuildContextArgs) => Record<string, unknown> | Promise<Record<string, unknown>>;
-
-  /**
-   * Websocket Subscriptions configuration
-   */
-  websocketSubscriptions?: WebSocketSubscriptionsOptions;
-
-  /**
-   * IDE configuration
-   *
-   * @default { altair: true, graphiql: true }
-   */
-  ide?: IDEOptions;
 }
 
 export interface BuildAppOptions {
@@ -74,17 +69,17 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
     },
   });
 
-  const { path = '/graphql', websocketSubscriptions, customHandleRequest } = config;
+  const { path = '/graphql', websockets, customHandleRequest } = config;
 
-  const subscriptionsClientFactoryPromise = CreateSubscriptionsServer(websocketSubscriptions);
+  const websocketsFactoryPromise = CreateWebSocketsServer(websockets);
 
   async function handleSubscriptions(getEnveloped: Envelop<unknown>, appInstance: Express, optionsServer: Server | undefined) {
-    if (!websocketSubscriptions) return;
+    if (!websockets) return;
 
-    const subscriptionsClientFactory = await subscriptionsClientFactoryPromise;
-    assert(subscriptionsClientFactory);
+    const websocketsHandler = await websocketsFactoryPromise;
+    assert(websocketsHandler);
 
-    const handleUpgrade = subscriptionsClientFactory(getEnveloped);
+    const handleUpgrade = websocketsHandler(getEnveloped);
 
     const server = optionsServer || createServer(appInstance);
 

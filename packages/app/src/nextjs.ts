@@ -1,7 +1,7 @@
 import { gql } from 'graphql-modules';
 
 import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app.js';
-import { handleCodegen, WithCodegen } from './common/codegen.js';
+import { handleCodegen, WithCodegen } from './common/codegen/handle.js';
 import { handleJit, WithJit } from './common/jit.js';
 import { LazyPromise } from './common/utils/promise.js';
 
@@ -116,7 +116,7 @@ export interface GraphiQLHandlerOptions extends RenderGraphiQLOptions {
 }
 
 const GraphiQLDeps = LazyPromise(async () => {
-  const { renderGraphiQL } = await import('graphql-helix/dist/render-graphiql');
+  const { renderGraphiQL } = await import('graphql-helix/dist/render-graphiql.js');
 
   return { renderGraphiQL };
 });
