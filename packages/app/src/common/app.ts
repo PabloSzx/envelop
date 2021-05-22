@@ -148,7 +148,7 @@ export function createEnvelopAppFactory<TContext>(
   }: {
     preBuild?: (plugins: Plugin[]) => void | Promise<void>;
     afterBuilt?: (getEnveloped: Envelop<unknown>) => void | Promise<void>;
-  }
+  } = {}
 ): EnvelopAppFactoryType {
   const { mergeSchemasConfig } = config;
   const factoryModules = uniqueArray(config.modules);
