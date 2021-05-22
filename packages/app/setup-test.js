@@ -1,4 +1,5 @@
 const { resolve } = require('path');
+const { execSync } = require('child_process');
 const { makeExecutableSchema } = require('@graphql-tools/schema');
 
 module.exports = async () => {
@@ -53,4 +54,8 @@ module.exports = async () => {
       moduleName: 'extend',
     }
   );
+
+  execSync(`node ${require.resolve('next/dist/bin/next')} build ${resolve(__dirname, 'test/nextjs')}`, {
+    stdio: 'inherit',
+  });
 };

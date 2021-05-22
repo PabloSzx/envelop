@@ -399,7 +399,7 @@ export async function startNextJSServer() {
   app
     .register(FastifyNext, {
       dir: NextJSDir,
-      dev: true,
+      dev: false,
       logLevel: 'warn',
     })
     .after(async () => {
