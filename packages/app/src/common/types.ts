@@ -1,5 +1,5 @@
 import type { ModuleConfig } from 'graphql-modules';
-import type { ExecutionContext } from 'graphql-helix/dist/types';
+import type { IncomingHttpHeaders } from 'http';
 
 type PossiblePromise<T> = T | Promise<T>;
 
@@ -18,7 +18,14 @@ type DeepPartialObject<T> = {
   [P in keyof T]?: PossiblePromise<DeepPartial<PossiblePromise<T[P]>>>;
 };
 
-export interface EnvelopContext extends GraphQLModules.ModuleContext, ExecutionContext {}
+export interface ExecutionContext {
+  body?: any;
+  headers: IncomingHttpHeaders;
+  method: string;
+  query: any;
+}
+
+export interface EnvelopContext extends ExecutionContext {}
 
 export interface EnvelopResolvers extends Record<string, any> {}
 
@@ -33,7 +40,7 @@ export type EnvelopModuleConfig = Omit<ModuleConfig, 'typeDefs' | 'id' | 'resolv
   autoAdd?: boolean;
 };
 
-type PromiseType<T> = T extends PromiseLike<infer U> ? U : T;
+export type PromiseType<T> = T extends PromiseLike<infer U> ? U : T;
 
 export type InferFunctionReturn<TFunction extends (...args: any) => any> = PromiseType<ReturnType<TFunction>>;
 
