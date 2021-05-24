@@ -20,7 +20,7 @@ function initMiddleware(middleware: typeof import('cors')): CorsMiddleware {
     });
 }
 
-export function handleCors(options?: WithCors): undefined | Promise<CorsMiddleware> {
+export function handleCors(options?: WithCors): void | Promise<CorsMiddleware> {
   if (!options) return;
 
   return import('cors').then(({ default: corsModule }) => {
