@@ -1,5 +1,6 @@
 import type { ModuleConfig } from 'graphql-modules';
 import type { IncomingHttpHeaders } from 'http';
+import type { ExecutionContext as HelixExecutionContext } from 'graphql-helix';
 
 type PossiblePromise<T> = T | Promise<T>;
 
@@ -18,11 +19,13 @@ type DeepPartialObject<T> = {
   [P in keyof T]?: PossiblePromise<DeepPartial<PossiblePromise<T[P]>>>;
 };
 
-export interface ExecutionContext {
-  body?: any;
-  headers: IncomingHttpHeaders;
-  method: string;
-  query: any;
+export interface ExecutionContext extends HelixExecutionContext {
+  request: {
+    body?: any;
+    headers: IncomingHttpHeaders;
+    method: string;
+    query: any;
+  };
 }
 
 export interface EnvelopContext extends ExecutionContext {}
