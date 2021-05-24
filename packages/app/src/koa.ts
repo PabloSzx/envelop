@@ -7,6 +7,7 @@ import { handleIDE, WithIDE } from './common/ide/handle.js';
 import { RawAltairHandlerDeps } from './common/ide/rawAltair.js';
 import { handleJit, WithJit } from './common/jit.js';
 
+import type { Options as CorsOptions } from '@koa/cors';
 import type * as KoaRouter from '@koa/router';
 import type { EnvelopContext } from './common/types';
 import type { ParameterizedContext, Request, Response } from 'koa';
@@ -38,6 +39,11 @@ export interface EnvelopAppOptions
    * [koa-bodyparser](http://npm.im/koa-bodyparser) options
    */
   bodyParserOptions?: bodyParser.Options | false;
+
+  /**
+   * Enable CORS or customize it
+   */
+  cors?: boolean | CorsOptions;
 }
 
 export interface BuildAppOptions {
@@ -76,6 +82,12 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
     const { getEnveloped } = await appBuilder({
       prepare,
       async adapterFactory(getEnveloped) {
+        if (config.cors) {
+          const koaCors = (await import('@koa/cors')).default;
+
+          router.use(koaCors(typeof config.cors === 'boolean' ? undefined : config.cors));
+        }
+
         if (bodyParserOptions) router.use(bodyParser(bodyParserOptions));
 
         await handleIDE(ide, path, {

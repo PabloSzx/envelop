@@ -8,7 +8,7 @@ import { RawAltairHandler } from './common/ide/rawAltair.js';
 import { handleJit, WithJit } from './common/jit.js';
 
 import type { EnvelopContext } from './common/types';
-import type { Request, ResponseToolkit, Plugin, Server, Lifecycle } from '@hapi/hapi';
+import type { Request, ResponseToolkit, Plugin, Server, Lifecycle, RouteOptionsCors, RouteOptions } from '@hapi/hapi';
 import type { Envelop } from '@envelop/types';
 
 export interface BuildContextArgs {
@@ -26,6 +26,21 @@ export interface EnvelopAppOptions extends BaseEnvelopAppOptions<EnvelopContext>
    * @default "/graphql"
    */
   path?: string;
+
+  /**
+   * Enable CORS or customize it
+   */
+  cors?: boolean | RouteOptionsCors;
+
+  /**
+   * Customize main route options
+   */
+  mainRouteOptions?: RouteOptions;
+
+  /**
+   * Customize IDE route options
+   */
+  ideRouteOptions?: RouteOptions;
 }
 
 export interface BuildAppOptions {
@@ -80,12 +95,20 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
                 path: wildCardPath,
                 method: 'GET',
                 handler,
+                options: {
+                  cors: config.cors,
+                  ...config.ideRouteOptions,
+                },
               });
             },
             handleGraphiQL({ path, html }) {
               server.route({
                 path,
                 method: 'GET',
+                options: {
+                  cors: config.cors,
+                  ...config.ideRouteOptions,
+                },
                 handler(_req, h) {
                   return h.response(html).type('text/html');
                 },
@@ -98,6 +121,10 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
           server.route({
             path,
             method: ['GET', 'POST'],
+            options: {
+              cors: config.cors,
+              ...config.mainRouteOptions,
+            },
             async handler(req, h) {
               const request = {
                 body: req.payload,

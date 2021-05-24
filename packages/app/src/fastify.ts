@@ -8,6 +8,7 @@ import { handleIDE, WithIDE } from './common/ide/handle.js';
 import { handleJit, WithJit } from './common/jit.js';
 import { CreateWebSocketsServer, WithWebSockets } from './common/websockets/handle.js';
 
+import type { FastifyCorsOptions, FastifyCorsOptionsDelegate, FastifyPluginOptionsDelegate } from 'fastify-cors';
 import type { Envelop } from '@envelop/types';
 import type { FastifyInstance, FastifyPluginCallback, FastifyReply, FastifyRequest, RouteOptions } from 'fastify';
 import type { Server } from 'http';
@@ -43,6 +44,11 @@ export interface EnvelopAppOptions
    * Custom Fastify Route options
    */
   routeOptions?: Omit<RouteOptions, 'method' | 'url' | 'handler'>;
+
+  /**
+   * Enable or customize CORS
+   */
+  cors?: boolean | FastifyCorsOptions | FastifyPluginOptionsDelegate<FastifyCorsOptionsDelegate>;
 }
 
 declare module 'fastify' {
@@ -119,6 +125,12 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
       prepare,
       adapterFactory(getEnveloped) {
         return async function FastifyPlugin(instance: FastifyInstance) {
+          if (config.cors) {
+            const fastifyCors = (await import('fastify-cors')).default;
+
+            await instance.register(fastifyCors, typeof config.cors !== 'boolean' ? config.cors : undefined);
+          }
+
           const idePromise = handleIDE(ide, path, {
             async handleAltair({ path, ...ideOptions }) {
               const { default: AltairFastify } = await import('altair-fastify-plugin');

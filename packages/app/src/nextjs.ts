@@ -2,6 +2,7 @@ import { gql } from 'graphql-modules';
 
 import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app.js';
 import { handleCodegen, WithCodegen } from './common/codegen/handle.js';
+import { handleCors, WithCors } from './common/cors/rawCors.js';
 import { handleJit, WithJit } from './common/jit.js';
 import { LazyPromise } from './common/utils/promise.js';
 
@@ -10,13 +11,12 @@ import type { NextApiHandler, NextApiRequest, NextApiResponse } from 'next';
 import type { EnvelopContext } from './common/types';
 import type { RenderOptions } from 'altair-static';
 import type { Envelop } from '@envelop/types';
-
 export interface BuildContextArgs {
   request: NextApiRequest;
   response: NextApiResponse;
 }
 
-export interface EnvelopAppOptions extends BaseEnvelopAppOptions<EnvelopContext>, WithCodegen, WithJit {
+export interface EnvelopAppOptions extends BaseEnvelopAppOptions<EnvelopContext>, WithCodegen, WithJit, WithCors {
   /**
    * Build Context
    */
@@ -52,12 +52,14 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
     let app: NextApiHandler<unknown> | undefined;
     const { buildContext, customHandleRequest } = config;
 
+    const corsMiddleware = handleCors(config);
+
     const appPromise = appBuilder({
       prepare,
       adapterFactory(getEnveloped): NextApiHandler<unknown> {
         const requestHandler = customHandleRequest || handleRequest;
 
-        return (req, res) => {
+        const handler: NextApiHandler<unknown> = async (req, res) => {
           const request = {
             body: req.body,
             headers: req.headers,
@@ -87,6 +89,15 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
             },
           });
         };
+
+        if (corsMiddleware) {
+          return async (req, res) => {
+            (await corsMiddleware)(req, res, config.cors);
+
+            await handler(req, res);
+          };
+        }
+        return handler;
       },
     });
 

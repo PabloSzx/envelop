@@ -9,6 +9,7 @@ import { handleIDE, WithIDE } from './common/ide/handle.js';
 import { handleJit, WithJit } from './common/jit.js';
 import { CreateWebSocketsServer, WithWebSockets } from './common/websockets/handle.js';
 
+import type { CorsOptions, CorsOptionsDelegate } from 'cors';
 import type { Envelop } from '@envelop/types';
 import type { EnvelopContext } from './common/types';
 import type { OptionsJson as BodyParserOptions } from 'body-parser';
@@ -40,6 +41,11 @@ export interface EnvelopAppOptions
    * Build Context
    */
   buildContext?: (args: BuildContextArgs) => Record<string, unknown> | Promise<Record<string, unknown>>;
+
+  /**
+   * Enable or customize CORS
+   */
+  cors?: boolean | CorsOptions | CorsOptionsDelegate;
 }
 
 export interface BuildAppOptions {
@@ -114,6 +120,11 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
         const EnvelopApp = Router();
 
         if (jsonOptions) EnvelopApp.use(json(typeof jsonOptions === 'object' ? jsonOptions : undefined));
+
+        if (config.cors) {
+          const corsMiddleware = (await import('cors')).default;
+          EnvelopApp.use(corsMiddleware(typeof config.cors !== 'boolean' ? config.cors : undefined));
+        }
 
         const IDEPromise = handleIDE(ide, path, {
           async handleAltair(ideOptions) {

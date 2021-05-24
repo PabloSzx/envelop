@@ -4,6 +4,7 @@ import querystring from 'querystring';
 import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app.js';
 import { LazyPromise } from './common/base.js';
 import { handleCodegen, WithCodegen } from './common/codegen/handle.js';
+import { handleCors, WithCors } from './common/cors/rawCors.js';
 import { parseIDEConfig, WithIDE } from './common/ide/handle.js';
 import { RawAltairHandler } from './common/ide/rawAltair.js';
 import { handleJit, WithJit } from './common/jit.js';
@@ -14,13 +15,12 @@ import type { EnvelopContext } from './common/types';
 import type { RenderOptions } from 'altair-static';
 import type { IncomingMessage, ServerResponse } from 'http';
 import type { Envelop } from '@envelop/types';
-
 export interface BuildContextArgs {
   request: IncomingMessage;
   response: ServerResponse;
 }
 
-export interface EnvelopAppOptions extends BaseEnvelopAppOptions<EnvelopContext>, WithCodegen, WithJit, WithIDE {
+export interface EnvelopAppOptions extends BaseEnvelopAppOptions<EnvelopContext>, WithCodegen, WithJit, WithIDE, WithCors {
   /**
    * Build Context
    */
@@ -77,6 +77,8 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
       customHandleRequest,
     } = config;
 
+    const corsMiddleware = handleCors(config);
+
     const appPromise = appBuilder({
       prepare,
       adapterFactory(getEnveloped): AsyncRequestHandler {
@@ -84,7 +86,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
 
         const requestHandler = customHandleRequest || handleRequest;
 
-        return async function (req, res): Promise<void> {
+        const handler: AsyncRequestHandler = async function (req, res): Promise<void> {
           const pathname = getPathname(req.url)!;
 
           if (pathname !== path) {
@@ -150,6 +152,28 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
             }
           });
         };
+
+        if (corsMiddleware) {
+          return async function (req, res) {
+            try {
+              (await corsMiddleware)(req, res, config.cors);
+
+              await handler(req, res);
+            } catch (err) /* istanbul ignore next */ {
+              res
+                .writeHead(500, {
+                  'Content-Type': 'application/json',
+                })
+                .end(
+                  JSON.stringify({
+                    message: err.message,
+                  })
+                );
+            }
+          };
+        }
+
+        return handler;
       },
     });
 
