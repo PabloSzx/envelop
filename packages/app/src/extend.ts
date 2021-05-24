@@ -13,6 +13,8 @@ export * from './common/codegen/prettier.js';
 export * from './common/codegen/typescript.js';
 export * from './common/codegen/write.js';
 
+export * from './common/cors/rawCors.js';
+
 export * from './common/ide/handle.js';
 export * from './common/ide/rawAltair.js';
 

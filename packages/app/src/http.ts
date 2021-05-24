@@ -156,7 +156,9 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
         if (corsMiddleware) {
           return async function (req, res) {
             try {
-              (await corsMiddleware)(req, res, config.cors);
+              await (
+                await corsMiddleware
+              )(req, res, config.cors);
 
               await handler(req, res);
             } catch (err) /* istanbul ignore next */ {
