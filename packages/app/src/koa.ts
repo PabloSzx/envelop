@@ -41,7 +41,7 @@ export interface EnvelopAppOptions
   bodyParserOptions?: bodyParser.Options | false;
 
   /**
-   * Enable CORS or customize it
+   * Enable CORS or configure it
    */
   cors?: boolean | CorsOptions;
 }

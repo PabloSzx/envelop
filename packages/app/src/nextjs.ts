@@ -119,7 +119,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
   };
 }
 
-export interface GraphiQLHandlerOptions extends RenderGraphiQLOptions, WithCors {
+export interface GraphiQLHandlerOptions extends RenderGraphiQLOptions {
   /**
    * The endpoint requests should be sent. Defaults to `"/api/graphql"`.
    */
@@ -138,24 +138,13 @@ export function GraphiQLHandler(options: GraphiQLHandlerOptions = {}): NextApiHa
   const html = GraphiQLDeps.then(({ renderGraphiQL }) => {
     return renderGraphiQL({ ...renderOptions, endpoint });
   });
-  const corsMiddleware = handleCors(options);
-  const handler: NextApiHandler = async function (req, res) {
+
+  return async function (req, res) {
     if (req.method !== 'GET') return res.status(404).end();
 
     res.setHeader('content-type', 'text/html');
     res.send(await html);
   };
-
-  if (corsMiddleware) {
-    return async function (req, res) {
-      await (
-        await corsMiddleware
-      )(req, res);
-
-      return handler(req, res);
-    };
-  }
-  return handler;
 }
 
 export interface AltairHandlerOptions extends Omit<RenderOptions, 'baseURL'>, WithCors {
@@ -198,9 +187,7 @@ export function AltairHandler(options: AltairHandlerOptions = {}): NextApiHandle
     };
   });
 
-  const corsMiddleware = handleCors(options);
-
-  const handler: NextApiHandler = async function (req, res) {
+  return async function (req, res) {
     const { renderAltair, getDistDirectory, readFile, resolve, lookup } = await deps;
     switch (req.url) {
       case path:
@@ -231,17 +218,6 @@ export function AltairHandler(options: AltairHandlerOptions = {}): NextApiHandle
       }
     }
   };
-
-  if (corsMiddleware) {
-    return async function (req, res) {
-      await (
-        await corsMiddleware
-      )(req, res);
-
-      return handler(req, res);
-    };
-  }
-  return handler;
 }
 
 export { gql };

@@ -107,7 +107,7 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
 
           req.on('end', async () => {
             try {
-              const body = JSON.parse(payload || '{}');
+              const body = payload ? JSON.parse(payload) : undefined;
 
               const urlQuery = req.url?.split('?')[1];
 

@@ -6,12 +6,12 @@ export type CacheOptions =
   | boolean
   | {
       /**
-       * Enable/Disable or customize cache options
+       * Enable/Disable or configure cache options
        * @default true
        */
       parse?: boolean | ParserCacheOptions;
       /**
-       * Enable/Disable or customize cache options
+       * Enable/Disable or configure cache options
        * @default true
        */
       validation?: boolean | ValidationCacheOptions;
@@ -19,7 +19,7 @@ export type CacheOptions =
 
 export interface WithCache {
   /**
-   * Enable/Disable/Customize in-memory cache that improves performance
+   * Enable/Disable/Configure in-memory cache that improves performance
    *
    * `cache === true` => Enable both parse & validation cache
    *

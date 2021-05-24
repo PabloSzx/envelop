@@ -43,7 +43,7 @@ export interface EnvelopAppOptions
   buildContext?: (args: BuildContextArgs) => Record<string, unknown> | Promise<Record<string, unknown>>;
 
   /**
-   * Enable or customize CORS
+   * Enable or configure CORS
    */
   cors?: boolean | CorsOptions | CorsOptionsDelegate;
 }
@@ -113,18 +113,18 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
   }
 
   async function buildApp({ prepare, app, server }: BuildAppOptions): Promise<EnvelopApp> {
-    const { buildContext, path = '/graphql', bodyParserJSONOptions: jsonOptions = {}, ide } = config;
+    const { buildContext, path = '/graphql', bodyParserJSONOptions: jsonOptions = {}, ide, cors } = config;
     const { app: router, getEnveloped } = await appBuilder({
       prepare,
       async adapterFactory(getEnveloped) {
         const EnvelopApp = Router();
 
-        if (jsonOptions) EnvelopApp.use(json(typeof jsonOptions === 'object' ? jsonOptions : undefined));
-
-        if (config.cors) {
+        if (cors) {
           const corsMiddleware = (await import('cors')).default;
-          EnvelopApp.use(corsMiddleware(typeof config.cors !== 'boolean' ? config.cors : undefined));
+          EnvelopApp.use(corsMiddleware(typeof cors !== 'boolean' ? cors : undefined));
         }
+
+        if (jsonOptions) EnvelopApp.use(json(typeof jsonOptions === 'object' ? jsonOptions : undefined));
 
         const IDEPromise = handleIDE(ide, path, {
           async handleAltair(ideOptions) {

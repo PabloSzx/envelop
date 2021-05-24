@@ -46,7 +46,7 @@ export interface EnvelopAppOptions
   routeOptions?: Omit<RouteOptions, 'method' | 'url' | 'handler'>;
 
   /**
-   * Enable or customize CORS
+   * Enable or configure CORS
    */
   cors?: boolean | FastifyCorsOptions | FastifyPluginOptionsDelegate<FastifyCorsOptionsDelegate>;
 }
@@ -120,15 +120,15 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
   }
 
   function buildApp({ prepare }: BuildAppOptions = {}): EnvelopApp {
-    const { buildContext, path = '/graphql', ide, routeOptions = {}, customHandleRequest } = config;
+    const { buildContext, path = '/graphql', ide, routeOptions = {}, customHandleRequest, cors } = config;
     const appPromise = appBuilder({
       prepare,
       adapterFactory(getEnveloped) {
         return async function FastifyPlugin(instance: FastifyInstance) {
-          if (config.cors) {
+          if (cors) {
             const fastifyCors = (await import('fastify-cors')).default;
 
-            await instance.register(fastifyCors, typeof config.cors !== 'boolean' ? config.cors : undefined);
+            await instance.register(fastifyCors, typeof cors !== 'boolean' ? cors : undefined);
           }
 
           const idePromise = handleIDE(ide, path, {

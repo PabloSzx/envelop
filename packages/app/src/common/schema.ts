@@ -45,7 +45,7 @@ export interface WithSchemaBuilding<TContext> {
   schema?: EnvelopSchemaDefinition<TContext> | EnvelopSchemaDefinition<TContext>[];
 
   /**
-   * Customize configuration of schema merging
+   * Configure configuration of schema merging
    */
   mergeSchemasConfig?: FilteredMergeSchemasConfig;
 }

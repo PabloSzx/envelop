@@ -28,17 +28,17 @@ export interface EnvelopAppOptions extends BaseEnvelopAppOptions<EnvelopContext>
   path?: string;
 
   /**
-   * Enable CORS or customize it
+   * Enable CORS or configure it
    */
   cors?: boolean | RouteOptionsCors;
 
   /**
-   * Customize main route options
+   * Configure main route options
    */
   mainRouteOptions?: RouteOptions;
 
   /**
-   * Customize IDE route options
+   * Configure IDE route options
    */
   ideRouteOptions?: RouteOptions;
 }
@@ -95,20 +95,14 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
                 path: wildCardPath,
                 method: 'GET',
                 handler,
-                options: {
-                  cors: config.cors,
-                  ...config.ideRouteOptions,
-                },
+                options: config.ideRouteOptions,
               });
             },
             handleGraphiQL({ path, html }) {
               server.route({
                 path,
                 method: 'GET',
-                options: {
-                  cors: config.cors,
-                  ...config.ideRouteOptions,
-                },
+                options: config.ideRouteOptions,
                 handler(_req, h) {
                   return h.response(html).type('text/html');
                 },
