@@ -1,10 +1,10 @@
 import { gql } from 'graphql-modules';
 
-import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app.js';
-import { handleCodegen, WithCodegen } from './common/codegen/handle.js';
-import { handleCors, WithCors } from './common/cors/rawCors.js';
-import { handleJit, WithJit } from './common/jit.js';
-import { LazyPromise } from './common/utils/promise.js';
+import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app';
+import { handleCodegen, WithCodegen } from './common/codegen/handle';
+import { handleCors, WithCors } from './common/cors/rawCors';
+import { handleJit, WithJit } from './common/jit';
+import { LazyPromise } from './common/utils/promise';
 
 import type { RenderGraphiQLOptions } from 'graphql-helix/dist/types';
 import type { NextApiHandler, NextApiRequest, NextApiResponse } from 'next';
@@ -222,4 +222,4 @@ export function AltairHandler(options: AltairHandlerOptions = {}): NextApiHandle
 
 export { gql };
 
-export * from './common/base.js';
+export * from './common/base';

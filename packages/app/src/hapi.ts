@@ -1,11 +1,11 @@
 import { gql } from 'graphql-modules';
 
-import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app.js';
-import { LazyPromise } from './common/base.js';
-import { handleCodegen, WithCodegen } from './common/codegen/handle.js';
-import { handleIDE, WithIDE } from './common/ide/handle.js';
-import { RawAltairHandler } from './common/ide/rawAltair.js';
-import { handleJit, WithJit } from './common/jit.js';
+import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app';
+import { LazyPromise } from './common/base';
+import { handleCodegen, WithCodegen } from './common/codegen/handle';
+import { handleIDE, WithIDE } from './common/ide/handle';
+import { RawAltairHandler } from './common/ide/rawAltair';
+import { handleJit, WithJit } from './common/jit';
 
 import type { EnvelopContext } from './common/types';
 import type { Request, ResponseToolkit, Plugin, Server, Lifecycle, RouteOptionsCors, RouteOptions } from '@hapi/hapi';
@@ -176,4 +176,4 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
 }
 
 export { gql };
-export * from './common/base.js';
+export * from './common/base';

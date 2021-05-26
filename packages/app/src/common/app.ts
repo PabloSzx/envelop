@@ -3,12 +3,12 @@ import { Application, createApplication, gql, Module } from 'graphql-modules';
 import { Envelop, envelop, Plugin } from '@envelop/core';
 import { useGraphQLModules } from '@envelop/graphql-modules';
 
-import { handleCache, WithCache } from './cache.js';
-import { RegisterDataLoader, RegisterDataLoaderFactory } from './dataloader.js';
-import { RegisterModule, RegisterModuleFactory, WithGraphQLModules } from './modules.js';
-import { createScalarsModule, ScalarsModule, WithScalars } from './scalars.js';
-import { SchemaBuilderFactory, WithSchemaBuilding } from './schema.js';
-import { uniqueArray } from './utils/object.js';
+import { handleCache, WithCache } from './cache';
+import { RegisterDataLoader, RegisterDataLoaderFactory } from './dataloader';
+import { RegisterModule, RegisterModuleFactory, WithGraphQLModules } from './modules';
+import { createScalarsModule, ScalarsModule, WithScalars } from './scalars';
+import { SchemaBuilderFactory, WithSchemaBuilding } from './schema';
+import { uniqueArray } from './utils/object';
 
 import type { handleRequest } from './request';
 
@@ -190,6 +190,6 @@ export function createEnvelopAppFactory<TContext>(
   return { ...baseAppBuilder, appBuilder };
 }
 
-export * from './request.js';
+export * from './request';
 
 export { gql };

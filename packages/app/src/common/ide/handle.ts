@@ -1,5 +1,5 @@
-import { cleanObject } from '../utils/object.js';
-import { LazyPromise } from '../utils/promise.js';
+import { cleanObject } from '../utils/object';
+import { LazyPromise } from '../utils/promise';
 
 import type { RenderOptions } from 'altair-static';
 import type { RenderGraphiQLOptions } from 'graphql-helix/dist/types';

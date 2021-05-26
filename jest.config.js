@@ -3,7 +3,6 @@ const { compilerOptions } = require('./tsconfig.json');
 
 module.exports = {
   preset: 'ts-jest',
-  resolver: 'ts-jest-resolver',
   testEnvironment: 'node',
   modulePathIgnorePatterns: ['/dist/'],
   testPathIgnorePatterns: ['/node_modules/', '/dist/', '/.next'],

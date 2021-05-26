@@ -1,5 +1,5 @@
 import type { Envelop } from '@envelop/types';
-import type { CodegenConfig } from './typescript.js';
+import type { CodegenConfig } from './typescript';
 
 export interface WithCodegen {
   /**
@@ -46,12 +46,12 @@ export function handleCodegen(getEnveloped: Envelop<unknown>, config: WithCodege
 
   Promise.all([
     outputSchema
-      ? import('./outputSchema.js').then(({ writeOutputSchema }) => {
+      ? import('./outputSchema').then(({ writeOutputSchema }) => {
           return writeOutputSchema(schema, outputSchema).catch(onError);
         })
       : null,
 
-    import('./typescript.js').then(({ EnvelopTypeScriptCodegen }) => {
+    import('./typescript').then(({ EnvelopTypeScriptCodegen }) => {
       return EnvelopTypeScriptCodegen(schema, config, internalConfig).catch(onError);
     }),
   ]).then(onFinish, onError);

@@ -1,14 +1,14 @@
 import { gql } from 'graphql-modules';
 import querystring from 'querystring';
 
-import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app.js';
-import { LazyPromise } from './common/base.js';
-import { handleCodegen, WithCodegen } from './common/codegen/handle.js';
-import { handleCors, WithCors } from './common/cors/rawCors.js';
-import { parseIDEConfig, WithIDE } from './common/ide/handle.js';
-import { RawAltairHandler } from './common/ide/rawAltair.js';
-import { handleJit, WithJit } from './common/jit.js';
-import { getPathname } from './common/utils/url.js';
+import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app';
+import { LazyPromise } from './common/base';
+import { handleCodegen, WithCodegen } from './common/codegen/handle';
+import { handleCors, WithCors } from './common/cors/rawCors';
+import { parseIDEConfig, WithIDE } from './common/ide/handle';
+import { RawAltairHandler } from './common/ide/rawAltair';
+import { handleJit, WithJit } from './common/jit';
+import { getPathname } from './common/utils/url';
 
 import type { RenderGraphiQLOptions } from 'graphql-helix/dist/types';
 import type { EnvelopContext } from './common/types';
@@ -254,4 +254,4 @@ export function AltairHandler(options: AltairHandlerOptions = {}): AsyncRequestH
 
 export { gql, getPathname };
 
-export * from './common/base.js';
+export * from './common/base';

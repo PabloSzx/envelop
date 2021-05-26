@@ -3,15 +3,15 @@ import { GraphQLSchema, isSchema } from 'graphql';
 import { useSchema } from '@envelop/core';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 
-import { cleanObject, toPlural } from './utils/object.js';
-import { LazyPromise } from './utils/promise.js';
+import { cleanObject, toPlural } from './utils/object';
+import { LazyPromise } from './utils/promise';
 
 import type { IExecutableSchemaDefinition } from '@graphql-tools/schema';
 import type { MergeSchemasConfig } from '@graphql-tools/merge';
 import type { Plugin } from '@envelop/types';
 import type { Application, Module } from 'graphql-modules';
 import type { ScalarsModule } from './scalars';
-import type { EnvelopContext, EnvelopResolvers } from './types.js';
+import type { EnvelopContext, EnvelopResolvers } from './types';
 
 export type FilteredMergeSchemasConfig = Omit<MergeSchemasConfig, 'schemas'>;
 

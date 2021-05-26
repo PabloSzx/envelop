@@ -3,18 +3,18 @@ import { resolve } from 'path';
 
 import { printSchemaWithDirectives } from '@graphql-tools/utils';
 
-import { cleanObject } from '../utils/object.js';
-import { LazyPromise } from '../utils/promise.js';
-import { formatPrettier } from './prettier.js';
-import { writeFileIfChanged } from './write.js';
+import { cleanObject } from '../utils/object';
+import { LazyPromise } from '../utils/promise';
+import { formatPrettier } from './prettier';
+import { writeFileIfChanged } from './write';
 
 import type { CodegenPlugin, Types } from '@graphql-codegen/plugin-helpers';
 import type { Source } from '@graphql-tools/utils';
 import type { LoadTypedefsOptions, UnnormalizedTypeDefPointer } from '@graphql-tools/load';
 import type { TypeScriptPluginConfig } from '@graphql-codegen/typescript';
 import type { TypeScriptResolversPluginConfig } from '@graphql-codegen/typescript-resolvers/config';
-import type { InternalCodegenConfig, WithCodegen } from './handle.js';
-import type { WithGraphQLUpload } from '../upload.js';
+import type { InternalCodegenConfig, WithCodegen } from './handle';
+import type { WithGraphQLUpload } from '../upload';
 
 export interface CodegenDocumentsConfig {
   /**

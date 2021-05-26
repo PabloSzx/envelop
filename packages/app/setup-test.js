@@ -3,16 +3,12 @@ const { execSync } = require('child_process');
 const { makeExecutableSchema } = require('@graphql-tools/schema');
 
 module.exports = async () => {
-  await require('tsc-node-build/src/main').build({
-    project: resolve(__dirname, './tsconfig.json'),
-    skipEsm: true,
-    silent: true,
-  });
+  require('esbuild-register/register');
 
   /**
    * @type {import("./src/extend")}
    */
-  const { EnvelopTypeScriptCodegen, gql } = require('./dist/cjs/extend');
+  const { EnvelopTypeScriptCodegen, gql } = require('./src/extend.ts');
 
   await EnvelopTypeScriptCodegen(
     makeExecutableSchema({

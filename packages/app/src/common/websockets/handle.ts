@@ -1,7 +1,7 @@
 import assert from 'assert';
 
-import { cleanObject } from '../utils/object.js';
-import { getPathname } from '../utils/url.js';
+import { cleanObject } from '../utils/object';
+import { getPathname } from '../utils/url';
 
 import type { Envelop } from '@envelop/types';
 import type WebSocket from 'ws';

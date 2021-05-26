@@ -1,18 +1,18 @@
 import { gql } from 'graphql-modules';
 import bodyParser from 'koa-bodyparser';
 
-import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app.js';
-import { handleCodegen, WithCodegen } from './common/codegen/handle.js';
-import { handleIDE, WithIDE } from './common/ide/handle.js';
-import { RawAltairHandlerDeps } from './common/ide/rawAltair.js';
-import { handleJit, WithJit } from './common/jit.js';
+import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app';
+import { handleCodegen, WithCodegen } from './common/codegen/handle';
+import { handleIDE, WithIDE } from './common/ide/handle';
+import { RawAltairHandlerDeps } from './common/ide/rawAltair';
+import { handleJit, WithJit } from './common/jit';
 
 import type { Options as CorsOptions } from '@koa/cors';
 import type * as KoaRouter from '@koa/router';
 import type { EnvelopContext } from './common/types';
 import type { ParameterizedContext, Request, Response } from 'koa';
 import type { Envelop } from '@envelop/types';
-import type { WithGraphQLUpload } from './common/upload.js';
+import type { WithGraphQLUpload } from './common/upload';
 
 export interface BuildContextArgs {
   request: Request;
@@ -200,4 +200,4 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
 
 export { gql };
 
-export * from './common/base.js';
+export * from './common/base';

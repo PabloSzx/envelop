@@ -3,17 +3,17 @@ import { Express, json, Request, RequestHandler, Response, Router } from 'expres
 import { gql } from 'graphql-modules';
 import { createServer, Server } from 'http';
 
-import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app.js';
-import { handleCodegen, WithCodegen } from './common/codegen/handle.js';
-import { handleIDE, WithIDE } from './common/ide/handle.js';
-import { handleJit, WithJit } from './common/jit.js';
-import { CreateWebSocketsServer, WithWebSockets } from './common/websockets/handle.js';
+import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app';
+import { handleCodegen, WithCodegen } from './common/codegen/handle';
+import { handleIDE, WithIDE } from './common/ide/handle';
+import { handleJit, WithJit } from './common/jit';
+import { CreateWebSocketsServer, WithWebSockets } from './common/websockets/handle';
 
 import type { CorsOptions, CorsOptionsDelegate } from 'cors';
 import type { Envelop } from '@envelop/types';
 import type { EnvelopContext } from './common/types';
 import type { OptionsJson as BodyParserOptions } from 'body-parser';
-import type { WithGraphQLUpload } from './common/upload.js';
+import type { WithGraphQLUpload } from './common/upload';
 
 export interface BuildContextArgs {
   request: Request;
@@ -209,4 +209,4 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
 
 export { gql };
 
-export * from './common/base.js';
+export * from './common/base';

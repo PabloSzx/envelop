@@ -1,12 +1,12 @@
 import assert from 'assert';
 import { gql } from 'graphql-modules';
 
-import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app.js';
-import { LazyPromise } from './common/base.js';
-import { handleCodegen, WithCodegen } from './common/codegen/handle.js';
-import { handleIDE, WithIDE } from './common/ide/handle.js';
-import { handleJit, WithJit } from './common/jit.js';
-import { CreateWebSocketsServer, WithWebSockets } from './common/websockets/handle.js';
+import { BaseEnvelopAppOptions, BaseEnvelopBuilder, createEnvelopAppFactory, handleRequest } from './common/app';
+import { LazyPromise } from './common/base';
+import { handleCodegen, WithCodegen } from './common/codegen/handle';
+import { handleIDE, WithIDE } from './common/ide/handle';
+import { handleJit, WithJit } from './common/jit';
+import { CreateWebSocketsServer, WithWebSockets } from './common/websockets/handle';
 
 import type { FastifyCorsOptions, FastifyCorsOptionsDelegate, FastifyPluginOptionsDelegate } from 'fastify-cors';
 import type { Envelop } from '@envelop/types';
@@ -14,7 +14,7 @@ import type { FastifyInstance, FastifyPluginCallback, FastifyReply, FastifyReque
 import type { Server } from 'http';
 import type { EnvelopContext } from './common/types';
 import type { AltairFastifyPluginOptions } from 'altair-fastify-plugin';
-import type { WithGraphQLUpload } from './common/upload.js';
+import type { WithGraphQLUpload } from './common/upload';
 
 export type EnvelopAppPlugin = FastifyPluginCallback<{}, Server>;
 
@@ -236,4 +236,4 @@ export function CreateApp(config: EnvelopAppOptions = {}): EnvelopAppBuilder {
 
 export { gql };
 
-export * from './common/base.js';
+export * from './common/base';

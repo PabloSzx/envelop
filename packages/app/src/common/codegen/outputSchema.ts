@@ -3,8 +3,8 @@ import { resolve } from 'path';
 
 import { printSchemaWithDirectives } from '@graphql-tools/utils';
 
-import { formatPrettier } from './prettier.js';
-import { writeFileIfChanged } from './write.js';
+import { formatPrettier } from './prettier';
+import { writeFileIfChanged } from './write';
 
 export async function writeOutputSchema(schema: GraphQLSchema, outputPath: string | boolean): Promise<void> {
   if (!outputPath) return;
