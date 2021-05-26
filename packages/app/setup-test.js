@@ -3,12 +3,14 @@ const { execSync } = require('child_process');
 const { makeExecutableSchema } = require('@graphql-tools/schema');
 
 module.exports = async () => {
-  require('esbuild-register/register');
+  execSync(`node ${require.resolve('rollup/dist/bin/rollup')} -c ${resolve(__dirname, 'rollup.config.js')}`, {
+    stdio: 'inherit',
+  });
 
   /**
    * @type {import("./src/extend")}
    */
-  const { EnvelopTypeScriptCodegen, gql } = require('./src/extend.ts');
+  const { EnvelopTypeScriptCodegen, gql } = require('./dist/extend');
 
   await EnvelopTypeScriptCodegen(
     makeExecutableSchema({
