@@ -1,6 +1,7 @@
 import globby from 'globby';
 import esbuild from 'rollup-plugin-esbuild';
 import path from 'path';
+import externals from 'rollup-plugin-node-externals';
 
 const input = globby.sync(path.join(__dirname, 'src/**/*.ts'));
 
@@ -25,6 +26,10 @@ const config = {
   plugins: [
     esbuild({
       target: 'es2019',
+    }),
+    externals({
+      packagePath: path.resolve(__dirname, 'package.json'),
+      deps: true,
     }),
   ],
 };
