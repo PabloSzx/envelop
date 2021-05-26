@@ -11,12 +11,12 @@ const config = {
   input,
   output: [
     {
-      dir: 'dist',
+      dir: path.resolve(__dirname, 'dist'),
       format: 'cjs',
       preserveModules: true,
     },
     {
-      dir: 'dist',
+      dir: path.resolve(__dirname, 'dist'),
       format: 'es',
       entryFileNames: '[name].mjs',
       preserveModules: true,
