@@ -6,23 +6,16 @@
   "author": "PabloSz <pablosaez1995@gmail.com>",
   "exports": {
     "./*": {
-      "require": "./dist/*.js",
-      "import": "./dist/*.mjs"
-    }
-  },
-  "typesVersions": {
-    "*": {
-      "*": [
-        "dist/*"
-      ]
+      "require": "./lib/*.js",
+      "import": "./lib/*.mjs"
     }
   },
   "files": [
-    "dist",
+    "lib",
     "src"
   ],
   "scripts": {
-    "build": "rimraf dist && concurrently -r \"tsc\" \"rollup -c\"",
+    "build": "concurrently -r \"tsc\" \"rollup -c\"",
     "dev": "rollup -c --watch",
     "dev:all": "yarn dev:mjs:all",
     "dev:all:cjs": "yarn dev:cjs:all",
@@ -40,19 +33,19 @@
     "dev:mjs:http": "cross-env PORT=3004 yarn --cwd ../../examples/app/http dev --silent",
     "dev:mjs:koa": "cross-env PORT=3005 yarn --cwd ../../examples/app/koa dev --silent",
     "dev:next": "yarn --cwd ../../examples/app/nextjs dev -p 3006",
-    "prepare": "pnpm build"
+    "prepare": "bob-esbuild build"
   },
   "dependencies": {
     "@envelop/dataloader": "^0.1.0",
     "@envelop/graphql-modules": "^0.1.0",
     "@envelop/parser-cache": "^0.1.0",
     "@envelop/validation-cache": "^0.1.0",
-    "@graphql-codegen/core": "^1.17.9",
-    "@graphql-codegen/plugin-helpers": "^1.18.6",
-    "@graphql-codegen/typed-document-node": "^1.18.5",
-    "@graphql-codegen/typescript": "^1.22.0",
-    "@graphql-codegen/typescript-operations": "^1.17.16",
-    "@graphql-codegen/typescript-resolvers": "^1.19.1",
+    "@graphql-codegen/core": "^1.17.10",
+    "@graphql-codegen/plugin-helpers": "^1.18.7",
+    "@graphql-codegen/typed-document-node": "^1.18.6",
+    "@graphql-codegen/typescript": "^1.22.1",
+    "@graphql-codegen/typescript-operations": "^1.18.0",
+    "@graphql-codegen/typescript-resolvers": "^1.19.2",
     "@graphql-tools/code-file-loader": "^6.3.1",
     "@graphql-tools/graphql-file-loader": "^6.2.7",
     "@graphql-tools/load": "^6.2.8",
@@ -104,12 +97,13 @@
     "@types/node": "^15.6.1",
     "@types/node-fetch": "^2.5.10",
     "@types/prettier": "^2.2.3",
+    "bob-esbuild-cli": "^0.0.2",
     "builtin-modules": "^3.2.0",
     "concurrently": "^6.2.0",
     "cross-env": "^7.0.3",
     "eventsource": "^1.1.0",
     "express": "^4.17.1",
-    "fastify": "^3.16.1",
+    "fastify": "^3.16.2",
     "fastify-nextjs": "^5.4.1",
     "form-data": "^4.0.0",
     "get-port": "^5.1.1",
@@ -124,12 +118,12 @@
     "next": "^10.2.3",
     "node-fetch": "^2.6.1",
     "rimraf": "^3.0.2",
-    "rollup": "^2.50.0",
+    "rollup": "^2.50.2",
     "rollup-plugin-esbuild": "^4.2.3",
     "rollup-plugin-node-externals": "^2.2.0",
     "tmp-promise": "^3.0.2",
-    "ts-jest": "^27.0.0",
-    "typescript": "^4.2.4",
+    "ts-jest": "^27.0.1",
+    "typescript": "^4.3.2",
     "undici": "^3.3.6"
   },
   "peerDependencies": {
@@ -193,6 +187,13 @@
     },
     "next": {
       "optional": true
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "*": [
+        "lib/*"
+      ]
     }
   }
 }

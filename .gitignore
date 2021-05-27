@@ -4,3 +4,5 @@ dist
 .next
 *.tsbuildinfo
 coverage
+lib
+/types

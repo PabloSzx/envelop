@@ -7,10 +7,7 @@ module.exports = async () => {
     stdio: 'inherit',
   });
 
-  /**
-   * @type {import("./src/extend")}
-   */
-  const { EnvelopTypeScriptCodegen, gql } = require('./dist/extend');
+  const { EnvelopTypeScriptCodegen, gql } = require('./lib/extend');
 
   await EnvelopTypeScriptCodegen(
     makeExecutableSchema({

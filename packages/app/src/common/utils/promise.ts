@@ -1,11 +1,8 @@
 export class PLazy<ValueType> extends Promise<ValueType> {
-  private _executor;
   private _promise?: Promise<ValueType>;
 
-  constructor(executor: (resolve: (value: ValueType) => void, reject: (err: unknown) => void) => void) {
+  constructor(private _executor: (resolve: (value: ValueType) => void, reject: (err: unknown) => void) => void) {
     super((resolve: (v?: any) => void) => resolve());
-
-    this._executor = executor;
   }
 
   then: Promise<ValueType>['then'] = (onFulfilled, onRejected) =>

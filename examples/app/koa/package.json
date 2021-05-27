@@ -24,6 +24,6 @@
     "@types/koa__router": "^8.0.4",
     "@types/node": "^15.6.1",
     "tsup": "^4.11.1",
-    "typescript": "^4.2.4"
+    "typescript": "^4.3.2"
   }
 }
