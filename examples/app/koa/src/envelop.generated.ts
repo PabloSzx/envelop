@@ -199,7 +199,7 @@ export type HelloQueryQueryVariables = Exact<{ [key: string]: never }>;
 
 export type HelloQueryQuery = { __typename?: 'Query' } & Pick<Query, 'hello'>;
 
-export const HelloQueryDocument: DocumentNode<HelloQueryQuery, HelloQueryQueryVariables> = {
+export const HelloQueryDocument = {
   kind: 'Document',
   definitions: [
     {
@@ -209,7 +209,7 @@ export const HelloQueryDocument: DocumentNode<HelloQueryQuery, HelloQueryQueryVa
       selectionSet: { kind: 'SelectionSet', selections: [{ kind: 'Field', name: { kind: 'Name', value: 'hello' } }] },
     },
   ],
-};
+} as unknown as DocumentNode<HelloQueryQuery, HelloQueryQueryVariables>;
 
 declare module '@pablosz/envelop-app/koa' {
   interface EnvelopResolvers extends Resolvers<import('@pablosz/envelop-app/koa').EnvelopContext> {}

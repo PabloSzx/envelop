@@ -2,7 +2,7 @@ import type { ModuleConfig } from 'graphql-modules';
 import type { IncomingHttpHeaders } from 'http';
 import type { ExecutionContext as HelixExecutionContext } from 'graphql-helix';
 
-type PossiblePromise<T> = T | Promise<T>;
+export type PromiseOrValue<T> = T | Promise<T>;
 
 export type DeepPartial<T> = T extends Function
   ? T
@@ -14,9 +14,9 @@ export type DeepPartial<T> = T extends Function
     DeepPartialObject<T>
   : T | undefined;
 
-interface DeepPartialArray<T> extends Array<PossiblePromise<DeepPartial<PossiblePromise<T>>>> {}
+interface DeepPartialArray<T> extends Array<PromiseOrValue<DeepPartial<PromiseOrValue<T>>>> {}
 type DeepPartialObject<T> = {
-  [P in keyof T]?: PossiblePromise<DeepPartial<PossiblePromise<T[P]>>>;
+  [P in keyof T]?: PromiseOrValue<DeepPartial<PromiseOrValue<T[P]>>>;
 };
 
 export interface ExecutionContext extends HelixExecutionContext {
@@ -36,7 +36,7 @@ export type EnvelopModuleConfig = Omit<ModuleConfig, 'typeDefs' | 'id' | 'resolv
   id?: string;
   resolvers?: EnvelopResolvers;
   /**
-   * Automatically add the create module in the built envelop app
+   * Automatically add the created module in the built envelop app
    *
    * @default true
    */

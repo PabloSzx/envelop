@@ -1,7 +1,7 @@
 import { GraphQLSchema, parse } from 'graphql';
 import { resolve } from 'path';
 
-import { printSchemaWithDirectives } from '@graphql-tools/utils';
+import { printSchemaWithDirectives, Loader, SingleFileOptions } from '@graphql-tools/utils';
 
 import { cleanObject } from '../utils/object';
 import { LazyPromise } from '../utils/promise';
@@ -106,6 +106,11 @@ export interface CodegenConfig extends TypeScriptPluginConfig, TypeScriptResolve
    * Transform the generated code
    */
   transformGenerated?: (code: string) => string | Promise<string>;
+
+  /**
+   * Custom document loaders
+   */
+  documentsLoaders?: Loader<string, SingleFileOptions>[];
 }
 
 const CodegenDeps = LazyPromise(async () => {
@@ -146,6 +151,7 @@ export async function EnvelopTypeScriptCodegen(
       extraPluginsMap,
       extraPluginsConfig,
       transformGenerated,
+      documentsLoaders,
       ...codegenOptions
     } = {},
   } = options;
@@ -186,15 +192,14 @@ export async function EnvelopTypeScriptCodegen(
   const documents: Source[] = [];
 
   if (documentsArg) {
-    const [{ loadDocuments }, { GraphQLFileLoader }, typedDocumentNode, { CodeFileLoader }] = await Promise.all([
+    const [{ loadDocuments }, { GraphQLFileLoader }, typedDocumentNode] = await Promise.all([
       import('@graphql-tools/load'),
       import('@graphql-tools/graphql-file-loader'),
       useTypedDocumentNode ? import('@graphql-codegen/typed-document-node') : null,
-      import('@graphql-tools/code-file-loader'),
     ]);
 
     const loadedDocuments = await loadDocuments(documentsArg, {
-      loaders: [new GraphQLFileLoader(), new CodeFileLoader()],
+      loaders: [new GraphQLFileLoader(), ...(documentsLoaders || [])],
       ...cleanObject(loadDocumentsConfig),
     });
 
