@@ -3,7 +3,7 @@ const { execSync } = require('child_process');
 const { makeExecutableSchema } = require('@graphql-tools/schema');
 
 module.exports = async () => {
-  execSync(`node ${require.resolve('rollup/dist/bin/rollup')} -c ${resolve(__dirname, 'rollup.config.js')}`, {
+  execSync(`node ${require.resolve('bob-esbuild-cli/bin/run')} build --cwd ${__dirname.replace(/\\/g, '/')}`, {
     stdio: 'inherit',
   });
 

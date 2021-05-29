@@ -234,7 +234,7 @@ export type PingSubscriptionSubscriptionVariables = Exact<{ [key: string]: never
 
 export type PingSubscriptionSubscription = { __typename?: 'Subscription' } & Pick<Subscription, 'ping'>;
 
-export const HelloDocument: DocumentNode<HelloQuery, HelloQueryVariables> = {
+export const HelloDocument = {
   kind: 'Document',
   definitions: [
     {
@@ -244,8 +244,8 @@ export const HelloDocument: DocumentNode<HelloQuery, HelloQueryVariables> = {
       selectionSet: { kind: 'SelectionSet', selections: [{ kind: 'Field', name: { kind: 'Name', value: 'hello' } }] },
     },
   ],
-};
-export const UsersDocument: DocumentNode<UsersQuery, UsersQueryVariables> = {
+} as unknown as DocumentNode<HelloQuery, HelloQueryVariables>;
+export const UsersDocument = {
   kind: 'Document',
   definitions: [
     {
@@ -264,8 +264,8 @@ export const UsersDocument: DocumentNode<UsersQuery, UsersQueryVariables> = {
       },
     },
   ],
-};
-export const GetContextDocument: DocumentNode<GetContextQuery, GetContextQueryVariables> = {
+} as unknown as DocumentNode<UsersQuery, UsersQueryVariables>;
+export const GetContextDocument = {
   kind: 'Document',
   definitions: [
     {
@@ -275,8 +275,8 @@ export const GetContextDocument: DocumentNode<GetContextQuery, GetContextQueryVa
       selectionSet: { kind: 'SelectionSet', selections: [{ kind: 'Field', name: { kind: 'Name', value: 'getContext' } }] },
     },
   ],
-};
-export const UploadFileDocument: DocumentNode<UploadFileMutation, UploadFileMutationVariables> = {
+} as unknown as DocumentNode<GetContextQuery, GetContextQueryVariables>;
+export const UploadFileDocument = {
   kind: 'Document',
   definitions: [
     {
@@ -308,8 +308,8 @@ export const UploadFileDocument: DocumentNode<UploadFileMutation, UploadFileMuta
       },
     },
   ],
-};
-export const PingSubscriptionDocument: DocumentNode<PingSubscriptionSubscription, PingSubscriptionSubscriptionVariables> = {
+} as unknown as DocumentNode<UploadFileMutation, UploadFileMutationVariables>;
+export const PingSubscriptionDocument = {
   kind: 'Document',
   definitions: [
     {
@@ -319,7 +319,7 @@ export const PingSubscriptionDocument: DocumentNode<PingSubscriptionSubscription
       selectionSet: { kind: 'SelectionSet', selections: [{ kind: 'Field', name: { kind: 'Name', value: 'ping' } }] },
     },
   ],
-};
+} as unknown as DocumentNode<PingSubscriptionSubscription, PingSubscriptionSubscriptionVariables>;
 
 declare module '../../src/common/types' {
   interface EnvelopResolvers extends Resolvers<import('../../src/common/types').EnvelopContext> {}

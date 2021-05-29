@@ -1,7 +1,9 @@
-import { promises, existsSync } from 'fs';
-import tmp from 'tmp-promise';
+import { existsSync, promises } from 'fs';
 import { resolve } from 'path';
+import tmp from 'tmp-promise';
+
 import { EnvelopTypeScriptCodegen, gql, LazyPromise, makeExecutableSchema, writeOutputSchema } from '@envelop/app/extend';
+import { CodeFileLoader } from '@graphql-tools/code-file-loader';
 
 const { writeFile, readFile, unlink } = promises;
 
@@ -70,6 +72,7 @@ describe('codegen with operations', () => {
           transformGenerated(code) {
             return code.replace(/'.+\/http'/g, "'@envelop/app/http'");
           },
+          documentsLoaders: [new CodeFileLoader()],
         },
       },
       {
@@ -81,9 +84,9 @@ describe('codegen with operations', () => {
       encoding: 'utf8',
     });
 
-    expect(generatedFile).toContain('export const HelloDocument: DocumentNode<HelloQuery, HelloQueryVariables>');
+    expect(generatedFile).toContain('export const HelloDocument');
 
-    expect(generatedFile).toContain('export const ByeDocument: DocumentNode<ByeQuery, ByeQueryVariables>');
+    expect(generatedFile).toContain('export const ByeDocument');
   });
 });
 
