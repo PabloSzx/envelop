@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 
 import type { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
-import type { EnvelopContext } from '@envelop/app/extend';
+import type { EnvelopContext } from '@pablosz/envelop-app/extend';
 import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
 export type Maybe<T> = T | null;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
@@ -321,6 +321,6 @@ export const PingSubscriptionDocument = {
   ],
 } as unknown as DocumentNode<PingSubscriptionSubscription, PingSubscriptionSubscriptionVariables>;
 
-declare module '@envelop/app/extend' {
-  interface EnvelopResolvers extends Resolvers<import('@envelop/app/extend').EnvelopContext> {}
+declare module '@pablosz/envelop-app/extend' {
+  interface EnvelopResolvers extends Resolvers<import('@pablosz/envelop-app/extend').EnvelopContext> {}
 }

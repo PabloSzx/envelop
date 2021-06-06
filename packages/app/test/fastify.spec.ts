@@ -2,7 +2,7 @@ import EventSource from 'eventsource';
 import got from 'got';
 import { buildClientSchema, getIntrospectionQuery, IntrospectionQuery, printSchema, print } from 'graphql';
 
-import { createDeferredPromise, gql, LazyPromise, makeExecutableSchema, readStreamToBuffer } from '@envelop/app/extend';
+import { createDeferredPromise, gql, LazyPromise, makeExecutableSchema, readStreamToBuffer } from '@pablosz/envelop-app/extend';
 
 import { GetContextDocument, HelloDocument, PingSubscriptionDocument, UsersDocument } from './generated/envelop.generated';
 import { commonImplementation, createUploadFileBody, readFile, startFastifyServer } from './utils';
@@ -312,7 +312,7 @@ test('codegen result', async () => {
     })
   ).toMatchInlineSnapshot(`
     "import type { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
-    import type { EnvelopContext } from '@envelop/app/fastify';
+    import type { EnvelopContext } from '@pablosz/envelop-app/fastify';
     export type Maybe<T> = T | null;
     export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
     export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
@@ -532,8 +532,8 @@ test('codegen result', async () => {
      */
     export type IResolvers<ContextType = EnvelopContext> = Resolvers<ContextType>;
 
-    declare module '@envelop/app/fastify' {
-      interface EnvelopResolvers extends Resolvers<import('@envelop/app/fastify').EnvelopContext> {}
+    declare module '@pablosz/envelop-app/fastify' {
+      interface EnvelopResolvers extends Resolvers<import('@pablosz/envelop-app/fastify').EnvelopContext> {}
     }
     "
   `);

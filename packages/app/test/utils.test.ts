@@ -1,4 +1,4 @@
-import { cleanObject, isObject, isPlainObject, LazyPromise, PLazy } from '@envelop/app/extend';
+import { cleanObject, isObject, isPlainObject, LazyPromise, PLazy } from '@pablosz/envelop-app/extend';
 
 test('PLazy', async () => {
   let nCalled = 0;

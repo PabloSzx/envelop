@@ -1,7 +1,7 @@
 /* eslint-disable no-use-before-define */
 
 import type { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
-import type { EnvelopContext } from '@envelop/app/express';
+import type { EnvelopContext } from '@pablosz/envelop-app/express';
 export type Maybe<T> = T | null;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
@@ -11,7 +11,9 @@ export type ResolverFn<TResult, TParent, TContext, TArgs> = (
   args: TArgs,
   context: TContext,
   info: GraphQLResolveInfo
-) => Promise<import('@envelop/app/express').DeepPartial<TResult>> | import('@envelop/app/express').DeepPartial<TResult>;
+) =>
+  | Promise<import('@pablosz/envelop-app/express').DeepPartial<TResult>>
+  | import('@pablosz/envelop-app/express').DeepPartial<TResult>;
 export type RequireFields<T, K extends keyof T> = { [X in Exclude<keyof T, K>]?: T[X] } & { [P in K]-?: NonNullable<T[P]> };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
@@ -192,6 +194,6 @@ export type Resolvers<ContextType = EnvelopContext> = {
  */
 export type IResolvers<ContextType = EnvelopContext> = Resolvers<ContextType>;
 
-declare module '@envelop/app/express' {
-  interface EnvelopResolvers extends Resolvers<import('@envelop/app/express').EnvelopContext> {}
+declare module '@pablosz/envelop-app/express' {
+  interface EnvelopResolvers extends Resolvers<import('@pablosz/envelop-app/express').EnvelopContext> {}
 }

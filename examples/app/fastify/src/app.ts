@@ -1,4 +1,11 @@
-import { BuildContextArgs, CreateApp, gql, InferDataLoader, InferFunctionReturn, readStreamToBuffer } from '@envelop/app/fastify';
+import {
+  BuildContextArgs,
+  CreateApp,
+  gql,
+  InferDataLoader,
+  InferFunctionReturn,
+  readStreamToBuffer,
+} from '@pablosz/envelop-app/fastify';
 
 function buildContext({ request }: BuildContextArgs) {
   return {
@@ -78,7 +85,7 @@ const stringRepeatear = registerDataLoader('stringRepeater', DataLoader => {
     return keys.map(v => v.repeat(5));
   });
 });
-declare module '@envelop/app/fastify' {
+declare module '@pablosz/envelop-app/fastify' {
   interface EnvelopContext extends InferFunctionReturn<typeof buildContext>, InferDataLoader<typeof stringRepeatear> {}
 }
 

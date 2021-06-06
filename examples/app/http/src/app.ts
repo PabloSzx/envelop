@@ -1,4 +1,4 @@
-import { CreateApp, BuildContextArgs, InferFunctionReturn, gql } from '@envelop/app/http';
+import { CreateApp, BuildContextArgs, InferFunctionReturn, gql } from '@pablosz/envelop-app/http';
 
 function buildContext({ request }: BuildContextArgs) {
   return {
@@ -7,7 +7,7 @@ function buildContext({ request }: BuildContextArgs) {
   };
 }
 
-declare module '@envelop/app/http' {
+declare module '@pablosz/envelop-app/http' {
   interface EnvelopContext extends InferFunctionReturn<typeof buildContext> {}
 }
 

@@ -1,5 +1,5 @@
 /**
- * @envelop/app/extend
+ * @pablosz/envelop-app/extend
  *
  * Module intended to be used as a building block
  * for custom Envelop integrations

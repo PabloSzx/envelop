@@ -1,4 +1,4 @@
-import { CreateApp, BuildContextArgs, InferFunctionReturn, gql } from '@envelop/app/hapi';
+import { CreateApp, BuildContextArgs, InferFunctionReturn, gql } from '@pablosz/envelop-app/hapi';
 
 function buildContext({ request }: BuildContextArgs) {
   return {
@@ -7,7 +7,7 @@ function buildContext({ request }: BuildContextArgs) {
   };
 }
 
-declare module '@envelop/app/hapi' {
+declare module '@pablosz/envelop-app/hapi' {
   interface EnvelopContext extends InferFunctionReturn<typeof buildContext> {}
 }
 

@@ -134,7 +134,7 @@ export async function EnvelopTypeScriptCodegen(
   options: WithCodegen & WithGraphQLUpload,
   internalConfig: InternalCodegenConfig
 ): Promise<void> {
-  const moduleName = `@envelop/app/${internalConfig.moduleName}`;
+  const moduleName = `@pablosz/envelop-app/${internalConfig.moduleName}`;
   const schema = parse(printSchemaWithDirectives(executableSchema));
 
   const {

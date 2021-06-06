@@ -1,4 +1,4 @@
-import { LazyPromise } from '@envelop/app/extend';
+import { LazyPromise } from '@pablosz/envelop-app/extend';
 
 import { HelloDocument } from './generated/envelop.generated';
 import { startNextJSServer } from './utils';

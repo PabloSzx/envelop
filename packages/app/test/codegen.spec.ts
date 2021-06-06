@@ -1,7 +1,7 @@
 import { promises, existsSync } from 'fs';
 import tmp from 'tmp-promise';
 import { resolve } from 'path';
-import { EnvelopTypeScriptCodegen, gql, LazyPromise, makeExecutableSchema, writeOutputSchema } from '@envelop/app/extend';
+import { EnvelopTypeScriptCodegen, gql, LazyPromise, makeExecutableSchema, writeOutputSchema } from '@pablosz/envelop-app/extend';
 
 const { writeFile, readFile, unlink } = promises;
 
@@ -56,7 +56,7 @@ describe('codegen with operations', () => {
           documents: [tmpGqlFile.path],
           targetPath: tmpGeneratedFile.path,
           transformGenerated(code) {
-            return code.replace(/'.+\/http'/g, "'@envelop/app/http'");
+            return code.replace(/'.+\/http'/g, "'@pablosz/envelop-app/http'");
           },
         },
       },

@@ -30,7 +30,7 @@ import {
   LazyPromise,
   PLazy,
   WithCodegen,
-} from '@envelop/app/extend';
+} from '@pablosz/envelop-app/extend';
 import { isDocumentNode } from '@graphql-tools/utils';
 
 import { UploadFileDocument } from './generated/envelop.generated';

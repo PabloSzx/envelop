@@ -1,4 +1,4 @@
-import { CreateApp, BuildContextArgs, InferFunctionReturn, readStreamToBuffer, gql } from '@envelop/app/express';
+import { CreateApp, BuildContextArgs, InferFunctionReturn, readStreamToBuffer, gql } from '@pablosz/envelop-app/express';
 
 function buildContext({ request }: BuildContextArgs) {
   return {
@@ -7,7 +7,7 @@ function buildContext({ request }: BuildContextArgs) {
   };
 }
 
-declare module '@envelop/app/express' {
+declare module '@pablosz/envelop-app/express' {
   interface EnvelopContext extends InferFunctionReturn<typeof buildContext> {}
 }
 

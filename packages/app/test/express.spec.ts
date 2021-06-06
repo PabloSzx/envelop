@@ -2,7 +2,7 @@ import EventSource from 'eventsource';
 import got from 'got';
 import { buildClientSchema, getIntrospectionQuery, IntrospectionQuery, printSchema } from 'graphql';
 import fetch from 'node-fetch';
-import { gql, readStreamToBuffer } from '@envelop/app/extend';
+import { gql, readStreamToBuffer } from '@pablosz/envelop-app/extend';
 
 import { HelloDocument, PingSubscriptionDocument, UsersDocument } from './generated/envelop.generated';
 import { commonImplementation, createUploadFileBody, readFile, startExpressServer } from './utils';
@@ -268,7 +268,7 @@ test('codegen result', async () => {
     })
   ).toMatchInlineSnapshot(`
     "import type { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
-    import type { EnvelopContext } from '@envelop/app/express';
+    import type { EnvelopContext } from '@pablosz/envelop-app/express';
     export type Maybe<T> = T | null;
     export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
     export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
@@ -477,8 +477,8 @@ test('codegen result', async () => {
      */
     export type IResolvers<ContextType = EnvelopContext> = Resolvers<ContextType>;
 
-    declare module '@envelop/app/express' {
-      interface EnvelopResolvers extends Resolvers<import('@envelop/app/express').EnvelopContext> {}
+    declare module '@pablosz/envelop-app/express' {
+      interface EnvelopResolvers extends Resolvers<import('@pablosz/envelop-app/express').EnvelopContext> {}
     }
     "
   `);

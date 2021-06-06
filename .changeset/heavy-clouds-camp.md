@@ -1,5 +1,5 @@
 ---
-'@envelop/app': minor
+'@pablosz/envelop-app': minor
 ---
 
 release

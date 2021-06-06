@@ -1,7 +1,7 @@
 /* eslint-disable no-use-before-define */
 
 import type { GraphQLResolveInfo } from 'graphql';
-import type { EnvelopContext } from '@envelop/app/nextjs';
+import type { EnvelopContext } from '@pablosz/envelop-app/nextjs';
 import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
 export type Maybe<T> = T | null;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
@@ -166,6 +166,6 @@ export const HelloDocument: DocumentNode<HelloQuery, HelloQueryVariables> = {
   ],
 };
 
-declare module '@envelop/app/nextjs' {
-  interface EnvelopResolvers extends Resolvers<import('@envelop/app/nextjs').EnvelopContext> {}
+declare module '@pablosz/envelop-app/nextjs' {
+  interface EnvelopResolvers extends Resolvers<import('@pablosz/envelop-app/nextjs').EnvelopContext> {}
 }

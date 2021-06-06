@@ -1,6 +1,6 @@
 {
-  "name": "@envelop/app",
-  "version": "0.0.1",
+  "name": "@pablosz/envelop-app",
+  "version": "0.1.30",
   "private": false,
   "license": "MIT",
   "exports": {

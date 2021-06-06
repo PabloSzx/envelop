@@ -1,7 +1,7 @@
 /* eslint-disable no-use-before-define */
 
 import type { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
-import type { EnvelopContext } from '@envelop/app/hapi';
+import type { EnvelopContext } from '@pablosz/envelop-app/hapi';
 import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
 export type Maybe<T> = T | null;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
@@ -12,7 +12,7 @@ export type ResolverFn<TResult, TParent, TContext, TArgs> = (
   args: TArgs,
   context: TContext,
   info: GraphQLResolveInfo
-) => Promise<import('@envelop/app/hapi').DeepPartial<TResult>> | import('@envelop/app/hapi').DeepPartial<TResult>;
+) => Promise<import('@pablosz/envelop-app/hapi').DeepPartial<TResult>> | import('@pablosz/envelop-app/hapi').DeepPartial<TResult>;
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
   ID: string;
@@ -177,6 +177,6 @@ export const HelloQueryDocument = {
   ],
 } as unknown as DocumentNode<HelloQueryQuery, HelloQueryQueryVariables>;
 
-declare module '@envelop/app/hapi' {
-  interface EnvelopResolvers extends Resolvers<import('@envelop/app/hapi').EnvelopContext> {}
+declare module '@pablosz/envelop-app/hapi' {
+  interface EnvelopResolvers extends Resolvers<import('@pablosz/envelop-app/hapi').EnvelopContext> {}
 }

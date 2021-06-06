@@ -1,4 +1,4 @@
-import { createDeferredPromise } from '@envelop/app/extend';
+import { createDeferredPromise } from '@pablosz/envelop-app/extend';
 
 import { PingSubscriptionModule, startFastifyServer } from './utils';
 

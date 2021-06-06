@@ -3,7 +3,7 @@ import got from 'got';
 import { buildClientSchema, getIntrospectionQuery, IntrospectionQuery, printSchema } from 'graphql';
 import fetch from 'node-fetch';
 
-import { gql, readStreamToBuffer } from '@envelop/app/extend';
+import { gql, readStreamToBuffer } from '@pablosz/envelop-app/extend';
 
 import { HelloDocument, UsersDocument } from './generated/envelop.generated';
 import { commonImplementation, createUploadFileBody, readFile, startKoaServer } from './utils';
@@ -194,7 +194,7 @@ test('codegen result', async () => {
     })
   ).toMatchInlineSnapshot(`
     "import type { GraphQLResolveInfo } from 'graphql';
-    import type { EnvelopContext } from '@envelop/app/koa';
+    import type { EnvelopContext } from '@pablosz/envelop-app/koa';
     export type Maybe<T> = T | null;
     export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
     export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
@@ -360,8 +360,8 @@ test('codegen result', async () => {
      */
     export type IResolvers<ContextType = EnvelopContext> = Resolvers<ContextType>;
 
-    declare module '@envelop/app/koa' {
-      interface EnvelopResolvers extends Resolvers<import('@envelop/app/koa').EnvelopContext> {}
+    declare module '@pablosz/envelop-app/koa' {
+      interface EnvelopResolvers extends Resolvers<import('@pablosz/envelop-app/koa').EnvelopContext> {}
     }
     "
   `);

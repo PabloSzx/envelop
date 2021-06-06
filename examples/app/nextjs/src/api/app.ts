@@ -1,4 +1,4 @@
-import { BuildContextArgs, CreateApp, InferFunctionReturn } from '@envelop/app/nextjs';
+import { BuildContextArgs, CreateApp, InferFunctionReturn } from '@pablosz/envelop-app/nextjs';
 
 function buildContext(_args: BuildContextArgs) {
   return {
@@ -6,7 +6,7 @@ function buildContext(_args: BuildContextArgs) {
   };
 }
 
-declare module '@envelop/app/nextjs' {
+declare module '@pablosz/envelop-app/nextjs' {
   interface EnvelopContext extends InferFunctionReturn<typeof buildContext> {}
 }
 

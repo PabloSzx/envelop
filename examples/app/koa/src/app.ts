@@ -1,4 +1,4 @@
-import { CreateApp, BuildContextArgs, InferFunctionReturn, gql, readStreamToBuffer } from '@envelop/app/koa';
+import { CreateApp, BuildContextArgs, InferFunctionReturn, gql, readStreamToBuffer } from '@pablosz/envelop-app/koa';
 
 function buildContext({ request }: BuildContextArgs) {
   return {
@@ -7,7 +7,7 @@ function buildContext({ request }: BuildContextArgs) {
   };
 }
 
-declare module '@envelop/app/koa' {
+declare module '@pablosz/envelop-app/koa' {
   interface EnvelopContext extends InferFunctionReturn<typeof buildContext> {}
 }
 

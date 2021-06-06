@@ -1,7 +1,7 @@
 /* eslint-disable no-use-before-define */
 
 import type { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
-import type { EnvelopContext } from '@envelop/app/koa';
+import type { EnvelopContext } from '@pablosz/envelop-app/koa';
 import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
 export type Maybe<T> = T | null;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
@@ -12,7 +12,7 @@ export type ResolverFn<TResult, TParent, TContext, TArgs> = (
   args: TArgs,
   context: TContext,
   info: GraphQLResolveInfo
-) => Promise<import('@envelop/app/koa').DeepPartial<TResult>> | import('@envelop/app/koa').DeepPartial<TResult>;
+) => Promise<import('@pablosz/envelop-app/koa').DeepPartial<TResult>> | import('@pablosz/envelop-app/koa').DeepPartial<TResult>;
 export type RequireFields<T, K extends keyof T> = { [X in Exclude<keyof T, K>]?: T[X] } & { [P in K]-?: NonNullable<T[P]> };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
@@ -211,6 +211,6 @@ export const HelloQueryDocument = {
   ],
 } as unknown as DocumentNode<HelloQueryQuery, HelloQueryQueryVariables>;
 
-declare module '@envelop/app/koa' {
-  interface EnvelopResolvers extends Resolvers<import('@envelop/app/koa').EnvelopContext> {}
+declare module '@pablosz/envelop-app/koa' {
+  interface EnvelopResolvers extends Resolvers<import('@pablosz/envelop-app/koa').EnvelopContext> {}
 }
